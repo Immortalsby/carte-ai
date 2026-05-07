@@ -29,6 +29,8 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
   const [saved, setSaved] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [pendingImageGen, setPendingImageGen] = useState<{ count: number; time: number } | null>(null);
+  const [imageGenProgress, setImageGenProgress] = useState<{ current: number; total: number; failed: number } | null>(null);
+  const imageGenAbortRef = useRef(false);
   const { toast } = useToast();
 
   function updateDish(dishId: string, updates: Partial<Dish>) {
@@ -86,29 +88,53 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
     );
     if (dishesWithoutImages.length === 0) return;
 
-    try {
-      const res = await fetch("/api/images/batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slug,
-          dishes: dishesWithoutImages.map((d) => ({
-            id: d.id,
-            name: d.name,
-            description: d.description.en || d.description.fr || undefined,
+    imageGenAbortRef.current = false;
+    setImageGenProgress({ current: 0, total: dishesWithoutImages.length, failed: 0 });
+    let failed = 0;
+
+    for (let i = 0; i < dishesWithoutImages.length; i++) {
+      if (imageGenAbortRef.current) break;
+      const dish = dishesWithoutImages[i];
+      setImageGenProgress({ current: i + 1, total: dishesWithoutImages.length, failed });
+
+      try {
+        const res = await fetch("/api/images/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: dish.name,
+            description: dish.description.en || dish.description.fr || undefined,
             cuisine,
-            ingredients: d.ingredients,
-          })),
-        }),
-      });
-      if (res.ok) {
-        toast(t.imageGenBackground, "success");
-      } else {
-        const err = await res.json().catch(() => null);
-        toast(err?.error || t.imageGenFailed);
+            ingredients: dish.ingredients,
+            source: "auto",
+            slug,
+            dishId: dish.id,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Update local state so UI reflects the new image immediately
+          setMenu((prev) => ({
+            ...prev,
+            dishes: prev.dishes.map((d) =>
+              d.id === dish.id ? { ...d, imageUrl: data.imageUrl } : d,
+            ),
+          }));
+        } else {
+          failed++;
+        }
+      } catch {
+        failed++;
       }
-    } catch {
-      toast(t.imageGenFailed);
+    }
+
+    setImageGenProgress(null);
+    if (imageGenAbortRef.current) {
+      toast(t.imageGenStopped, "info");
+    } else if (failed === 0) {
+      toast(t.imageGenComplete, "success");
+    } else {
+      toast(t.imageGenPartial(dishesWithoutImages.length - failed, dishesWithoutImages.length), "info");
     }
   }
 
@@ -154,8 +180,36 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
 
   return (
     <div>
+      {/* Image generation progress banner */}
+      {imageGenProgress && (
+        <div className="mb-4 rounded-lg border border-purple-300 bg-purple-50 px-4 py-3 dark:border-purple-700 dark:bg-purple-900/30">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
+              {t.imageGenProgressLabel(imageGenProgress.current, imageGenProgress.total)}
+            </span>
+            <button
+              type="button"
+              onClick={() => { imageGenAbortRef.current = true; }}
+              className="rounded-md px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+            >
+              {t.imageGenStop}
+            </button>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-purple-200 dark:bg-purple-800">
+            <div
+              className="h-full rounded-full bg-purple-600 transition-all duration-500"
+              style={{ width: `${(imageGenProgress.current / imageGenProgress.total) * 100}%` }}
+            />
+          </div>
+          {imageGenProgress.failed > 0 && (
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+              {imageGenProgress.failed} {t.imageGenFailedCount}
+            </p>
+          )}
+        </div>
+      )}
       {/* Image generation confirmation banner */}
-      {pendingImageGen && (
+      {pendingImageGen && !imageGenProgress && (
         <div className="mb-4 flex items-center justify-between rounded-lg border border-purple-300 bg-purple-50 px-4 py-3 dark:border-purple-700 dark:bg-purple-900/30">
           <span className="text-sm text-purple-800 dark:text-purple-200">
             {(t.generateImagesConfirm as unknown as (c: number, t: number) => string)(pendingImageGen.count, pendingImageGen.time)}

@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getOrGenerateDishImage } from "@/lib/dish-image-service";
+import { getTenantBySlug } from "@/lib/db/queries/tenants";
+import { patchDishImageUrl } from "@/lib/db/queries/menus";
 
 const generateSchema = z.object({
   name: z.object({
@@ -14,6 +16,9 @@ const generateSchema = z.object({
   cuisine: z.string().optional(),
   ingredients: z.array(z.string()).optional(),
   source: z.enum(["auto", "ai"]).optional(),
+  // Optional: persist image URL to a specific dish in the menu
+  slug: z.string().optional(),
+  dishId: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -34,6 +39,14 @@ export async function POST(request: Request) {
         { error: "Unable to find or generate image" },
         { status: 404 },
       );
+    }
+
+    // Persist to dish if slug + dishId provided
+    if (parsed.slug && parsed.dishId) {
+      const tenant = await getTenantBySlug(parsed.slug);
+      if (tenant) {
+        await patchDishImageUrl(tenant.id, parsed.dishId, result.imageUrl);
+      }
     }
 
     return NextResponse.json(result, { status: result.isNew ? 201 : 200 });

@@ -110,6 +110,14 @@ const dict = {
     photoFound: "Photo found",
     imageGenFailed: "Image generation failed — please try again",
     imageGenBackground: "Image generation started in the background. Refresh the page to see results.",
+    imageGenProgressLabel: (current: number, total: number) =>
+      `Generating image ${current} of ${total}...`,
+    imageGenStop: "Stop",
+    imageGenStopped: "Image generation stopped",
+    imageGenComplete: "All images generated successfully!",
+    imageGenPartial: (success: number, total: number) =>
+      `${success} of ${total} images generated. Some failed — you can retry later.`,
+    imageGenFailedCount: "failed",
     regenerate: "Regenerate",
     removing: "Removing...",
     flagImage: "Flag image as inaccurate",
@@ -430,6 +438,14 @@ const dict = {
     photoFound: "Photo trouvée",
     imageGenFailed: "Échec de la génération — veuillez réessayer",
     imageGenBackground: "Génération d'images lancée en arrière-plan. Actualisez la page pour voir les résultats.",
+    imageGenProgressLabel: (current: number, total: number) =>
+      `Génération de l'image ${current} sur ${total}...`,
+    imageGenStop: "Arrêter",
+    imageGenStopped: "Génération d'images arrêtée",
+    imageGenComplete: "Toutes les images ont été générées !",
+    imageGenPartial: (success: number, total: number) =>
+      `${success} sur ${total} images générées. Certaines ont échoué — vous pourrez réessayer plus tard.`,
+    imageGenFailedCount: "échouées",
     regenerate: "Régénérer",
     removing: "Suppression...",
     flagImage: "Signaler l'image comme inexacte",
@@ -743,6 +759,14 @@ const dict = {
     photoFound: "已找到图片",
     imageGenFailed: "图片生成失败，请重试",
     imageGenBackground: "图片正在后台生成，刷新页面查看结果。",
+    imageGenProgressLabel: (current: number, total: number) =>
+      `正在生成第 ${current}/${total} 张图片...`,
+    imageGenStop: "停止",
+    imageGenStopped: "图片生成已停止",
+    imageGenComplete: "所有图片生成完成！",
+    imageGenPartial: (success: number, total: number) =>
+      `${success}/${total} 张图片生成成功，部分失败，可稍后重试。`,
+    imageGenFailedCount: "张失败",
     regenerate: "重新生成",
     removing: "删除中...",
     flagImage: "标记图片不准确",
