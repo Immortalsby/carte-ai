@@ -17,15 +17,22 @@ export const auth = betterAuth({
     provider: "pg",
     schema: authSchema,
   }),
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }: { user: { name: string; email: string }; url: string }) => {
+      // Override callbackURL to redirect to /welcome after verification
+      const verifyUrl = new URL(url);
+      verifyUrl.searchParams.set("callbackURL", "/welcome");
+      sendVerificationEmail({ name: user.name, email: user.email, url: verifyUrl.toString() })
+        .catch((err) => console.error("Verification email failed:", err));
+    },
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
     maxPasswordLength: 128,
     requireEmailVerification: true,
-    sendVerificationEmail: async ({ user, url }: { user: { name: string; email: string }; url: string }) => {
-      sendVerificationEmail({ name: user.name, email: user.email, url })
-        .catch((err) => console.error("Verification email failed:", err));
-    },
     sendResetPassword: async ({ user, url }) => {
       sendPasswordResetEmail({ name: user.name, email: user.email, url })
         .catch((err) => console.error("Password reset email failed:", err));

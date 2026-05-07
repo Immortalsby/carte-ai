@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnstileRef = useRef<TurnstileInstance>(null);
 
@@ -52,7 +53,7 @@ export default function RegisterPage() {
         } as Parameters<typeof signUp.email>[0],
         {
           onSuccess: () => {
-            window.location.href = "/welcome";
+            setRegistered(true);
           },
           onError: (ctx) => {
             const msg = ctx.error.message;
@@ -74,6 +75,27 @@ export default function RegisterPage() {
 
   async function handleGoogleLogin() {
     await signIn.social({ provider: "google", callbackURL: "/admin" });
+  }
+
+  if (registered) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icon.svg" alt="CarteAI" className="mx-auto h-12 w-12" />
+        <h1 className="mt-3 text-xl font-bold text-foreground">{t.verifyEmailTitle}</h1>
+        <p
+          className="mt-3 text-sm text-muted-foreground"
+          dangerouslySetInnerHTML={{ __html: t.verifyEmailDesc(email) }}
+        />
+        <p className="mt-2 text-xs text-muted-foreground">{t.verifyEmailNote}</p>
+        <a
+          href="/login"
+          className="mt-6 inline-block text-sm text-foreground underline"
+        >
+          {t.backToSignIn}
+        </a>
+      </div>
+    );
   }
 
   return (

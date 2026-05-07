@@ -422,7 +422,7 @@ Every localized text field must include at least zh, fr and en. Add other suppor
   }]
 }
 Allowed allergens: gluten, crustaceans, eggs, fish, peanuts, soy, milk, nuts, celery, mustard, sesame, sulphites, lupin, molluscs, alcohol, unknown.
-Allowed dietaryTags: vegetarian, vegan, halal_possible, contains_pork, contains_beef, contains_seafood, high_protein, low_calorie, spicy, signature, popular, good_value, light, comfort_food.
+Allowed dietaryTags: vegetarian, vegan, halal_possible, contains_pork, contains_beef, contains_seafood, high_protein, low_calorie, healthy, spicy, signature, popular, good_value, light, comfort_food.
 If the source does not provide allergens, use ["unknown"]. If calories are absent, omit caloriesKcal.`;
 
   if (input.text) {

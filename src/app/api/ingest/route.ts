@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { extractMenuDraftWithLlm } from "@/lib/llm";
-import { getDefaultMenu, parseMenu } from "@/lib/menu";
+import { getDefaultMenu, parseMenu, sanitizeRawMenu } from "@/lib/menu";
 import type { RestaurantMenu, Dish } from "@/types/menu";
 
 const MAX_FILES = 10;
@@ -255,7 +255,7 @@ export async function POST(request: Request) {
 
     const validMenus = results
       .filter((r): r is RestaurantMenu => r !== null && "dishes" in r && Array.isArray(r.dishes))
-      .map((r) => parseMenu(r));
+      .map((r) => parseMenu(sanitizeRawMenu(r as unknown as Record<string, unknown>)));
 
     if (validMenus.length === 0) {
       return NextResponse.json({

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/Toast";
 
 export function ApproveButton({
   userId,
@@ -12,6 +13,7 @@ export function ApproveButton({
 }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleToggle() {
     setLoading(true);
@@ -23,7 +25,12 @@ export function ApproveButton({
       });
       if (res.ok) {
         router.refresh();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast(data?.error || "Operation failed");
       }
+    } catch {
+      toast("Network error");
     } finally {
       setLoading(false);
     }

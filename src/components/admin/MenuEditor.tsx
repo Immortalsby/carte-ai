@@ -27,7 +27,6 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
   const [editingDish, setEditingDish] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [generatingImages, setGeneratingImages] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [pendingImageGen, setPendingImageGen] = useState<{ count: number; time: number } | null>(null);
   const { toast } = useToast();
@@ -87,12 +86,12 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
     );
     if (dishesWithoutImages.length === 0) return;
 
-    setGeneratingImages(true);
     try {
       const res = await fetch("/api/images/batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          slug,
           dishes: dishesWithoutImages.map((d) => ({
             id: d.id,
             name: d.name,
@@ -103,19 +102,13 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
         }),
       });
       if (res.ok) {
-        const { images } = (await res.json()) as { images: Record<string, string> };
-        setMenu((prev) => ({
-          ...prev,
-          dishes: prev.dishes.map((d) =>
-            images[d.id] ? { ...d, imageUrl: images[d.id] } : d,
-          ),
-        }));
-        setSaved(false); // need to re-save with image URLs
+        toast(t.imageGenBackground, "success");
+      } else {
+        const err = await res.json().catch(() => null);
+        toast(err?.error || t.imageGenFailed);
       }
     } catch {
-      console.error("Image generation failed");
-    } finally {
-      setGeneratingImages(false);
+      toast(t.imageGenFailed);
     }
   }
 
@@ -194,11 +187,6 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {generatingImages && (
-            <span className="text-xs text-purple-600 animate-pulse">
-              {t.generatingImages}
-            </span>
-          )}
           {onReImport && (
             <button
               type="button"
@@ -290,6 +278,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                       <DishEditor
                         dish={dish}
                         cuisine={cuisine}
+                        slug={slug}
                         locale={locale}
                         onUpdate={(updates) => updateDish(dish.id, updates)}
                       />
@@ -321,11 +310,13 @@ const allergenOptions: Allergen[] = [
 function DishEditor({
   dish,
   cuisine,
+  slug,
   locale = "en",
   onUpdate,
 }: {
   dish: Dish;
   cuisine?: string;
+  slug?: string;
   locale?: AdminLocale;
   onUpdate: (updates: Partial<Dish>) => void;
 }) {
@@ -353,7 +344,7 @@ function DishEditor({
       const res = await fetch("/api/ai/dish-assist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "translate", name: primaryName, cuisine }),
+        body: JSON.stringify({ action: "translate", name: primaryName, cuisine, slug }),
       });
       if (res.ok) {
         const { translations } = await res.json();
@@ -365,6 +356,9 @@ function DishEditor({
             zh: translations.zh || dish.name.zh,
           },
         });
+      } else {
+        const data = await res.json().catch(() => null);
+        toast(data?.error || t.translationFailed);
       }
     } catch {
       toast(t.translationFailed);
@@ -380,7 +374,7 @@ function DishEditor({
       const res = await fetch("/api/ai/dish-assist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "describe", name: primaryName, cuisine }),
+        body: JSON.stringify({ action: "describe", name: primaryName, cuisine, slug }),
       });
       if (res.ok) {
         const { descriptions } = await res.json();
@@ -392,6 +386,9 @@ function DishEditor({
             zh: descriptions.zh || dish.description.zh,
           },
         });
+      } else {
+        const data = await res.json().catch(() => null);
+        toast(data?.error || t.descriptionFailed);
       }
     } catch {
       toast(t.descriptionFailed);
@@ -445,6 +442,9 @@ function DishEditor({
       });
       if (res.ok) {
         onUpdate({ imageUrl: undefined });
+      } else {
+        const err = await res.json().catch(() => null);
+        toast(err?.error || t.flagFailed);
       }
     } catch {
       toast(t.flagFailed);

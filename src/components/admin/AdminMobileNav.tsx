@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signOut } from "@/lib/auth-client";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface NavItem {
@@ -62,13 +63,16 @@ export function AdminMobileNav({ slug, email, navItems, themeLabels }: AdminMobi
               </div>
             )}
             <p className="px-3 text-[10px] text-muted-foreground">{email}</p>
-            <Link
-              href="/api/auth/sign-out"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-red-500 hover:bg-red-500/10 dark:text-red-400"
+            <button
+              type="button"
+              onClick={async () => {
+                await signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } });
+              }}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-red-500 hover:bg-red-500/10 dark:text-red-400"
             >
               <span>🚪</span>
               Sign out
-            </Link>
+            </button>
           </div>
         </div>
       )}

@@ -25,6 +25,7 @@ type Dictionary = {
   voice: string;
   listening: string;
   voiceUnavailable: string;
+  voicePermissionDenied: string;
   aiImageNotice: string;
   // Mascot assistant
   mascotTapMe: string;
@@ -66,6 +67,7 @@ const en: Dictionary = {
   voice: "Voice",
   listening: "Listening...",
   voiceUnavailable: "Voice input is not available in this browser.",
+  voicePermissionDenied: "Microphone access denied. Please allow microphone permission in your browser settings.",
   aiImageNotice: "AI-generated reference image. Please confirm with staff or the real menu photo.",
   // Mascot
   mascotTapMe: "Tap me for suggestions!",
@@ -108,6 +110,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     voice: "Voix",
     listening: "Écoute...",
     voiceUnavailable: "La saisie vocale n'est pas disponible dans ce navigateur.",
+    voicePermissionDenied: "Accès au microphone refusé. Veuillez autoriser le microphone dans les paramètres du navigateur.",
     aiImageNotice: "Image de référence générée par IA. Confirmez avec l'équipe ou la vraie photo du menu.",
     mascotTapMe: "Touchez-moi pour des suggestions !",
     mascotClose: "Fermer",
@@ -146,6 +149,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     voice: "语音",
     listening: "正在听...",
     voiceUnavailable: "当前浏览器不支持语音输入。",
+    voicePermissionDenied: "麦克风权限被拒绝，请在浏览器设置中允许使用麦克风。",
     aiImageNotice: "AI 生成参考图，请向服务员确认或以真实菜单图片为准。",
     mascotTapMe: "点我，帮你推荐好吃的~",
     mascotClose: "关闭",
@@ -184,6 +188,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     voice: "語音",
     listening: "正在聽...",
     voiceUnavailable: "目前瀏覽器不支援語音輸入。",
+    voicePermissionDenied: "麥克風權限被拒絕，請在瀏覽器設定中允許使用麥克風。",
     aiImageNotice: "AI 生成參考圖，請向店員確認或以真實菜單圖片為準。",
   },
   es: {
@@ -209,6 +214,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     voice: "Voz",
     listening: "Escuchando...",
     voiceUnavailable: "La entrada de voz no está disponible en este navegador.",
+    voicePermissionDenied: "Acceso al micrófono denegado. Permita el micrófono en la configuración del navegador.",
     aiImageNotice: "Imagen de referencia generada por IA. Confirme con el personal o la foto real del menú.",
   },
   it: {
@@ -287,6 +293,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     voice: "صوت",
     listening: "جارٍ الاستماع...",
     voiceUnavailable: "الإدخال الصوتي غير متوفر في هذا المتصفح.",
+    voicePermissionDenied: "تم رفض الوصول إلى الميكروفون. يرجى السماح بالميكروفون في إعدادات المتصفح.",
     aiImageNotice: "صورة مرجعية مولدة بالذكاء الاصطناعي. يرجى التأكد من الموظفين أو صورة القائمة الحقيقية.",
   },
   ja: {

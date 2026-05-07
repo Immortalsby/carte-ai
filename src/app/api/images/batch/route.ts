@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
+import { after } from "next/server";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getOrGenerateDishImage } from "@/lib/dish-image-service";
+import { getTenantBySlug } from "@/lib/db/queries/tenants";
+import { patchDishImageUrl } from "@/lib/db/queries/menus";
 
 const schema = z.object({
+  slug: z.string().min(1),
   dishes: z.array(
     z.object({
       id: z.string(),
@@ -28,32 +32,45 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { dishes } = schema.parse(body);
+    const { slug, dishes } = schema.parse(body);
 
-    // Process sequentially with delay — Pollinations free tier allows 1 req / 15s
-    const results: Record<string, string> = {};
-    for (let i = 0; i < dishes.length; i++) {
-      const dish = dishes[i];
-      try {
-        const result = await getOrGenerateDishImage({
-          name: dish.name as { en?: string; fr?: string; zh?: string },
-          description: dish.description,
-          cuisine: dish.cuisine,
-          ingredients: dish.ingredients,
-        });
-        if (result) {
-          results[dish.id] = result.imageUrl;
-        }
-        // If this was a fresh AI generation (not cached), wait before next request
-        if (result?.isNew && result.source === "ai_generated" && i < dishes.length - 1) {
-          await new Promise((r) => setTimeout(r, 16_000));
-        }
-      } catch (err) {
-        console.error(`[BatchImages] Failed for ${dish.id}:`, err);
-      }
+    const tenant = await getTenantBySlug(slug);
+    if (!tenant) {
+      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
+    const tenantId = tenant.id;
 
-    return NextResponse.json({ images: results });
+    // Return immediately — process images in the background
+    after(async () => {
+      for (let i = 0; i < dishes.length; i++) {
+        const dish = dishes[i];
+        try {
+          const result = await getOrGenerateDishImage({
+            name: dish.name as { en?: string; fr?: string; zh?: string },
+            description: dish.description,
+            cuisine: dish.cuisine,
+            ingredients: dish.ingredients,
+          });
+          if (result) {
+            // Persist each image to DB immediately
+            await patchDishImageUrl(tenantId, dish.id, result.imageUrl);
+          }
+          // Rate limit: Pollinations free tier ~1 req / 15s
+          if (result?.isNew && result.source === "ai_generated" && i < dishes.length - 1) {
+            await new Promise((r) => setTimeout(r, 16_000));
+          }
+        } catch (err) {
+          console.error(`[BatchImages] Failed for ${dish.id}:`, err);
+        }
+      }
+      console.log(`[BatchImages] Completed ${dishes.length} dishes for tenant ${slug}`);
+    });
+
+    return NextResponse.json({
+      status: "processing",
+      message: `Generating images for ${dishes.length} dishes in the background. Refresh the page to see results.`,
+      count: dishes.length,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -52,7 +52,7 @@ export default async function SettingsPage({
     <div>
       <h1 className="text-2xl font-bold">{t.settingsTitle}</h1>
 
-      <div className="mt-6 max-w-lg">
+      <div className="mt-6 max-w-2xl">
         {/* Customer link */}
         <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
           <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t.customerMenuLink}</p>

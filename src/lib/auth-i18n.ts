@@ -31,6 +31,12 @@ const dict = {
     alreadyHaveAccount: "Already have an account?",
     registrationFailed: "Registration failed. Please try again.",
 
+    // Post-registration
+    verifyEmailTitle: "Check your email",
+    verifyEmailDesc: (email: string) =>
+      `We've sent a verification link to <strong class="text-foreground">${email}</strong>. Please check your inbox and spam folder to activate your account.`,
+    verifyEmailNote: "You must verify your email before you can sign in.",
+
     // Forgot password
     resetTitle: "Reset your password",
     resetDesc: "Enter the email address associated with your account and we'll send you a reset link.",
@@ -70,6 +76,11 @@ const dict = {
     alreadyHaveAccount: "Vous avez déjà un compte ?",
     registrationFailed: "L'inscription a échoué. Veuillez réessayer.",
 
+    verifyEmailTitle: "Vérifiez votre e-mail",
+    verifyEmailDesc: (email: string) =>
+      `Nous avons envoyé un lien de vérification à <strong class="text-foreground">${email}</strong>. Veuillez vérifier votre boîte de réception et vos spams pour activer votre compte.`,
+    verifyEmailNote: "Vous devez vérifier votre e-mail avant de pouvoir vous connecter.",
+
     resetTitle: "Réinitialiser le mot de passe",
     resetDesc: "Entrez l'adresse e-mail associée à votre compte et nous vous enverrons un lien de réinitialisation.",
     sending: "Envoi...",
@@ -107,6 +118,11 @@ const dict = {
     createAccount: "创建账户",
     alreadyHaveAccount: "已有账户？",
     registrationFailed: "注册失败，请重试。",
+
+    verifyEmailTitle: "请查收邮件",
+    verifyEmailDesc: (email: string) =>
+      `我们已向 <strong class="text-foreground">${email}</strong> 发送了验证链接。请检查收件箱和垃圾邮件以激活您的账户。`,
+    verifyEmailNote: "您必须验证邮箱后才能登录。",
 
     resetTitle: "重置密码",
     resetDesc: "输入您的账户邮箱，我们将发送重置链接。",

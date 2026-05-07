@@ -170,13 +170,25 @@ export function ConciergePanel({
       setIsListening(false);
     };
 
-    recognition.onerror = () => setIsListening(false);
+    recognition.onerror = (event: Event & { error?: string }) => {
+      setIsListening(false);
+      const err = event.error ?? "unknown";
+      if (err === "not-allowed" || err === "service-not-allowed") {
+        toast(dict.voicePermissionDenied, "info");
+      } else if (err !== "aborted" && err !== "no-speech") {
+        toast(dict.voiceUnavailable, "info");
+      }
+    };
     recognition.onend = () => setIsListening(false);
 
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-  }, [lang, dict.voiceUnavailable]);
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch {
+      toast(dict.voiceUnavailable, "info");
+    }
+  }, [lang, dict.voiceUnavailable, dict.voicePermissionDenied, toast]);
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();
@@ -219,6 +231,11 @@ export function ConciergePanel({
           menu,
         }),
       });
+      if (!res.ok) {
+        setResults(null);
+        changeStep("mode");
+        return;
+      }
       const data = await res.json();
       setResults(data);
       const hasAllergenWarning = data.recommendations?.some(

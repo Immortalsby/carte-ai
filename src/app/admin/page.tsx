@@ -11,6 +11,7 @@ import { user as userTable } from "@/lib/db/auth-schema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { ApproveButton } from "@/components/admin/ApproveButton";
+import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
 
 export default async function AdminIndexPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -332,7 +333,10 @@ async function FounderDashboard() {
                     {u.createdAt.toLocaleDateString()}
                   </td>
                   <td className="px-4 py-2.5">
-                    <ApproveButton userId={u.id} approved={u.approved} />
+                    <div className="flex items-center gap-2">
+                      <ApproveButton userId={u.id} approved={u.approved} />
+                      <DeleteUserButton userId={u.id} userName={u.name} tenantCount={u.tenants.length} />
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -7,6 +7,7 @@ import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import { AdminSidebarNav } from "@/components/admin/AdminSidebarNav";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
+import { SignOutButton } from "@/components/admin/SignOutButton";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
 
 export default async function AdminLayout({
@@ -90,13 +91,10 @@ export default async function AdminLayout({
           <div className="px-3 py-2">
             <p className="text-[10px] text-muted-foreground truncate">{session.user.email}</p>
           </div>
-          <Link
-            href="/api/auth/sign-out"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-red-500 hover:bg-red-500/10 dark:text-red-400"
-          >
-            <span>🚪</span>
-            {t.signOut}
-          </Link>
+          <SignOutButton
+            label={t.signOut}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-red-500 hover:bg-red-500/10 dark:text-red-400"
+          />
         </div>
       </nav>
 

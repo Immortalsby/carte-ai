@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { getTenantBySlug } from "@/lib/db/queries/tenants";
 
 const schema = z.object({
   action: z.enum(["translate", "describe"]),
@@ -11,6 +12,8 @@ const schema = z.object({
   cuisine: z.string().optional(),
   /** Source language (auto-detected if omitted) */
   sourceLang: z.string().optional(),
+  /** Tenant slug — used to read per-tenant AI model settings */
+  slug: z.string().optional(),
 });
 
 function stripJson(text: string) {
@@ -20,51 +23,81 @@ function stripJson(text: string) {
   return match?.[0] ?? trimmed;
 }
 
-async function callLlm(systemPrompt: string, userPrompt: string) {
-  // Try Anthropic Foundry first
-  const anthropicKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
-  const baseUrl = process.env.ANTHROPIC_FOUNDRY_BASE_URL?.replace(/\/$/, "");
-  const model =
-    process.env.ANTHROPIC_MODEL === "OPUS"
-      ? process.env.ANTHROPIC_DEFAULT_OPUS_MODEL || "claude-opus-4-6"
-      : process.env.ANTHROPIC_MODEL || process.env.ANTHROPIC_DEFAULT_OPUS_MODEL;
+async function resolveModelConfig(slug?: string) {
+  let provider: string | undefined;
+  let model: string | undefined;
 
-  if (anthropicKey && baseUrl && model) {
-    const res = await fetch(`${baseUrl}/v1/messages`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": anthropicKey,
-        "api-key": anthropicKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 800,
-        temperature: 0.3,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }],
-      }),
-    });
-    if (res.ok) {
-      const payload = await res.json();
-      const text =
-        payload?.content
-          ?.map((p: { type?: string; text?: string }) =>
-            p.type === "text" ? p.text : "",
-          )
-          .join("") ?? "";
-      return text;
+  if (slug) {
+    const tenant = await getTenantBySlug(slug);
+    if (tenant) {
+      const settings = (tenant.settings as Record<string, unknown> | null) ?? {};
+      provider = (settings.llm_provider as string) || undefined;
+      model = (settings.llm_model as string) || undefined;
     }
   }
 
-  // Fallback to OpenAI
+  // "auto" means no preference — fall through to default logic
+  if (provider === "auto") provider = undefined;
+
+  return { provider, model };
+}
+
+async function callLlm(
+  systemPrompt: string,
+  userPrompt: string,
+  config?: { provider?: string; model?: string },
+) {
+  const preferOpenai = config?.provider === "openai";
+  const preferAnthropic = !config?.provider || config?.provider === "anthropic";
+
+  // Try Anthropic first (unless OpenAI is explicitly preferred)
+  if (preferAnthropic) {
+    const anthropicKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
+    const baseUrl = process.env.ANTHROPIC_FOUNDRY_BASE_URL?.replace(/\/$/, "");
+    const anthropicModel =
+      config?.model ||
+      (process.env.ANTHROPIC_MODEL === "OPUS"
+        ? process.env.ANTHROPIC_DEFAULT_OPUS_MODEL || "claude-opus-4-6"
+        : process.env.ANTHROPIC_MODEL || process.env.ANTHROPIC_DEFAULT_OPUS_MODEL);
+
+    if (anthropicKey && baseUrl && anthropicModel) {
+      const res = await fetch(`${baseUrl}/v1/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": anthropicKey,
+          "api-key": anthropicKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: anthropicModel,
+          max_tokens: 800,
+          temperature: 0.3,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+        }),
+      });
+      if (res.ok) {
+        const payload = await res.json();
+        const text =
+          payload?.content
+            ?.map((p: { type?: string; text?: string }) =>
+              p.type === "text" ? p.text : "",
+            )
+            .join("") ?? "";
+        return text;
+      }
+    }
+  }
+
+  // OpenAI fallback (or primary if preferred)
   const openaiKey = process.env.OPENAI_API_KEY;
   if (openaiKey) {
+    const openaiModel = config?.model || process.env.OPENAI_MODEL || "gpt-4.1-mini";
     const { default: OpenAI } = await import("openai");
     const client = new OpenAI({ apiKey: openaiKey });
     const response = await client.responses.create({
-      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+      model: openaiModel,
       input: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -84,9 +117,12 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { action, name, cuisine, sourceLang } = schema.parse(body);
+    const { action, name, cuisine, sourceLang, slug } = schema.parse(body);
     const cuisineLabel =
       cuisine?.replace(/_restaurant$/, "").replace(/_/g, " ") ?? "";
+
+    // Resolve per-tenant model config
+    const config = await resolveModelConfig(slug);
 
     if (action === "translate") {
       const systemPrompt =
@@ -99,7 +135,7 @@ ${sourceLang ? `Source language: ${sourceLang}` : "Auto-detect the source langua
 Return JSON: {"en": "English name", "fr": "French name", "zh": "Chinese name"}
 Keep the original language value identical to the input.`;
 
-      const result = await callLlm(systemPrompt, userPrompt);
+      const result = await callLlm(systemPrompt, userPrompt, config);
       if (!result) {
         return NextResponse.json(
           { error: "LLM unavailable" },
@@ -119,7 +155,7 @@ ${cuisineLabel ? `Cuisine: ${cuisineLabel}` : ""}
 
 Return JSON: {"en": "English description", "fr": "French description", "zh": "Chinese description"}`;
 
-      const result = await callLlm(systemPrompt, userPrompt);
+      const result = await callLlm(systemPrompt, userPrompt, config);
       if (!result) {
         return NextResponse.json(
           { error: "LLM unavailable" },
