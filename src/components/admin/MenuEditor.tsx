@@ -68,7 +68,9 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
     setActiveDragId(null);
     if (!over) return;
     const dishId = active.id as string;
-    const targetCategory = over.id as MenuCategory;
+    // Drop target can be a category section or a pill (pill-{category})
+    const overId = over.id as string;
+    const targetCategory = (overId.startsWith("pill-") ? overId.slice(5) : overId) as MenuCategory;
     const dish = menu.dishes.find((d) => d.id === dishId);
     if (dish && dish.category !== targetCategory) {
       updateDish(dishId, { category: targetCategory });
@@ -300,6 +302,20 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
 
       {/* Dish list by category — with dnd-kit drag and drop */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        {/* Sticky category pills — visible only while dragging */}
+        {activeDragId && (
+          <div className="sticky top-0 z-40 -mx-1 mt-4 flex flex-wrap gap-2 rounded-xl border border-primary/20 bg-card/95 px-3 py-2.5 shadow-lg backdrop-blur">
+            {categoryOrder.map((cat) => {
+              const draggedDish = menu.dishes.find((d) => d.id === activeDragId);
+              const isCurrent = draggedDish?.category === cat;
+              return (
+                <DroppablePill key={cat} id={`pill-${cat}`} category={cat} isCurrent={isCurrent}>
+                  {categoryLabels[cat]}
+                </DroppablePill>
+              );
+            })}
+          </div>
+        )}
         <div className="mt-6 space-y-6">
           {categoryOrder.map((category) => {
             const items = menu.dishes.filter((d) => d.category === category);
@@ -311,7 +327,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                 id={category}
                 isDragging={!!activeDragId}
               >
-                {/* Category header with inline + button (Plan C) */}
+                {/* Category header with inline + button */}
                 <div className="mb-2 flex items-center justify-between">
                   <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                     {categoryLabels[category]} ({items.length})
@@ -331,17 +347,9 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                 <div className="space-y-2">
                   {items.map((dish) => (
                     <DraggableDishCard key={dish.id} id={dish.id}>
-                      <div className={`flex items-center justify-between rounded-lg border p-4 transition-all ${
+                      <div className={`flex items-center justify-between rounded-lg border p-4 transition-all cursor-grab active:cursor-grabbing ${
                         activeDragId === dish.id ? "opacity-30 scale-[0.98]" : ""
                       }`}>
-                        {/* Drag grip handle */}
-                        <div className="mr-2 flex shrink-0 cursor-grab touch-none items-center text-muted-foreground/40 hover:text-muted-foreground/70">
-                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                            <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
-                            <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
-                            <circle cx="9" cy="19" r="1.5" /><circle cx="15" cy="19" r="1.5" />
-                          </svg>
-                        </div>
                         {/* Dish thumbnail */}
                         {dish.imageUrl ? (
                           <img
@@ -372,6 +380,16 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                           </p>
                         </button>
                         <div className="ml-3 flex shrink-0 items-center gap-2">
+                          {/* Move to category dropdown */}
+                          <MoveToDropdown
+                            dish={dish}
+                            categoryLabels={categoryLabels}
+                            onMove={(targetCategory) => {
+                              updateDish(dish.id, { category: targetCategory });
+                              toast(`${tAny.movedTo || "Moved to"} ${categoryLabels[targetCategory]}`, "success");
+                            }}
+                            label={tAny.moveToCategory || "Move to…"}
+                          />
                           <button
                             type="button"
                             onClick={() => toggleAvailability(dish.id)}
@@ -409,7 +427,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                   ))}
                 </div>
 
-                {/* Empty slot card (Plan B) — shown when category has < 3 items */}
+                {/* Empty slot card — shown when category has < 3 items */}
                 {items.length < 3 && (
                   <button
                     type="button"
@@ -466,6 +484,94 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
 }
 
 /* ─── dnd-kit helper components ─── */
+
+function DroppablePill({
+  id,
+  category,
+  isCurrent,
+  children,
+}: {
+  id: string;
+  category: string;
+  isCurrent: boolean;
+  children: React.ReactNode;
+}) {
+  const { isOver, setNodeRef } = useDroppable({ id, data: { category } });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
+        isCurrent
+          ? "bg-muted text-muted-foreground opacity-50"
+          : isOver
+            ? "bg-primary text-primary-foreground scale-110 shadow-md"
+            : "bg-primary/10 text-primary hover:bg-primary/20"
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function MoveToDropdown({
+  dish,
+  categoryLabels,
+  onMove,
+  label,
+}: {
+  dish: Dish;
+  categoryLabels: Record<MenuCategory, string>;
+  onMove: (category: MenuCategory) => void;
+  label: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  function handleBlur(e: React.FocusEvent) {
+    if (ref.current && !ref.current.contains(e.relatedTarget as Node)) {
+      setOpen(false);
+    }
+  }
+
+  const otherCategories = categoryOrder.filter((c) => c !== dish.category);
+
+  return (
+    <div ref={ref} className="relative" onBlur={handleBlur}>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="rounded-full px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+        title={label}
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border bg-card py-1 shadow-xl">
+          <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            {label}
+          </p>
+          {otherCategories.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMove(cat);
+                setOpen(false);
+              }}
+              className="block w-full px-3 py-1.5 text-left text-xs hover:bg-muted"
+            >
+              {categoryLabels[cat]}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function DroppableCategorySection({
   id,
