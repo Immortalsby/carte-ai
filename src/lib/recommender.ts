@@ -86,10 +86,23 @@ function scoreDish(dish: Dish, request: RecommendationRequest) {
       break;
   }
 
+  // Category-based scoring: treat new categories like their closest match
+  if (dish.category === "sharing") {
+    if (request.mode === "sharing") score += 12;
+    score += 4; // sharing plates are generally appealing
+  }
+  if (dish.category === "soup") score += 2; // treat like starter
+  if (dish.category === "pasta") score += 2; // treat like main
+  if (dish.category === "wine" || dish.category === "cocktail") {
+    // treat like drink
+    if (request.occasion === "drinks") score += 10;
+  }
+  if (dish.category === "brunch") score += 2; // treat like main
+
   // Occasion-based scoring adjustments
   if (request.occasion === "drinks") {
-    if (dish.category === "drink") score += 12;
-    if (dish.category === "starter") score += 6;
+    if (dish.category === "drink" || dish.category === "wine" || dish.category === "cocktail") score += 12;
+    if (dish.category === "starter" || dish.category === "sharing") score += 6;
     if (dish.category === "main") score -= 5;
   } else if (request.occasion === "feast") {
     if (dish.portionScore === 3) score += 8;
@@ -245,17 +258,17 @@ function buildSet(
 
   if (occasion === "drinks") {
     // Afterwork: mainly drinks + shareable snacks
-    // 1p: 2 drinks + 1 starter
-    // 2p: 3 drinks + 1 starter
-    // 3p: 4 drinks + 2 starters
-    // 4p: 5 drinks + 2 starters + 1 side
+    // Include wine/cocktail as drink alternatives
     const drinkCount = ps + 1;
     const starterCount = ps >= 3 ? 2 : 1;
-    const sideCount = ps >= 4 ? 1 : 0;
+    const sharingCount = ps >= 2 ? 1 : 0;
     const drinks = pickN("drink", drinkCount);
+    const wines = pickN("wine", Math.max(1, Math.floor(drinkCount / 2)));
+    const cocktails = pickN("cocktail", Math.max(1, Math.floor(drinkCount / 2)));
+    const allDrinks = [...drinks, ...wines, ...cocktails].slice(0, drinkCount + 1);
     const starters = pickN("starter", starterCount);
-    const sides = pickN("side", sideCount);
-    dishes = [...drinks, ...starters, ...sides];
+    const sharing = pickN("sharing", sharingCount);
+    dishes = [...allDrinks, ...sharing, ...starters];
   } else if (occasion === "feast") {
     // Family-style sharing (e.g. Chinese): more dishes to share + rice/sides
     // 2p: 3 mains + 1 starter + 1 side + 2 drinks
@@ -325,12 +338,18 @@ function buildSet(
   }
 
   const catLabels: Record<string, Record<string, string>> = {
-    main:    { zh: "主菜", "zh-Hant": "主菜", fr: "plat", es: "plato", en: "main" },
-    starter: { zh: "前菜", "zh-Hant": "前菜", fr: "entrée", es: "entrada", en: "starter" },
-    side:    { zh: "配菜", "zh-Hant": "配菜", fr: "accomp.", es: "acomp.", en: "side" },
-    drink:   { zh: "饮品", "zh-Hant": "飲品", fr: "boisson", es: "bebida", en: "drink" },
-    dessert: { zh: "甜点", "zh-Hant": "甜點", fr: "dessert", es: "postre", en: "dessert" },
-    combo:   { zh: "套餐", "zh-Hant": "套餐", fr: "combo", es: "combo", en: "combo" },
+    main:     { zh: "主菜", "zh-Hant": "主菜", fr: "plat", es: "plato", en: "main" },
+    starter:  { zh: "前菜", "zh-Hant": "前菜", fr: "entrée", es: "entrada", en: "starter" },
+    side:     { zh: "配菜", "zh-Hant": "配菜", fr: "accomp.", es: "acomp.", en: "side" },
+    drink:    { zh: "饮品", "zh-Hant": "飲品", fr: "boisson", es: "bebida", en: "drink" },
+    dessert:  { zh: "甜点", "zh-Hant": "甜點", fr: "dessert", es: "postre", en: "dessert" },
+    combo:    { zh: "套餐", "zh-Hant": "套餐", fr: "combo", es: "combo", en: "combo" },
+    sharing:  { zh: "分享", "zh-Hant": "分享", fr: "partage", es: "para compartir", en: "sharing" },
+    soup:     { zh: "汤品", "zh-Hant": "湯品", fr: "soupe", es: "sopa", en: "soup" },
+    pasta:    { zh: "意面", "zh-Hant": "義大利麵", fr: "pâtes", es: "pasta", en: "pasta" },
+    wine:     { zh: "葡萄酒", "zh-Hant": "葡萄酒", fr: "vin", es: "vino", en: "wine" },
+    cocktail: { zh: "鸡尾酒", "zh-Hant": "雞尾酒", fr: "cocktail", es: "cóctel", en: "cocktail" },
+    brunch:   { zh: "早午餐", "zh-Hant": "早午餐", fr: "brunch", es: "brunch", en: "brunch" },
   };
 
   function catSummary(lang: string): string {

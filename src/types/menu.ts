@@ -27,7 +27,13 @@ export type MenuCategory =
   | "side"
   | "dessert"
   | "drink"
-  | "combo";
+  | "combo"
+  | "sharing"
+  | "soup"
+  | "pasta"
+  | "wine"
+  | "cocktail"
+  | "brunch";
 
 export type Allergen =
   | "gluten"

@@ -12,6 +12,7 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { ApproveButton } from "@/components/admin/ApproveButton";
 import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
+import { AssignOwnerButton } from "@/components/admin/AssignOwnerButton";
 import { detectAdminLocale, getAdminDict, type AdminLocale } from "@/lib/admin-i18n";
 
 async function getLocale(): Promise<AdminLocale> {
@@ -45,7 +46,7 @@ export default async function AdminIndexPage() {
 
   // Founder sees global dashboard; owner sees their restaurant list
   if (founder) {
-    return <FounderDashboard locale={locale} />;
+    return <FounderDashboard locale={locale} founderId={session.user.id} />;
   }
 
   const restaurants = await getTenantsByOwnerId(session.user.id);
@@ -109,7 +110,7 @@ export default async function AdminIndexPage() {
 }
 
 /** Founder-only global dashboard — cross-tenant overview (FR40) */
-async function FounderDashboard({ locale }: { locale: AdminLocale }) {
+async function FounderDashboard({ locale, founderId }: { locale: AdminLocale; founderId: string }) {
   const t = getAdminDict(locale);
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -129,6 +130,18 @@ async function FounderDashboard({ locale }: { locale: AdminLocale }) {
 
   // Map tenant_id → name for the per-tenant table
   const tenantMap = new Map(allTenants.map((tn) => [tn.id, tn]));
+
+  // Eligible users for owner assignment: verified + approved
+  const eligibleUsers = usersWithTenants
+    .filter((u) => u.emailVerified && u.approved)
+    .map((u) => ({ id: u.id, name: u.name, email: u.email }));
+
+  // Build owner map: user ID → user info
+  const ownerMap = new Map(usersWithTenants.map((u) => [u.id, u]));
+
+  // A restaurant is "unowned" if its owner is the founder or the owner doesn't exist in the user list
+  const isUnowned = (ownerId: string) =>
+    ownerId === founderId || !ownerMap.has(ownerId);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
@@ -222,58 +235,88 @@ async function FounderDashboard({ locale }: { locale: AdminLocale }) {
         <div className="divide-y">
           {globalStats.perTenant.map((row) => {
             const tn = tenantMap.get(row.tenant_id);
+            const unowned = tn ? isUnowned(tn.owner_id) : false;
+            const owner = tn ? ownerMap.get(tn.owner_id) : undefined;
             return (
-              <Link
-                key={row.tenant_id}
-                href={`/admin/${tn?.slug ?? row.tenant_id}`}
-                className="group flex items-center justify-between px-4 py-3 hover:bg-muted"
-              >
-                <div>
-                  <p className="text-sm font-medium">
+              <div key={row.tenant_id} className="group flex items-center justify-between px-4 py-3 hover:bg-muted">
+                <div className="min-w-0 flex-1">
+                  <Link href={`/admin/${tn?.slug ?? row.tenant_id}`} className="text-sm font-medium hover:text-emerald-600">
                     {tn?.name ?? row.tenant_id}
-                  </p>
-                  {tn?.cuisine_type && (
-                    <p className="text-xs capitalize text-muted-foreground">
-                      {tn.cuisine_type.replace(/_/g, " ")}
-                    </p>
+                  </Link>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    {tn?.cuisine_type && (
+                      <span className="capitalize">{tn.cuisine_type.replace(/_/g, " ")}</span>
+                    )}
+                    {owner && !unowned && (
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-600 dark:text-emerald-400">
+                        {owner.name}
+                      </span>
+                    )}
+                    {unowned && (
+                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                        No owner
+                      </span>
+                    )}
+                  </div>
+                  {unowned && tn && (
+                    <div className="mt-1.5">
+                      <AssignOwnerButton tenantId={tn.id} tenantName={tn.name} eligibleUsers={eligibleUsers} />
+                    </div>
                   )}
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-semibold text-foreground">
                     {row.count} {t.scans.toLowerCase()}
                   </span>
-                  <span className="text-xs text-muted-foreground group-hover:text-emerald-600">
+                  <Link href={`/admin/${tn?.slug ?? row.tenant_id}`} className="text-xs text-muted-foreground hover:text-emerald-600">
                     {t.manage} →
-                  </span>
+                  </Link>
                 </div>
-              </Link>
+              </div>
             );
           })}
           {/* Show restaurants with zero scans */}
           {allTenants
             .filter((tn) => !globalStats.perTenant.some((r) => r.tenant_id === tn.id))
-            .map((tn) => (
-              <Link
-                key={tn.id}
-                href={`/admin/${tn.slug}`}
-                className="group flex items-center justify-between px-4 py-3 hover:bg-muted"
-              >
-                <div>
-                  <p className="text-sm font-medium">{tn.name}</p>
-                  {tn.cuisine_type && (
-                    <p className="text-xs capitalize text-muted-foreground">
-                      {tn.cuisine_type.replace(/_/g, " ")}
-                    </p>
-                  )}
+            .map((tn) => {
+              const unowned = isUnowned(tn.owner_id);
+              const owner = ownerMap.get(tn.owner_id);
+              return (
+                <div key={tn.id} className="group flex items-center justify-between px-4 py-3 hover:bg-muted">
+                  <div className="min-w-0 flex-1">
+                    <Link href={`/admin/${tn.slug}`} className="text-sm font-medium hover:text-emerald-600">
+                      {tn.name}
+                    </Link>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      {tn.cuisine_type && (
+                        <span className="capitalize">{tn.cuisine_type.replace(/_/g, " ")}</span>
+                      )}
+                      {owner && !unowned && (
+                        <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-600 dark:text-emerald-400">
+                          {owner.name}
+                        </span>
+                      )}
+                      {unowned && (
+                        <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                          No owner
+                        </span>
+                      )}
+                    </div>
+                    {unowned && (
+                      <div className="mt-1.5">
+                        <AssignOwnerButton tenantId={tn.id} tenantName={tn.name} eligibleUsers={eligibleUsers} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-muted-foreground">0 {t.scans.toLowerCase()}</span>
+                    <Link href={`/admin/${tn.slug}`} className="text-xs text-muted-foreground hover:text-emerald-600">
+                      {t.manage} →
+                    </Link>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">0 {t.scans.toLowerCase()}</span>
-                  <span className="text-xs text-muted-foreground group-hover:text-emerald-600">
-                    {t.manage} →
-                  </span>
-                </div>
-              </Link>
-            ))}
+              );
+            })}
           {allTenants.length === 0 && (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">
               {t.noRestaurantsYet}

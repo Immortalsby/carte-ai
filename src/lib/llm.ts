@@ -422,7 +422,7 @@ export async function extractMenuDraftWithLlm(input: {
   base64?: string;
 }) {
   const schemaInstruction = `Return only a RestaurantMenu JSON object with this exact TypeScript-compatible shape.
-IMPORTANT: Extract EVERY dish from the menu. Do NOT truncate or skip any items. Include all starters, mains, sides, desserts, drinks, and combos.
+IMPORTANT: Extract EVERY dish from the menu. Do NOT truncate or skip any items. Include all starters, mains, sides, desserts, drinks, combos, sharing plates, soups, pasta, wines, cocktails, and brunch items.
 Supported language codes: ${supportedLanguageCodes.join(", ")}.
 Every localized text field must include at least zh, fr and en. Add other supported language keys when you are confident; otherwise the app will fall back safely.
 {
@@ -439,7 +439,7 @@ Every localized text field must include at least zh, fr and en. Add other suppor
   "updatedAt": "ISO date string",
   "dishes": [{
     "id": "kebab-case-id",
-    "category": "starter|main|side|dessert|drink|combo",
+    "category": "starter|main|side|dessert|drink|combo|sharing|soup|pasta|wine|cocktail|brunch",
     "name": { "zh": "string", "fr": "string", "en": "string" },
     "description": { "zh": "string", "fr": "string", "en": "string" },
     "priceCents": 123,
@@ -598,7 +598,7 @@ Input: Raw text extracted from a menu image (may be in any language).
 Your tasks:
 1. Parse each dish: name, price, description (if present), section/category
 2. Translate names and descriptions into zh, fr, and en (keep the original language accurate, translate the others)
-3. Categorize: starter, main, side, dessert, drink, or combo
+3. Categorize: starter, main, side, dessert, drink, combo, sharing (tapas/shared plates), soup, pasta, wine, cocktail, or brunch
 4. Infer likely allergens from dish names and ingredients — use ["unknown"] if unsure
 5. Infer dietary tags where obvious (vegetarian, vegan, contains_pork, contains_beef, etc.)
 6. Generate a short appetizing description in each language if not provided
@@ -619,7 +619,7 @@ Return ONLY a valid JSON object with this exact shape:
   "updatedAt": "${new Date().toISOString()}",
   "dishes": [{
     "id": "kebab-case-id",
-    "category": "starter|main|side|dessert|drink|combo",
+    "category": "starter|main|side|dessert|drink|combo|sharing|soup|pasta|wine|cocktail|brunch",
     "name": { "zh": "中文名", "fr": "Nom français", "en": "English name" },
     "description": { "zh": "描述", "fr": "Description", "en": "Description" },
     "priceCents": 1850,

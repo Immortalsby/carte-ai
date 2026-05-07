@@ -9,6 +9,12 @@ export const categorySchema = z.enum([
   "dessert",
   "drink",
   "combo",
+  "sharing",
+  "soup",
+  "pasta",
+  "wine",
+  "cocktail",
+  "brunch",
 ]);
 export const allergenSchema = z.enum([
   "gluten",

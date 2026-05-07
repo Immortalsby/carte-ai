@@ -39,6 +39,15 @@ export async function deleteTenant(id: string) {
   await db.delete(tenants).where(eq(tenants.id, id));
 }
 
+export async function updateTenantOwner(id: string, ownerId: string) {
+  const result = await db
+    .update(tenants)
+    .set({ owner_id: ownerId, updated_at: new Date() })
+    .where(eq(tenants.id, id))
+    .returning();
+  return result[0];
+}
+
 export async function updateTenant(
   id: string,
   data: Partial<{

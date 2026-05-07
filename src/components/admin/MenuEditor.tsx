@@ -6,7 +6,10 @@ import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
 
-const categoryOrder: MenuCategory[] = ["combo", "starter", "main", "side", "dessert", "drink"];
+const categoryOrder: MenuCategory[] = [
+  "combo", "brunch", "sharing", "starter", "soup", "main", "pasta",
+  "side", "dessert", "drink", "wine", "cocktail",
+];
 
 interface MenuEditorProps {
   menu: RestaurantMenu;
@@ -23,6 +26,8 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
   const categoryLabels: Record<MenuCategory, string> = {
     starter: t.catStarter, main: t.catMain, side: t.catSide,
     dessert: t.catDessert, drink: t.catDrink, combo: t.catCombo,
+    sharing: tAny.catSharing, soup: tAny.catSoup, pasta: tAny.catPasta,
+    wine: tAny.catWine, cocktail: tAny.catCocktail, brunch: tAny.catBrunch,
   };
   const [menu, setMenu] = useState<RestaurantMenu>(initialMenu);
   const [editingDish, setEditingDish] = useState<string | null>(null);
@@ -396,9 +401,12 @@ function DishEditor({
   onUpdate: (updates: Partial<Dish>) => void;
 }) {
   const t = getAdminDict(locale);
+  const tAny = t as unknown as Record<string, string>;
   const categoryLabels: Record<MenuCategory, string> = {
     starter: t.catStarter, main: t.catMain, side: t.catSide,
     dessert: t.catDessert, drink: t.catDrink, combo: t.catCombo,
+    sharing: tAny.catSharing, soup: tAny.catSoup, pasta: tAny.catPasta,
+    wine: tAny.catWine, cocktail: tAny.catCocktail, brunch: tAny.catBrunch,
   };
   const { toast } = useToast();
   const [flagging, setFlagging] = useState(false);

@@ -12,15 +12,42 @@ const categoryLabels: Record<MenuCategory, Record<string, string>> = {
   dessert: { fr: "Desserts", en: "Desserts", zh: "甜点" },
   drink: { fr: "Boissons", en: "Drinks", zh: "饮品" },
   combo: { fr: "Formules", en: "Combos", zh: "套餐" },
+  sharing: { fr: "À partager", en: "Sharing", zh: "分享" },
+  soup: { fr: "Soupes", en: "Soups", zh: "汤品" },
+  pasta: { fr: "Pâtes", en: "Pasta", zh: "意面" },
+  wine: { fr: "Vins", en: "Wines", zh: "葡萄酒" },
+  cocktail: { fr: "Cocktails", en: "Cocktails", zh: "鸡尾酒" },
+  brunch: { fr: "Brunch", en: "Brunch", zh: "早午餐" },
 };
 
-const categoryOrder: MenuCategory[] = [
+const defaultCategoryOrder: MenuCategory[] = [
   "combo",
   "starter",
+  "soup",
   "main",
+  "pasta",
+  "sharing",
   "side",
   "dessert",
+  "brunch",
   "drink",
+  "wine",
+  "cocktail",
+];
+
+const drinksCategoryOrder: MenuCategory[] = [
+  "sharing",
+  "wine",
+  "cocktail",
+  "drink",
+  "combo",
+  "starter",
+  "soup",
+  "main",
+  "pasta",
+  "side",
+  "dessert",
+  "brunch",
 ];
 
 interface MenuBrowserProps {
@@ -29,11 +56,14 @@ interface MenuBrowserProps {
   restaurantName: string;
   cuisine?: string;
   tenantId?: string;
+  drinksMode?: boolean;
 }
 
-export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId }: MenuBrowserProps) {
+export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, drinksMode }: MenuBrowserProps) {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  const categoryOrder = drinksMode ? drinksCategoryOrder : defaultCategoryOrder;
 
   // Group dishes by category
   const grouped = categoryOrder
