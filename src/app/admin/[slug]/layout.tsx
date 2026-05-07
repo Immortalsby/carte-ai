@@ -9,6 +9,7 @@ import { AdminSidebarNav } from "@/components/admin/AdminSidebarNav";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
 import { SignOutButton } from "@/components/admin/SignOutButton";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
+import { TzCookie } from "@/components/admin/TzCookie";
 
 export default async function AdminLayout({
   children,
@@ -116,6 +117,7 @@ export default async function AdminLayout({
 
       {/* Main content */}
       <main className="flex-1 p-4 lg:p-6">{children}</main>
+      <TzCookie />
     </div>
   );
 }

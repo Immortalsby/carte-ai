@@ -25,10 +25,11 @@ export async function GET(
 
     const url = new URL(request.url);
     const days = parseInt(url.searchParams.get("days") ?? "30", 10);
+    const tz = url.searchParams.get("tz") || "Europe/Paris";
     const now = new Date();
     const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
-    const stats = await getDashboardStats(tenant.id, from, now);
+    const stats = await getDashboardStats(tenant.id, from, now, tz);
     return NextResponse.json(stats);
   } catch (error) {
     console.error("[API] analytics/stats error:", error);

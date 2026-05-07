@@ -14,6 +14,7 @@ import { ApproveButton } from "@/components/admin/ApproveButton";
 import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
 import { AssignOwnerButton } from "@/components/admin/AssignOwnerButton";
 import { detectAdminLocale, getAdminDict, type AdminLocale } from "@/lib/admin-i18n";
+import { TzCookie } from "@/components/admin/TzCookie";
 
 async function getLocale(): Promise<AdminLocale> {
   const cookieStore = await cookies();
@@ -112,12 +113,14 @@ export default async function AdminIndexPage() {
 /** Founder-only global dashboard — cross-tenant overview (FR40) */
 async function FounderDashboard({ locale, founderId }: { locale: AdminLocale; founderId: string }) {
   const t = getAdminDict(locale);
+  const cookieStore = await cookies();
+  const tz = cookieStore.get("tz")?.value || "Europe/Paris";
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   const [allTenants, globalStats, activeStats, llmUsage, usersWithTenants] = await Promise.all([
     getAllTenants(),
-    getGlobalStats(thirtyDaysAgo, now),
+    getGlobalStats(thirtyDaysAgo, now, tz),
     getActiveTenantsStats(thirtyDaysAgo, now),
     getGlobalLlmUsage(),
     getAllUsersWithTenants(),
@@ -145,6 +148,7 @@ async function FounderDashboard({ locale, founderId }: { locale: AdminLocale; fo
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
+      <TzCookie />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t.founderDashboardTitle}</h1>

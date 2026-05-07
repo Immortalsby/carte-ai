@@ -32,13 +32,14 @@ export default async function AdminDashboard({
   );
   const t = getAdminDict(locale);
 
+  const tz = cookieStore.get("tz")?.value || "Europe/Paris";
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const tenantSettings = (tenant.settings ?? {}) as Record<string, unknown>;
   const llmQuotaCalls = (tenantSettings.llm_quota_calls as number) || LLM_QUOTA_CALLS;
 
   const [stats, llmUsage, llmProviderStats] = await Promise.all([
-    getDashboardStats(tenant.id, thirtyDaysAgo, now),
+    getDashboardStats(tenant.id, thirtyDaysAgo, now, tz),
     founder ? getLlmUsage(tenant.id) : Promise.resolve({ call_count: 0, cost_cents: 0 }),
     founder ? getLlmProviderStats(tenant.id, thirtyDaysAgo, now) : Promise.resolve({ totalCount: 0, fallbackCount: 0, providerDistribution: [] }),
   ]);

@@ -65,7 +65,7 @@ export async function getActiveTenantsStats(from: Date, to: Date) {
 }
 
 /** Global stats across all tenants — for founder dashboard (FR40) */
-export async function getGlobalStats(from: Date, to: Date) {
+export async function getGlobalStats(from: Date, to: Date, tz = "Europe/Paris") {
   const scans = await db
     .select({ count: count() })
     .from(analytics_events)
@@ -103,7 +103,7 @@ export async function getGlobalStats(from: Date, to: Date) {
 
   const dailyScans = await db
     .select({
-      date: sql<string>`to_char(created_at, 'YYYY-MM-DD')`,
+      date: sql<string>`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`,
       count: count(),
     })
     .from(analytics_events)
@@ -114,8 +114,8 @@ export async function getGlobalStats(from: Date, to: Date) {
         lte(analytics_events.created_at, to),
       ),
     )
-    .groupBy(sql`to_char(created_at, 'YYYY-MM-DD')`)
-    .orderBy(sql`to_char(created_at, 'YYYY-MM-DD')`);
+    .groupBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`)
+    .orderBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`);
 
   // Per-tenant breakdown
   const perTenant = await db
@@ -151,6 +151,7 @@ export async function getDashboardStats(
   tenantId: string,
   from: Date,
   to: Date,
+  tz = "Europe/Paris",
 ) {
   const scans = await db
     .select({ count: count() })
@@ -225,7 +226,7 @@ export async function getDashboardStats(
   // Daily scan trend
   const dailyScans = await db
     .select({
-      date: sql<string>`to_char(created_at, 'YYYY-MM-DD')`,
+      date: sql<string>`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`,
       count: count(),
     })
     .from(analytics_events)
@@ -237,8 +238,8 @@ export async function getDashboardStats(
         lte(analytics_events.created_at, to),
       ),
     )
-    .groupBy(sql`to_char(created_at, 'YYYY-MM-DD')`)
-    .orderBy(sql`to_char(created_at, 'YYYY-MM-DD')`);
+    .groupBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`)
+    .orderBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`);
 
   // Culture match count (FR37)
   const cultureMatches = await db
@@ -269,7 +270,7 @@ export async function getDashboardStats(
   // Daily adoption trend (FR44)
   const dailyAdoptions = await db
     .select({
-      date: sql<string>`to_char(created_at, 'YYYY-MM-DD')`,
+      date: sql<string>`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`,
       total: count(),
       adopted: sql<number>`count(*) filter (where payload->>'adopted' = 'true')`,
     })
@@ -282,8 +283,8 @@ export async function getDashboardStats(
         lte(analytics_events.created_at, to),
       ),
     )
-    .groupBy(sql`to_char(created_at, 'YYYY-MM-DD')`)
-    .orderBy(sql`to_char(created_at, 'YYYY-MM-DD')`);
+    .groupBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`)
+    .orderBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`);
 
   // Dwell time distribution (FR45)
   const dwellDistribution = await db

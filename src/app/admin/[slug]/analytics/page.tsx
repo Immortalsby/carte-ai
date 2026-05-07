@@ -29,10 +29,11 @@ export default async function AnalyticsPage({
   );
   const t = getAdminDict(locale);
 
+  const tz = cookieStore.get("tz")?.value || "Europe/Paris";
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const [stats, llmProviderStats] = await Promise.all([
-    getDashboardStats(tenant.id, thirtyDaysAgo, now),
+    getDashboardStats(tenant.id, thirtyDaysAgo, now, tz),
     founder ? getLlmProviderStats(tenant.id, thirtyDaysAgo, now) : Promise.resolve({ totalCount: 0, fallbackCount: 0, providerDistribution: [] }),
   ]);
 
