@@ -1,0 +1,7 @@
+# CarteAI — https://carte-ai.link
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+
+Sitemap: https://carte-ai.link/sitemap.xml

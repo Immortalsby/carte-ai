@@ -1,0 +1,283 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --font-heading: var(--font-sans);
+  /* CarteAI cuisine-aware colors */
+  --color-carte-bg: var(--carte-bg);
+  --color-carte-surface: var(--carte-surface);
+  --color-carte-surface-hover: var(--carte-surface-hover);
+  --color-carte-primary: var(--carte-primary);
+  --color-carte-accent: var(--carte-accent);
+  --color-carte-glow: var(--carte-glow);
+  --color-carte-text: var(--carte-text);
+  --color-carte-text-muted: var(--carte-text-muted);
+  --color-carte-text-dim: var(--carte-text-dim);
+  --color-carte-border: var(--carte-border);
+  --color-carte-success: var(--carte-success);
+  --color-carte-warning: var(--carte-warning);
+  --color-carte-danger: var(--carte-danger);
+  --color-carte-confidence-high: var(--carte-confidence-high);
+  --color-carte-confidence-mid: var(--carte-confidence-mid);
+  --color-carte-confidence-low: var(--carte-confidence-low);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+button,
+a,
+input,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media print {
+  body {
+    background: #050507;
+  }
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  /* Landing-page aligned dark palette: #050507 base + emerald accent */
+  --background: #050507;
+  --foreground: rgba(255, 255, 255, 0.92);
+  --card: #0a0a12;
+  --card-foreground: rgba(255, 255, 255, 0.92);
+  --popover: #0a0a12;
+  --popover-foreground: rgba(255, 255, 255, 0.92);
+  --primary: #10b981;
+  --primary-foreground: #050507;
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: rgba(255, 255, 255, 0.85);
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: rgba(255, 255, 255, 0.5);
+  --accent: rgba(16, 185, 129, 0.12);
+  --accent-foreground: rgba(255, 255, 255, 0.92);
+  --destructive: #f87171;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #10b981;
+  --chart-1: #10b981;
+  --chart-2: #d4a574;
+  --chart-3: #7dd3fc;
+  --chart-4: #fcd34d;
+  --chart-5: #f87171;
+  --sidebar: #050507;
+  --sidebar-foreground: rgba(255, 255, 255, 0.85);
+  --sidebar-primary: #10b981;
+  --sidebar-primary-foreground: #050507;
+  --sidebar-accent: rgba(16, 185, 129, 0.12);
+  --sidebar-accent-foreground: rgba(255, 255, 255, 0.92);
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #10b981;
+}
+
+/* ─── CarteAI Design System: Cuisine Dynamic Color Themes ─── */
+
+:root {
+  /* Base warm-dark theme (default/fallback) */
+  --carte-bg: #0a0a0f;
+  --carte-surface: rgba(255, 255, 255, 0.06);
+  --carte-surface-hover: rgba(255, 255, 255, 0.10);
+  --carte-primary: #fcd34d;       /* amber-300 */
+  --carte-accent: #fed7aa;        /* orange-200 */
+  --carte-glow: rgba(251, 191, 36, 0.2); /* amber-400/20 */
+  --carte-text: rgba(255, 255, 255, 0.9);
+  --carte-text-muted: rgba(255, 255, 255, 0.6);
+  --carte-text-dim: rgba(255, 255, 255, 0.4);
+  --carte-border: rgba(255, 255, 255, 0.1);
+  --carte-success: #34d399;       /* emerald-400 */
+  --carte-warning: #fbbf24;       /* amber-400 */
+  --carte-danger: #f87171;        /* red-400 */
+  --carte-confidence-high: #6ee7b7; /* emerald-300 */
+  --carte-confidence-mid: #fcd34d;  /* amber-300 */
+  --carte-confidence-low: #fb923c;  /* orange-400 */
+}
+
+/* Chinese — 红灯笼、金色点缀 */
+[data-cuisine="chinese_restaurant"],
+[data-cuisine="chinese"] {
+  --carte-primary: #f87171;       /* red-400 */
+  --carte-accent: #fcd34d;        /* amber-300 */
+  --carte-glow: rgba(248, 113, 113, 0.2);
+}
+
+/* French — 法式蓝、奶油白 */
+[data-cuisine="french_restaurant"],
+[data-cuisine="french"] {
+  --carte-primary: #93c5fd;       /* blue-300 */
+  --carte-accent: #fef3c7;        /* amber-100 */
+  --carte-glow: rgba(147, 197, 253, 0.2);
+}
+
+/* Indian — 香料橙、姜黄金 */
+[data-cuisine="indian_restaurant"],
+[data-cuisine="indian"] {
+  --carte-primary: #fb923c;       /* orange-400 */
+  --carte-accent: #fde047;        /* yellow-300 */
+  --carte-glow: rgba(251, 146, 60, 0.2);
+}
+
+/* Italian — 橄榄绿、番茄红 */
+[data-cuisine="italian_restaurant"],
+[data-cuisine="italian"] {
+  --carte-primary: #34d399;       /* emerald-400 */
+  --carte-accent: #fca5a5;        /* red-300 */
+  --carte-glow: rgba(52, 211, 153, 0.2);
+}
+
+/* Japanese — 樱花粉、和风灰 */
+[data-cuisine="japanese_restaurant"],
+[data-cuisine="japanese"] {
+  --carte-primary: #fda4af;       /* rose-300 */
+  --carte-accent: #e2e8f0;        /* slate-200 */
+  --carte-glow: rgba(253, 164, 175, 0.2);
+}
+
+/* Korean — 辣红、清新蓝 */
+[data-cuisine="korean_restaurant"],
+[data-cuisine="korean"] {
+  --carte-primary: #fca5a5;       /* red-300 */
+  --carte-accent: #a5f3fc;        /* cyan-200 */
+  --carte-glow: rgba(252, 165, 165, 0.2);
+}
+
+/* Thai — 金色、热带绿 */
+[data-cuisine="thai_restaurant"],
+[data-cuisine="thai"] {
+  --carte-primary: #facc15;       /* yellow-400 */
+  --carte-accent: #6ee7b7;        /* emerald-300 */
+  --carte-glow: rgba(250, 204, 21, 0.2);
+}
+
+/* Mexican — 鲜绿、辣椒红 */
+[data-cuisine="mexican_restaurant"],
+[data-cuisine="mexican"] {
+  --carte-primary: #a3e635;       /* lime-400 */
+  --carte-accent: #f87171;        /* red-400 */
+  --carte-glow: rgba(163, 230, 53, 0.2);
+}
+
+/* Mediterranean — 地中海蓝、沙滩金 */
+[data-cuisine="mediterranean_restaurant"],
+[data-cuisine="mediterranean"] {
+  --carte-primary: #7dd3fc;       /* sky-300 */
+  --carte-accent: #fde68a;        /* amber-200 */
+  --carte-glow: rgba(125, 211, 252, 0.2);
+}
+
+/* Vietnamese — 薄荷绿、青柠 */
+[data-cuisine="vietnamese_restaurant"],
+[data-cuisine="vietnamese"] {
+  --carte-primary: #6ee7b7;       /* emerald-300 */
+  --carte-accent: #d9f99d;        /* lime-200 */
+  --carte-glow: rgba(110, 231, 183, 0.2);
+}
+
+/* ─── End Cuisine Themes ─── */
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

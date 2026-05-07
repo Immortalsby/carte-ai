@@ -1,0 +1,72 @@
+"use client";
+
+import { useState } from "react";
+import type { RestaurantMenu } from "@/types/menu";
+import type { AdminLocale } from "@/lib/admin-i18n";
+import { getAdminDict } from "@/lib/admin-i18n";
+import { MenuEditor } from "@/components/admin/MenuEditor";
+import { MenuImporter } from "@/components/admin/MenuImporter";
+
+interface MenuPageProps {
+  menu: RestaurantMenu | null;
+  slug: string;
+  version: number;
+  cuisine?: string;
+  locale?: AdminLocale;
+}
+
+export function MenuPage({ menu: initialMenu, slug, version, cuisine, locale = "en" }: MenuPageProps) {
+  const t = getAdminDict(locale);
+  const [menu, setMenu] = useState<RestaurantMenu | null>(initialMenu);
+  const [showImporter, setShowImporter] = useState(!initialMenu);
+
+  function handleImported(draft: RestaurantMenu) {
+    setMenu(draft);
+    setShowImporter(false);
+  }
+
+  // No menu and showing importer
+  if (showImporter) {
+    return (
+      <div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">{t.menuManagement}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t.importMenuDesc}</p>
+          </div>
+          {menu && (
+            <button
+              type="button"
+              onClick={() => setShowImporter(false)}
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              &larr; {t.menuManagement}
+            </button>
+          )}
+        </div>
+        <div className="mt-8">
+          <MenuImporter slug={slug} locale={locale} onImported={handleImported} />
+        </div>
+      </div>
+    );
+  }
+
+  // Has menu — show editor with re-import button
+  if (menu) {
+    return (
+      <div>
+        <MenuEditor
+          menu={menu}
+          slug={slug}
+          version={version}
+          cuisine={cuisine}
+          locale={locale}
+          onReImport={() => setShowImporter(true)}
+        />
+      </div>
+    );
+  }
+
+  // Fallback (shouldn't reach here)
+  return null;
+}

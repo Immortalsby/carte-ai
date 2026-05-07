@@ -1,0 +1,210 @@
+{
+  "restaurant": {
+    "id": "demo-restaurant",
+    "slug": "demo-bistro",
+    "name": "Demo Bistro",
+    "cuisine": "Fusion / International",
+    "city": "Paris",
+    "currency": "EUR",
+    "languages": ["fr", "en", "zh", "zh-Hant", "es", "it", "de", "pt", "ar", "ja", "ko", "ru", "tr", "nl", "pl", "uk", "ro", "vi", "th", "hi"],
+    "welcome": {
+      "zh": "告诉我你今天想怎么吃，我会直接推荐最合适的菜。",
+      "fr": "Dites-moi votre envie du moment, je vous recommande le bon choix.",
+      "en": "Tell me how you want to eat today, and I will recommend the right choice."
+    }
+  },
+  "updatedAt": "2026-05-04T00:00:00.000Z",
+  "dishes": [
+    {
+      "id": "chicken-bowl",
+      "category": "main",
+      "name": {
+        "zh": "鸡肉能量碗",
+        "fr": "Bowl au poulet",
+        "en": "Chicken Power Bowl"
+      },
+      "description": {
+        "zh": "烤鸡肉、米饭、蔬菜和轻酱汁，适合想吃饱但不想太油的人。",
+        "fr": "Poulet grillé, riz, légumes et sauce légère.",
+        "en": "Grilled chicken, rice, vegetables and light sauce."
+      },
+      "priceCents": 980,
+      "currency": "EUR",
+      "ingredients": ["chicken", "rice", "carrot", "cucumber", "light sauce"],
+      "allergens": ["soy"],
+      "dietaryTags": ["high_protein", "good_value", "popular"],
+      "caloriesKcal": 620,
+      "spiceLevel": 0,
+      "available": true,
+      "marginPriority": 2,
+      "portionScore": 3
+    },
+    {
+      "id": "veggie-wrap",
+      "category": "main",
+      "name": {
+        "zh": "素食卷饼",
+        "fr": "Wrap végétarien",
+        "en": "Vegetarian Wrap"
+      },
+      "description": {
+        "zh": "蔬菜、鹰嘴豆泥和薄饼，口味清爽，适合轻食。",
+        "fr": "Légumes, houmous et galette, option légère.",
+        "en": "Vegetables, hummus and flatbread, a light option."
+      },
+      "priceCents": 850,
+      "currency": "EUR",
+      "ingredients": ["flatbread", "hummus", "lettuce", "tomato", "cucumber"],
+      "allergens": ["gluten", "sesame"],
+      "dietaryTags": ["vegetarian", "light", "low_calorie", "good_value"],
+      "caloriesKcal": 480,
+      "spiceLevel": 0,
+      "available": true,
+      "marginPriority": 2,
+      "portionScore": 2
+    },
+    {
+      "id": "spicy-beef-noodles",
+      "category": "main",
+      "name": {
+        "zh": "香辣牛肉面",
+        "fr": "Nouilles au boeuf épicé",
+        "en": "Spicy Beef Noodles"
+      },
+      "description": {
+        "zh": "牛肉、面条和香辣汤底，适合喜欢重口味的人。",
+        "fr": "Boeuf, nouilles et bouillon épicé.",
+        "en": "Beef, noodles and spicy broth."
+      },
+      "priceCents": 1250,
+      "currency": "EUR",
+      "ingredients": ["beef", "noodles", "chili", "broth"],
+      "allergens": ["gluten", "soy"],
+      "dietaryTags": ["contains_beef", "spicy", "comfort_food", "signature"],
+      "caloriesKcal": 780,
+      "spiceLevel": 2,
+      "available": true,
+      "marginPriority": 3,
+      "portionScore": 3
+    },
+    {
+      "id": "green-soup",
+      "category": "starter",
+      "name": {
+        "zh": "香草青蔬汤",
+        "fr": "Velouté vert aux herbes",
+        "en": "Green Herb Soup"
+      },
+      "description": {
+        "zh": "温热青蔬汤，轻盈、不辣，适合想先垫一下的人。",
+        "fr": "Soupe verte chaude, légère et non épicée.",
+        "en": "Warm green vegetable soup, light and not spicy."
+      },
+      "priceCents": 590,
+      "currency": "EUR",
+      "ingredients": ["spinach", "zucchini", "herbs", "olive oil"],
+      "allergens": [],
+      "dietaryTags": ["vegetarian", "vegan", "light", "low_calorie"],
+      "caloriesKcal": 210,
+      "spiceLevel": 0,
+      "available": true,
+      "marginPriority": 2,
+      "portionScore": 1
+    },
+    {
+      "id": "sesame-tuna",
+      "category": "main",
+      "name": {
+        "zh": "芝麻金枪鱼饭",
+        "fr": "Riz au thon sésame",
+        "en": "Sesame Tuna Rice"
+      },
+      "description": {
+        "zh": "金枪鱼、米饭、牛油果和芝麻酱，适合想吃清爽海鲜的人。",
+        "fr": "Thon, riz, avocat et sauce au sésame.",
+        "en": "Tuna, rice, avocado and sesame sauce."
+      },
+      "priceCents": 1390,
+      "currency": "EUR",
+      "ingredients": ["tuna", "rice", "avocado", "sesame sauce"],
+      "allergens": ["fish", "sesame", "soy"],
+      "dietaryTags": ["contains_seafood", "high_protein", "light", "signature"],
+      "caloriesKcal": 690,
+      "spiceLevel": 0,
+      "available": true,
+      "marginPriority": 3,
+      "portionScore": 2
+    },
+    {
+      "id": "lemon-water",
+      "category": "drink",
+      "name": {
+        "zh": "柠檬水",
+        "fr": "Eau citronnée",
+        "en": "Lemon Water"
+      },
+      "description": {
+        "zh": "清爽柠檬水。",
+        "fr": "Boisson fraîche au citron.",
+        "en": "Fresh lemon drink."
+      },
+      "priceCents": 250,
+      "currency": "EUR",
+      "ingredients": ["water", "lemon"],
+      "allergens": [],
+      "dietaryTags": ["low_calorie", "light"],
+      "caloriesKcal": 40,
+      "spiceLevel": 0,
+      "available": true,
+      "marginPriority": 1,
+      "portionScore": 1
+    },
+    {
+      "id": "yuzu-cheesecake",
+      "category": "dessert",
+      "name": {
+        "zh": "柚子芝士蛋糕",
+        "fr": "Cheesecake au yuzu",
+        "en": "Yuzu Cheesecake"
+      },
+      "description": {
+        "zh": "柚子风味芝士蛋糕，酸甜平衡。",
+        "fr": "Cheesecake au yuzu, frais et acidulé.",
+        "en": "Yuzu cheesecake with a bright citrus finish."
+      },
+      "priceCents": 650,
+      "currency": "EUR",
+      "ingredients": ["cream cheese", "yuzu", "biscuit"],
+      "allergens": ["milk", "gluten", "eggs"],
+      "dietaryTags": ["popular", "comfort_food"],
+      "caloriesKcal": 420,
+      "spiceLevel": 0,
+      "available": true,
+      "marginPriority": 3,
+      "portionScore": 1
+    },
+    {
+      "id": "lunch-combo",
+      "category": "combo",
+      "name": {
+        "zh": "午餐经济套餐",
+        "fr": "Formule midi économique",
+        "en": "Budget Lunch Combo"
+      },
+      "description": {
+        "zh": "主菜加饮品，适合想控制预算的顾客。",
+        "fr": "Plat principal avec boisson, idéal pour petit budget.",
+        "en": "Main dish with drink, ideal for budget customers."
+      },
+      "priceCents": 990,
+      "currency": "EUR",
+      "ingredients": ["main dish", "drink"],
+      "allergens": ["unknown"],
+      "dietaryTags": ["good_value", "popular"],
+      "spiceLevel": 0,
+      "available": true,
+      "marginPriority": 3,
+      "portionScore": 3
+    }
+  ]
+}

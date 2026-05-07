@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280">
+  <rect width="720" height="280" fill="#050507"></rect>
+  <g transform="translate(140,140) scale(2.0)">
+    <path d="M0,-50 L2.4,-42 L10,-40 L2.4,-38 L0,-30 L-2.4,-38 L-10,-40 L-2.4,-42 Z" fill="#d4a574"></path>
+    <path d="M-36,16 A36,32 0 0 1 36,16" fill="none" stroke="#10b981" stroke-width="6" stroke-linecap="round"></path>
+    <path d="M-22,8 A22,16 0 0 1 -2,-12" fill="none" stroke="#10b981" stroke-width="2.4" stroke-linecap="round" opacity="0.55"></path>
+    <ellipse cx="0" cy="20" rx="44" ry="4.2" fill="#10b981"></ellipse>
+  </g>
+  <g transform="translate(310,160)">
+    <text x="0" y="0" font-family="Fraunces, Georgia, serif" font-weight="400" font-size="78" fill="#f0ece3" letter-spacing="-1.5">Carte</text>
+    <line x1="248" y1="-44" x2="248" y2="6" stroke="#d4a574" stroke-width="1.4"></line>
+    <text x="262" y="-6" font-family="ui-monospace, Menlo, monospace" font-weight="500" font-size="22" fill="#d4a574" letter-spacing="3">AI</text>
+    <text x="262" y="22" font-family="ui-monospace, Menlo, monospace" font-weight="400" font-size="9" fill="#7a7a82" letter-spacing="2.4">DINING · CONCIERGE</text>
+  </g>
+</svg>

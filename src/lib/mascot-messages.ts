@@ -1,0 +1,219 @@
+import type { LanguageCode } from "@/types/menu";
+import type { RestaurantMenu } from "@/types/menu";
+
+/* ─── Idle message pools ─── */
+const idle: Record<string, string[]> = {
+  en: [
+    "Not sure what to order? I can help!",
+    "Feeling adventurous today?",
+    "Tap me for personalized picks!",
+    "Hungry? Let me find something perfect.",
+    "First time here? I know the best dishes!",
+    "Let me be your dining guide today.",
+    "I've got some great suggestions for you!",
+    "Want me to pick something special?",
+  ],
+  fr: [
+    "Pas sûr de quoi prendre ? Je peux aider !",
+    "Envie de nouveauté aujourd'hui ?",
+    "Touchez-moi pour des suggestions perso !",
+    "Faim ? Je trouve le plat parfait pour vous.",
+    "Première visite ? Je connais les meilleurs plats !",
+    "Laissez-moi vous guider aujourd'hui.",
+    "J'ai de super suggestions pour vous !",
+    "Envie que je vous trouve quelque chose de spécial ?",
+  ],
+  zh: [
+    "不知道吃什么？我来帮你！",
+    "嘿嘿，今天想尝点新的吗？",
+    "点我，帮你推荐好吃的~",
+    "饿了吗？交给我就好！",
+    "第一次来？我知道哪些菜最好吃！",
+    "今天让我当你的美食向导吧~",
+    "我有几个超棒的推荐给你！",
+    "想让我帮你挑一道特别的？",
+  ],
+};
+
+/* ─── Flow step messages ─── */
+const flow: Record<string, Record<string, string>> = {
+  occasion: {
+    en: "What brings you here today?",
+    fr: "Qu'est-ce qui vous amène ?",
+    zh: "今天什么场合呀？",
+  },
+  mode: {
+    en: "Great! What are you in the mood for?",
+    fr: "Super ! Qu'est-ce qui vous ferait envie ?",
+    zh: "好的！你想吃什么类型的？",
+  },
+  preferences: {
+    en: "Tell me more about your preferences~",
+    fr: "Dites-m'en plus sur vos envies~",
+    zh: "告诉我更多你的偏好~",
+  },
+  loading: {
+    en: "Let me think...",
+    fr: "Laissez-moi réfléchir...",
+    zh: "让我想想...",
+  },
+  results: {
+    en: "Found it! Check these out~",
+    fr: "Trouvé ! Regardez ça~",
+    zh: "找到啦！看看这些~",
+  },
+  concerned: {
+    en: "Heads up: allergen info below",
+    fr: "Attention : info allergènes ci-dessous",
+    zh: "注意：有过敏原信息",
+  },
+};
+
+/* ─── Contextual message generators ─── */
+function timeOfDayMessage(hour: number, lang: string): string | null {
+  const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
+  if (hour >= 6 && hour < 11) {
+    return { en: "Good morning! Ready for a great meal?", fr: "Bonjour ! Prêt pour un bon repas ?", zh: "早上好！准备享用美食了吗？" }[l]!;
+  }
+  if (hour >= 11 && hour < 14) {
+    return { en: "Lunchtime! Let me help you decide.", fr: "C'est l'heure du déjeuner !", zh: "午饭时间到！让我帮你选~" }[l]!;
+  }
+  if (hour >= 18 && hour < 22) {
+    return { en: "Dinner time! How about something special?", fr: "L'heure du dîner ! Quelque chose de spécial ?", zh: "晚餐时间，来点好的？" }[l]!;
+  }
+  return null;
+}
+
+function popularDishMessage(dishName: string, lang: string): string {
+  const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
+  return {
+    en: `"${dishName}" is super popular here!`,
+    fr: `"${dishName}" est très populaire ici !`,
+    zh: `这道${dishName}超多人点的~`,
+  }[l]!;
+}
+
+function cuisineHintMessage(cuisineType: string, lang: string): string | null {
+  const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
+  const hints: Record<string, Record<string, string>> = {
+    chinese: { en: "Authentic Chinese cuisine — I'll help you pick!", fr: "Cuisine chinoise authentique — je vous guide !", zh: "正宗中餐，我帮你选？" },
+    japanese: { en: "Japanese delicacies await! Let me guide you.", fr: "Des délices japonais vous attendent !", zh: "日料推荐？交给我！" },
+    french: { en: "French gastronomy at its finest. Shall I suggest?", fr: "La gastronomie française à son meilleur. Un conseil ?", zh: "法餐精选，要我推荐吗？" },
+    italian: { en: "Buon appetito! Let me find your perfect dish.", fr: "Buon appetito ! Je vous trouve le plat parfait.", zh: "意大利美食，帮你挑？" },
+    korean: { en: "Korean flavors! Want some recommendations?", fr: "Saveurs coréennes ! Des suggestions ?", zh: "韩餐推荐？问我就对了！" },
+    thai: { en: "Thai cuisine! How spicy do you like it?", fr: "Cuisine thaï ! Vous aimez épicé ?", zh: "泰餐来啦！你能吃多辣？" },
+    vietnamese: { en: "Vietnamese flavors! Fresh and delicious.", fr: "Saveurs vietnamiennes ! Fraîches et délicieuses.", zh: "越南菜，清爽又好吃~" },
+    indian: { en: "Indian cuisine! Rich flavors await.", fr: "Cuisine indienne ! Des saveurs riches vous attendent.", zh: "印度菜，风味浓郁！" },
+    mexican: { en: "Mexican feast! Ready to explore?", fr: "Festin mexicain ! Prêt à explorer ?", zh: "墨西哥美食，准备好了吗？" },
+    mediterranean: { en: "Mediterranean gems! Let me help.", fr: "Trésors méditerranéens ! Je vous aide.", zh: "地中海风味，帮你选？" },
+  };
+  return hints[cuisineType]?.[l] ?? null;
+}
+
+/* ─── Intro messages (first visit) ─── */
+const intro: Record<string, { greeting: string; features: string[] ; gotIt: string; whatCanYouDo: string }> = {
+  en: {
+    greeting: "Hi! I'm Cloché, the AI concierge by CarteAI. I help you discover the best dishes on this menu — personalized just for you!",
+    features: [
+      "Recommend dishes based on your taste and mood",
+      "Filter out allergens to keep you safe",
+      "Suggest group meals for sharing with friends",
+      "Know the best picks for first-time visitors",
+      "Speak your language — English, French, Chinese and more",
+    ],
+    gotIt: "Got it!",
+    whatCanYouDo: "What can you do?",
+  },
+  fr: {
+    greeting: "Bonjour ! Je suis Cloché, le concierge IA de CarteAI. Je vous aide à découvrir les meilleurs plats de ce menu — rien que pour vous !",
+    features: [
+      "Recommander des plats selon vos goûts et envies",
+      "Filtrer les allergènes pour votre sécurité",
+      "Suggérer des repas de groupe à partager",
+      "Connaître les incontournables pour les nouveaux visiteurs",
+      "Parler votre langue — français, anglais, chinois et plus",
+    ],
+    gotIt: "Compris !",
+    whatCanYouDo: "Que sais-tu faire ?",
+  },
+  zh: {
+    greeting: "你好！我是 Cloché，CarteAI 的 AI 助手。我能帮你发现这份菜单上最好吃的菜——为你量身推荐！",
+    features: [
+      "根据你的口味和心情推荐菜品",
+      "过滤过敏原，保障你的安全",
+      "为朋友聚餐推荐拼桌菜单",
+      "第一次来？我知道哪些菜最值得点",
+      "支持多语言——中文、英语、法语等",
+    ],
+    gotIt: "我知道了",
+    whatCanYouDo: "你都会做什么？",
+  },
+};
+
+/* ─── Public API ─── */
+
+/** Pick an idle message, avoiding consecutive repeats */
+export function pickIdleMessage(
+  lang: LanguageCode,
+  lastIndex: number,
+): { message: string; index: number } {
+  const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
+  const pool = idle[l] ?? idle.en;
+  let idx: number;
+  do {
+    idx = Math.floor(Math.random() * pool.length);
+  } while (idx === lastIndex && pool.length > 1);
+  return { message: pool[idx], index: idx };
+}
+
+/** Pick a contextual message (time / cuisine / popular dish) or null */
+export function pickContextualMessage(
+  lang: LanguageCode,
+  menu: RestaurantMenu,
+  cuisineType?: string | null,
+): string | null {
+  const roll = Math.random();
+
+  // 40% time-based
+  if (roll < 0.4) {
+    const msg = timeOfDayMessage(new Date().getHours(), lang);
+    if (msg) return msg;
+  }
+
+  // 30% cuisine-based
+  if (roll < 0.7 && cuisineType) {
+    const msg = cuisineHintMessage(cuisineType, lang);
+    if (msg) return msg;
+  }
+
+  // 30% popular dish
+  const popular = menu.dishes.filter(
+    (d) => d.available && d.marginPriority && d.marginPriority >= 3,
+  );
+  if (popular.length > 0) {
+    const dish = popular[Math.floor(Math.random() * popular.length)];
+    const name =
+      dish.name[lang as keyof typeof dish.name] ||
+      dish.name.fr ||
+      dish.name.en ||
+      Object.values(dish.name)[0];
+    if (name) return popularDishMessage(name, lang);
+  }
+
+  return null;
+}
+
+/** Get the flow message for a given step */
+export function getFlowMessage(
+  step: string,
+  lang: LanguageCode,
+): string {
+  const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
+  return flow[step]?.[l] ?? flow[step]?.en ?? "";
+}
+
+/** Get intro messages for the first-visit onboarding */
+export function getIntroMessages(lang: LanguageCode) {
+  const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
+  return intro[l] ?? intro.en;
+}
