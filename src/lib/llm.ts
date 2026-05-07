@@ -169,10 +169,10 @@ async function createAnthropicMessage(content: string | AnthropicContentBlock[])
     },
     body: JSON.stringify({
       model,
-      max_tokens: 4000,
+      max_tokens: 16000,
       temperature: 0,
       system:
-        "You are CarteAI's menu ingestion engine. Extract restaurant menu data into strict JSON. Never invent allergens, calories, ingredients, prices, or dish names. If a field is missing, use safe placeholders and mark allergens as unknown when needed.",
+        "You are CarteAI's menu ingestion engine. Extract ALL dishes from the restaurant menu into strict JSON. Never skip dishes — include every single item. Never invent allergens, calories, ingredients, prices, or dish names. If a field is missing, use safe placeholders and mark allergens as unknown when needed.",
       messages: [{ role: "user", content }],
     }),
   });
@@ -213,7 +213,7 @@ async function createGeminiMessage(
       contents: [{ parts }],
       generationConfig: {
         temperature: 0,
-        maxOutputTokens: 8000,
+        maxOutputTokens: 32000,
         responseMimeType: "application/json",
       },
     }),
@@ -390,6 +390,7 @@ export async function extractMenuDraftWithLlm(input: {
   base64?: string;
 }) {
   const schemaInstruction = `Return only a RestaurantMenu JSON object with this exact TypeScript-compatible shape.
+IMPORTANT: Extract EVERY dish from the menu. Do NOT truncate or skip any items. Include all starters, mains, sides, desserts, drinks, and combos.
 Supported language codes: ${supportedLanguageCodes.join(", ")}.
 Every localized text field must include at least zh, fr and en. Add other supported language keys when you are confident; otherwise the app will fall back safely.
 {
@@ -435,7 +436,7 @@ If the source does not provide allergens, use ["unknown"]. If calories are absen
   if (input.base64) {
     const contentType = input.mimeType || "application/octet-stream";
     const visionSystemPrompt =
-      "You are CarteAI's menu ingestion engine. Extract restaurant menu data into strict JSON. Never invent allergens, calories, ingredients, prices, or dish names. If a field is missing, use safe placeholders and mark allergens as unknown when needed.";
+      "You are CarteAI's menu ingestion engine. Extract ALL dishes from the restaurant menu into strict JSON. Never skip dishes — include every single item on every page. Never invent allergens, calories, ingredients, prices, or dish names. If a field is missing, use safe placeholders and mark allergens as unknown when needed.";
     const prompt = `${schemaInstruction}\n\nFile name: ${input.fileName}\nMIME: ${input.mimeType}`;
 
     // Try Gemini first for vision tasks (images/PDFs)
