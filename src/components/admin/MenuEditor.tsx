@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { Dish, RestaurantMenu, MenuCategory, Allergen } from "@/types/menu";
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
@@ -37,7 +37,73 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
   const [pendingImageGen, setPendingImageGen] = useState<{ count: number; time: number } | null>(null);
   const [imageGenProgress, setImageGenProgress] = useState<{ current: number; total: number; failed: number } | null>(null);
   const imageGenAbortRef = useRef(false);
+  // Drag-to-move state
+  const [movingDishId, setMovingDishId] = useState<string | null>(null);
+  const [dragOverCat, setDragOverCat] = useState<MenuCategory | null>(null);
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const addMenuRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Close add-dish dropdown on outside click
+  useEffect(() => {
+    if (!showAddMenu) return;
+    function handleClick(e: MouseEvent) {
+      if (addMenuRef.current && !addMenuRef.current.contains(e.target as Node)) {
+        setShowAddMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showAddMenu]);
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressRef.current) {
+      clearTimeout(longPressRef.current);
+      longPressRef.current = null;
+    }
+    pointerStartRef.current = null;
+  }, []);
+
+  function handleDishPointerDown(dishId: string, e: React.PointerEvent) {
+    if (e.button !== 0 || editingDish) return;
+    // If already in move mode, clicking the same dish cancels
+    if (movingDishId) {
+      if (movingDishId === dishId) {
+        setMovingDishId(null);
+        setDragOverCat(null);
+      }
+      return;
+    }
+    pointerStartRef.current = { x: e.clientX, y: e.clientY };
+    longPressRef.current = setTimeout(() => {
+      setMovingDishId(dishId);
+      if (navigator.vibrate) navigator.vibrate(50);
+    }, 500);
+  }
+
+  function handleDishPointerMove(e: React.PointerEvent) {
+    if (!pointerStartRef.current || movingDishId) return;
+    const dx = Math.abs(e.clientX - pointerStartRef.current.x);
+    const dy = Math.abs(e.clientY - pointerStartRef.current.y);
+    if (dx > 8 || dy > 8) cancelLongPress();
+  }
+
+  function handleDishPointerUp() {
+    cancelLongPress();
+  }
+
+  function moveDishToCategory(cat: MenuCategory) {
+    if (!movingDishId) return;
+    const dish = menu.dishes.find((d) => d.id === movingDishId);
+    if (dish && dish.category !== cat) {
+      updateDish(movingDishId, { category: cat });
+      toast(`${tAny.movedTo || "Moved to"} ${categoryLabels[cat]}`, "success");
+    }
+    setMovingDishId(null);
+    setDragOverCat(null);
+  }
 
   function updateDish(dishId: string, updates: Partial<Dish>) {
     setMenu((prev) => ({
@@ -256,6 +322,37 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
               {t.reImportMenu}
             </button>
           )}
+          {/* Add Dish button with category picker */}
+          <div ref={addMenuRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setShowAddMenu(!showAddMenu)}
+              className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              {tAny.addNewDish || "Add Dish"}
+            </button>
+            {showAddMenu && (
+              <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-xl border border-border bg-card p-1.5 shadow-lg">
+                <p className="px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {tAny.pickCategory || "Pick a category"}
+                </p>
+                {categoryOrder.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => { addDish(cat); setShowAddMenu(false); }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-xs text-primary">+</span>
+                    {categoryLabels[cat]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             type="button"
             onClick={save}
@@ -266,6 +363,46 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
           </button>
         </div>
       </div>
+
+      {/* Category drop zone — shown during drag-to-move */}
+      {movingDishId && (
+        <div className="sticky top-0 z-30 -mx-4 mb-4 mt-4 border-b border-primary/20 bg-background/95 px-4 py-3 shadow-sm backdrop-blur-sm">
+          <p className="mb-2 text-center text-xs text-muted-foreground">
+            {tAny.moveDishHint || "Tap a category to move this dish"}
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {categoryOrder.map((cat) => {
+              const isCurrentCat = menu.dishes.find((d) => d.id === movingDishId)?.category === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => moveDishToCategory(cat)}
+                  onDragOver={(e) => { e.preventDefault(); setDragOverCat(cat); }}
+                  onDragLeave={() => dragOverCat === cat && setDragOverCat(null)}
+                  onDrop={(e) => { e.preventDefault(); moveDishToCategory(cat); }}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                    dragOverCat === cat
+                      ? "scale-110 bg-primary text-primary-foreground shadow-md"
+                      : isCurrentCat
+                        ? "bg-primary/20 text-primary ring-1 ring-primary/30"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {categoryLabels[cat]}
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={() => { setMovingDishId(null); setDragOverCat(null); }}
+            className="mx-auto mt-2 block text-xs text-muted-foreground hover:text-foreground"
+          >
+            {tAny.cancel || "Cancel"}
+          </button>
+        </div>
+      )}
 
       {/* Dish list by category */}
       <div className="mt-6 space-y-6">
@@ -279,7 +416,33 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
               <div className="space-y-2">
                 {items.map((dish) => (
                   <div key={dish.id}>
-                    <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div
+                      draggable={movingDishId === dish.id}
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = "move";
+                        e.dataTransfer.setData("text/plain", dish.id);
+                      }}
+                      onDragEnd={() => { setMovingDishId(null); setDragOverCat(null); }}
+                      onPointerDown={(e) => handleDishPointerDown(dish.id, e)}
+                      onPointerMove={handleDishPointerMove}
+                      onPointerUp={handleDishPointerUp}
+                      onPointerCancel={handleDishPointerUp}
+                      className={`flex items-center justify-between rounded-lg border p-4 transition-all select-none ${
+                        movingDishId === dish.id
+                          ? "scale-[0.97] opacity-50 ring-2 ring-primary"
+                          : movingDishId
+                            ? "opacity-70"
+                            : ""
+                      }`}
+                    >
+                      {/* Drag grip handle */}
+                      <div className="mr-2 flex shrink-0 cursor-grab touch-none items-center text-muted-foreground/40">
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                          <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
+                          <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+                          <circle cx="9" cy="19" r="1.5" /><circle cx="15" cy="19" r="1.5" />
+                        </svg>
+                      </div>
                       {/* Dish thumbnail */}
                       {dish.imageUrl ? (
                         <img
@@ -297,7 +460,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                       <button
                         type="button"
                         onClick={() =>
-                          setEditingDish(editingDish === dish.id ? null : dish.id)
+                          !movingDishId && setEditingDish(editingDish === dish.id ? null : dish.id)
                         }
                         className="min-w-0 flex-1 text-left"
                       >
@@ -349,9 +512,12 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
               <button
                 type="button"
                 onClick={() => addDish(category)}
-                className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-border py-2 text-sm text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/[0.02] py-2.5 text-sm text-primary/70 transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
               >
-                + {categoryLabels[category]}
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                {tAny.addNewDish || "Add Dish"}
               </button>
             </section>
           );
