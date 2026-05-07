@@ -336,6 +336,11 @@ textarea {
 
 /* ─── End Cuisine Themes ─── */
 
+@keyframes scan {
+  0%, 100% { transform: translateY(0); opacity: 0.3; }
+  50% { transform: translateY(3.75rem); opacity: 1; }
+}
+
 @keyframes slide-up {
   from {
     transform: translateY(100%);

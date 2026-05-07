@@ -514,3 +514,153 @@ If the source does not provide allergens, use ["unknown"]. If calories are absen
 
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// Two-step menu import: OCR (Gemini) → Structure (OpenAI)
+// ---------------------------------------------------------------------------
+
+/**
+ * Step 1: OCR only — extract raw text from menu image/PDF via Gemini Vision.
+ * Returns plain text with dish names, prices, and any visible info in the
+ * original language. No translation, no JSON structuring.
+ */
+export async function extractMenuOcr(input: {
+  fileName: string;
+  mimeType: string;
+  base64: string;
+}): Promise<string | null> {
+  const contentType = input.mimeType || "application/octet-stream";
+
+  const ocrPrompt = `You are an OCR engine for restaurant menus. Extract ALL text from this menu image exactly as written.
+
+Rules:
+- Preserve the original language(s) — do NOT translate anything
+- Keep dish names, prices, descriptions, section headers, and any notes
+- Format output as a clean list grouped by section/category if visible
+- Use this format for each item: "DISH NAME — PRICE" (e.g. "Couscous Royal — 18.50€")
+- Include any visible notes about allergens, ingredients, or dietary info
+- If a section header is visible (e.g. "Entrées", "Plats", "Desserts"), include it as a header line
+- Extract EVERY item, do not skip or truncate
+- Do NOT add any commentary or explanation — output only the extracted text`;
+
+  // For OCR, skip JSON response format — we want plain text
+  const apiKey = process.env.GEMINI_API_KEY;
+  const model = process.env.GEMINI_VISION_MODEL || "gemini-2.5-flash";
+
+  if (apiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: ocrPrompt }] },
+          contents: [{ parts: [
+            { text: `File: ${input.fileName}` },
+            { inlineData: { mimeType: contentType, data: input.base64 } },
+          ] }],
+          generationConfig: { temperature: 0, maxOutputTokens: 8000 },
+        }),
+      });
+      if (response.ok) {
+        const payload = await response.json();
+        const text = payload?.candidates?.[0]?.content?.parts
+          ?.map((p: { text?: string }) => p.text ?? "")
+          .join("") ?? "";
+        if (text) return text;
+      }
+    } catch {
+      // Fall through to Anthropic
+    }
+  }
+
+  // Fallback: Anthropic vision
+  const fileBlock: AnthropicContentBlock =
+    contentType === "application/pdf"
+      ? { type: "document", source: { type: "base64", media_type: contentType, data: input.base64 } }
+      : { type: "image", source: { type: "base64", media_type: contentType, data: input.base64 } };
+
+  return createAnthropicMessage([
+    { type: "text", text: ocrPrompt },
+    fileBlock,
+  ]);
+}
+
+/**
+ * Step 2: Structure OCR text into a RestaurantMenu JSON using OpenAI (text-only, fast).
+ * Translates to 3 languages, categorizes, infers allergens, generates descriptions.
+ */
+export async function structureMenuWithLlm(ocrText: string): Promise<RestaurantMenu | null> {
+  const structurePrompt = `You are CarteAI's menu structuring engine. Convert raw OCR text from a restaurant menu into a structured JSON object.
+
+Input: Raw text extracted from a menu image (may be in any language).
+
+Your tasks:
+1. Parse each dish: name, price, description (if present), section/category
+2. Translate names and descriptions into zh, fr, and en (keep the original language accurate, translate the others)
+3. Categorize: starter, main, side, dessert, drink, or combo
+4. Infer likely allergens from dish names and ingredients — use ["unknown"] if unsure
+5. Infer dietary tags where obvious (vegetarian, vegan, contains_pork, contains_beef, etc.)
+6. Generate a short appetizing description in each language if not provided
+7. Generate a kebab-case ID for each dish from its English name
+
+Return ONLY a valid JSON object with this exact shape:
+{
+  "restaurant": {
+    "id": "imported",
+    "slug": "imported",
+    "name": "Imported Menu",
+    "cuisine": "",
+    "city": "",
+    "currency": "EUR",
+    "languages": ${JSON.stringify(supportedLanguageCodes)},
+    "welcome": { "zh": "欢迎", "fr": "Bienvenue", "en": "Welcome" }
+  },
+  "updatedAt": "${new Date().toISOString()}",
+  "dishes": [{
+    "id": "kebab-case-id",
+    "category": "starter|main|side|dessert|drink|combo",
+    "name": { "zh": "中文名", "fr": "Nom français", "en": "English name" },
+    "description": { "zh": "描述", "fr": "Description", "en": "Description" },
+    "priceCents": 1850,
+    "currency": "EUR",
+    "ingredients": [],
+    "allergens": ["unknown"],
+    "dietaryTags": [],
+    "spiceLevel": 0,
+    "available": true,
+    "marginPriority": 1,
+    "portionScore": 1
+  }]
+}
+
+Allowed allergens: gluten, crustaceans, eggs, fish, peanuts, soy, milk, nuts, celery, mustard, sesame, sulphites, lupin, molluscs, alcohol, unknown.
+Allowed dietaryTags: vegetarian, vegan, halal_possible, contains_pork, contains_beef, contains_seafood, high_protein, low_calorie, healthy, spicy, signature, popular, good_value, light, comfort_food.
+Prices must be in cents (e.g. 18.50€ = 1850). If no currency symbol, assume EUR.`;
+
+  // Try OpenAI first (fast for text-only tasks)
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey) {
+    try {
+      const client = new OpenAI({ apiKey: openaiKey });
+      const response = await client.responses.create({
+        model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+        input: [
+          { role: "system", content: structurePrompt },
+          { role: "user", content: `Here is the raw OCR text from the menu:\n\n${ocrText}` },
+        ],
+      });
+      const text = response.output_text;
+      if (text) return JSON.parse(stripJson(text)) as RestaurantMenu;
+    } catch {
+      // Fall through to Anthropic
+    }
+  }
+
+  // Fallback: Anthropic
+  const text = await createAnthropicMessage(
+    `${structurePrompt}\n\nHere is the raw OCR text from the menu:\n\n${ocrText}`,
+  );
+  if (!text) return null;
+  return JSON.parse(stripJson(text)) as RestaurantMenu;
+}

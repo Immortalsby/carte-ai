@@ -19,6 +19,7 @@ interface MenuEditorProps {
 
 export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale = "en", onReImport }: MenuEditorProps) {
   const t = getAdminDict(locale);
+  const tAny = t as unknown as Record<string, string>;
   const categoryLabels: Record<MenuCategory, string> = {
     starter: t.catStarter, main: t.catMain, side: t.catSide,
     dessert: t.catDessert, drink: t.catDrink, combo: t.catCombo,
@@ -351,6 +352,26 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
           );
         })}
       </div>
+
+      {/* Bottom publish bar — sticky reminder */}
+      {!saved && (
+        <div className="sticky bottom-0 mt-6 flex items-center justify-between rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 shadow-md dark:border-amber-700 dark:bg-amber-900/30">
+          <div className="flex items-center gap-2">
+            <span className="text-amber-600 dark:text-amber-400">&#9888;</span>
+            <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+              {tAny.unpublishedWarning || "You have unpublished changes"}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {saving ? t.publishing : t.publishChanges}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

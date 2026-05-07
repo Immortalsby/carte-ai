@@ -54,6 +54,7 @@ const dict = {
     addDrink: "+ Add drink",
     addCombo: "+ Add combo",
     noMenuYet: "No menu yet. Upload a menu to get started.",
+    unpublishedWarning: "You have unpublished changes — don't forget to publish!",
     noAllergensListed: "No allergens listed",
     generatingImages: "Generating images...",
     imagesGenerated: "images generated",
@@ -303,6 +304,12 @@ const dict = {
     addMoreFiles: "Add More Files",
     mergeHint: "Each file is analyzed separately and results are merged. Duplicate dishes are automatically removed.",
 
+    // Two-step import
+    importStep1: "Reading menu...",
+    importStep1Desc: "AI is scanning the image to extract text",
+    importStep2: "Building menu...",
+    importStep2Desc: "Translating, categorizing and structuring dishes",
+
     // Restaurant creation
     createRestaurant: "Create Restaurant",
     createRestaurantDesc: "Set up your restaurant on CarteAI",
@@ -426,6 +433,7 @@ const dict = {
     addDrink: "+ Ajouter une boisson",
     addCombo: "+ Ajouter un combo",
     noMenuYet: "Pas encore de menu. Importez un menu pour commencer.",
+    unpublishedWarning: "Vous avez des modifications non publiées — n'oubliez pas de publier !",
     noAllergensListed: "Aucun allergène listé",
     generatingImages: "Génération des images...",
     imagesGenerated: "images générées",
@@ -667,6 +675,11 @@ const dict = {
     addMoreFiles: "Ajouter des fichiers",
     mergeHint: "Chaque fichier est analysé séparément et les résultats sont fusionnés. Les doublons sont supprimés automatiquement.",
 
+    importStep1: "Lecture du menu...",
+    importStep1Desc: "L'IA scanne l'image pour extraire le texte",
+    importStep2: "Construction du menu...",
+    importStep2Desc: "Traduction, catégorisation et structuration des plats",
+
     // Restaurant creation
     createRestaurant: "Créer un restaurant",
     createRestaurantDesc: "Configurez votre restaurant sur CarteAI",
@@ -787,6 +800,7 @@ const dict = {
     addDrink: "+ 添加饮品",
     addCombo: "+ 添加套餐",
     noMenuYet: "还没有菜单。上传菜单以开始使用。",
+    unpublishedWarning: "菜单有未发布的更改，别忘了点击发布！",
     noAllergensListed: "未标注过敏原",
     generatingImages: "正在生成图片...",
     imagesGenerated: "张图片已生成",
@@ -1027,6 +1041,11 @@ const dict = {
     startImport: "开始导入",
     addMoreFiles: "继续添加",
     mergeHint: "每个文件单独分析后合并结果，重复菜品会自动去除。",
+
+    importStep1: "正在识别菜单...",
+    importStep1Desc: "AI 正在扫描图片提取文字",
+    importStep2: "正在生成菜单...",
+    importStep2Desc: "翻译、分类、整理菜品信息",
 
     // Restaurant creation
     createRestaurant: "创建餐厅",
