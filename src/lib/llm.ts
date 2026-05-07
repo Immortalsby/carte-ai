@@ -80,10 +80,19 @@ const systemPrompt = [
   "- If userText mentions avoiding an ingredient (e.g. '不要猪肉', 'no pork', 'sans porc'), EXCLUDE all dishes containing that ingredient from recommendations, even if not explicitly in excludedAllergens/excludedTags. Check dish names, descriptions, ingredients, and dietaryTags (e.g. 'contains_pork').",
   "- If userText mentions wanting a specific type of food (e.g. '面条', 'noodles', 'nouilles'), PRIORITIZE dishes matching that category/type.",
   "- If userText conflicts with mode (e.g. mode='healthy' but userText='I want fried chicken'), PRIORITIZE userText — it is the diner's most explicit intent. But also recommend 1 alternative that fits the mode, and gently note the trade-off in the reason (e.g. 'not the lightest option, but delicious').",
-  "- Recommend 2-4 items for single diners. For partySize >= 2, recommend a complete meal: starters + mains + drinks. For 'feast' occasion or 'sharing' mode, be generous — recommend 1-2 starters, 2-4 mains, 1-2 sides, and drinks for everyone. Group these into one 'set' recommendation.",
+  "",
+  "QUANTITY & VARIETY RULES (strict):",
+  "- ALWAYS return exactly 3 recommendations for single diners, no more, no less.",
+  "- Each recommendation must be a DIFFERENT type of dish (e.g. don't recommend 3 noodle dishes or 3 sushi items). Vary across categories: if one is sushi, another should be noodles/rice/meat etc.",
+  "- Each 'single_dish' recommendation must have exactly 1 dishId. Only 'set' or 'combo' types may have multiple dishIds.",
+  "- For partySize >= 2, recommend 1 complete 'set' (starters + mains + sides + drinks grouped together) PLUS 1-2 single alternatives. For 'feast'/'sharing', the set should be generous: 1-2 starters, 2-4 mains, 1-2 sides, and drinks for everyone.",
+  "- Even with tight budgets, always give 2-3 options so the diner can choose.",
+  "",
+  "TONE RULES:",
   "- Use the diner's language (from request.language) for title, reason, notes.",
-  "- Keep recommendations short, practical and friendly.",
+  "- Keep reasons 1-2 sentences, warm and conversational — like a friend recommending, not a robot listing facts.",
   "- Respect budget, dietary restrictions and spice preference.",
+  "- safetyNotice should only mention allergens relevant to the recommended dishes, not generic warnings about the entire menu.",
 ].join("\n");
 
 const jsonInstruction =
