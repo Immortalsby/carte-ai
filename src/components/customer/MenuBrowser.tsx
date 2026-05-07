@@ -50,7 +50,7 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId }:
   return (
     <>
       {/* Category tabs — sticky */}
-      <nav className="sticky top-0 z-10 -mx-4 overflow-x-auto px-4 py-2 backdrop-blur-md" style={{ backgroundColor: "color-mix(in srgb, var(--carte-bg) 90%, transparent)" }}>
+      <nav className="sticky top-0 z-10 -mx-4 overflow-x-auto px-4 py-2 backdrop-blur-sm" style={{ backgroundColor: "color-mix(in srgb, var(--carte-bg) 96%, transparent)" }}>
         <div className="flex gap-2">
           {grouped.map(({ category }) => (
             <button

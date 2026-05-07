@@ -117,36 +117,22 @@ export function DishCard({ dish, lang, cuisine, tenantId, onTap }: DishCardProps
           <p className="mt-0.5 line-clamp-2 text-xs text-carte-text-muted">{desc}</p>
         )}
 
-        {dish.allergens.length > 0 && (
+        {/* Show concrete allergens as emoji chips; show a subtle hint when only "unknown" */}
+        {dish.allergens.filter((a) => a !== "unknown").length > 0 ? (
           <div className="mt-1 flex items-center gap-0.5">
-            {dish.allergens.map((a) => (
-              <span
-                key={a}
-                className="text-xs"
-                title={a}
-                style={
-                  a === "unknown"
-                    ? {
-                        backgroundColor: "color-mix(in srgb, var(--carte-warning) 20%, transparent)",
-                        borderRadius: "9999px",
-                        padding: "1px 4px",
-                      }
-                    : undefined
-                }
-              >
-                {allergenEmoji[a]}
-              </span>
-            ))}
-            {dish.allergens.includes("unknown") && (
-              <span
-                className="text-[9px] font-medium"
-                style={{ color: "var(--carte-warning)" }}
-              >
-                {"\u26a0\ufe0f"}
-              </span>
-            )}
+            {dish.allergens
+              .filter((a) => a !== "unknown")
+              .map((a) => (
+                <span key={a} className="text-xs" title={a}>
+                  {allergenEmoji[a]}
+                </span>
+              ))}
           </div>
-        )}
+        ) : dish.allergens.includes("unknown") ? (
+          <p className="mt-1 text-[10px] text-carte-text-dim">
+            {lang === "zh" ? "过敏原信息请咨询店员" : lang === "fr" ? "Allergènes : veuillez demander" : "Allergens: please ask staff"}
+          </p>
+        ) : null}
       </div>
 
       <span className="shrink-0 text-sm font-bold tabular-nums text-carte-primary">

@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { _previewWelcomeEmail, _previewAdminEmail, _previewPasswordResetEmail, _previewVerificationEmail } from "./email-preview";
+import { _previewWelcomeEmail, _previewAdminEmail, _previewPasswordResetEmail, _previewVerificationEmail, _previewAccountActivatedEmail } from "./email-preview";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -57,6 +57,23 @@ export async function sendAdminNewUserNotification(user: {
     to: ADMIN_EMAIL,
     subject: `[CarteAI] New registration: ${user.name.replace(/[\r\n]/g, "").slice(0, 50)}`,
     html: _previewAdminEmail(user),
+  });
+}
+
+/**
+ * Send an account-activated notification when admin approves a user.
+ */
+export async function sendAccountActivatedEmail(user: {
+  name: string;
+  email: string;
+}) {
+  if (!process.env.RESEND_API_KEY) return;
+
+  await resend.emails.send({
+    from: FROM_HELLO,
+    to: user.email,
+    subject: "Your CarteAI account is activated! / Votre compte est activé ! / 您的账户已激活！",
+    html: _previewAccountActivatedEmail(user),
   });
 }
 

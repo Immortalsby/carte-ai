@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { isFounder } from "@/lib/roles";
@@ -12,6 +12,16 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { ApproveButton } from "@/components/admin/ApproveButton";
 import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
+import { detectAdminLocale, getAdminDict, type AdminLocale } from "@/lib/admin-i18n";
+
+async function getLocale(): Promise<AdminLocale> {
+  const cookieStore = await cookies();
+  const headerStore = await headers();
+  return detectAdminLocale(
+    cookieStore.get("admin_locale")?.value,
+    headerStore.get("accept-language"),
+  );
+}
 
 export default async function AdminIndexPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -30,9 +40,12 @@ export default async function AdminIndexPage() {
     }
   }
 
+  const locale = await getLocale();
+  const t = getAdminDict(locale);
+
   // Founder sees global dashboard; owner sees their restaurant list
   if (founder) {
-    return <FounderDashboard />;
+    return <FounderDashboard locale={locale} />;
   }
 
   const restaurants = await getTenantsByOwnerId(session.user.id);
@@ -45,26 +58,26 @@ export default async function AdminIndexPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-12">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">My Restaurants</h1>
+        <h1 className="text-2xl font-bold">{t.myRestaurants}</h1>
         <Link
           href="/admin/new"
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          + Add Restaurant
+          {t.addRestaurant}
         </Link>
       </div>
 
       {restaurants.length === 0 ? (
         <div className="mt-16 text-center">
-          <p className="text-lg text-muted-foreground">No restaurants yet</p>
+          <p className="text-lg text-muted-foreground">{t.noRestaurantsYet}</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Create your first restaurant to get started with CarteAI.
+            {t.noRestaurantsDesc}
           </p>
           <Link
             href="/admin/new"
             className="mt-6 inline-block rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Create Restaurant
+            {t.createRestaurant}
           </Link>
         </div>
       ) : (
@@ -96,7 +109,8 @@ export default async function AdminIndexPage() {
 }
 
 /** Founder-only global dashboard — cross-tenant overview (FR40) */
-async function FounderDashboard() {
+async function FounderDashboard({ locale }: { locale: AdminLocale }) {
+  const t = getAdminDict(locale);
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
@@ -114,15 +128,15 @@ async function FounderDashboard() {
   }));
 
   // Map tenant_id → name for the per-tenant table
-  const tenantMap = new Map(allTenants.map((t) => [t.id, t]));
+  const tenantMap = new Map(allTenants.map((tn) => [tn.id, tn]));
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Founder Dashboard</h1>
+          <h1 className="text-2xl font-bold">{t.founderDashboardTitle}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Global overview &middot; Last 30 days
+            {t.globalOverview} &middot; {t.last30Days}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -130,7 +144,7 @@ async function FounderDashboard() {
             href="/admin/new"
             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            + New Restaurant
+            {t.newRestaurant}
           </Link>
           <span className="rounded-full bg-purple-500/15 px-3 py-1 text-xs font-medium text-purple-700 dark:text-purple-400">
             Founder
@@ -140,36 +154,36 @@ async function FounderDashboard() {
 
       {/* Global KPIs */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <GCard label="Total Restaurants" value={allTenants.length} />
-        <GCard label="Total Scans" value={globalStats.scans} />
-        <GCard label="Recommendations" value={globalStats.recommendations} />
+        <GCard label={t.totalRestaurants} value={allTenants.length} />
+        <GCard label={t.totalScans} value={globalStats.scans} />
+        <GCard label={t.recommendations} value={globalStats.recommendations} />
         <GCard
-          label="Adoption Rate"
+          label={t.adoptionRate}
           value={`${(globalStats.adoptionRate * 100).toFixed(1)}%`}
-          subtitle={`${globalStats.adoptions} adoptions`}
+          subtitle={`${globalStats.adoptions} ${t.adoptions.toLowerCase()}`}
         />
       </div>
 
       {/* Business Health + LLM */}
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <GCard label="DAU (Restaurants)" value={activeStats.dau} />
-        <GCard label="WAU (Restaurants)" value={activeStats.wau} />
+        <GCard label={t.dauRestaurants} value={activeStats.dau} />
+        <GCard label={t.wauRestaurants} value={activeStats.wau} />
         <GCard
-          label="Avg Scans / Restaurant"
+          label={t.avgScansPerRestaurant}
           value={activeStats.avgDailyScansPerTenant}
         />
         <GCard
-          label="LLM Cost (month)"
+          label={t.llmCostMonth}
           value={`$${(llmUsage.cost_cents / 100).toFixed(2)}`}
           subtitle={`${llmUsage.call_count} calls · ${llmUsage.token_count} tokens`}
         />
       </div>
 
-      {/* Daily scan trend (simple table — no client chart dependency) */}
+      {/* Daily scan trend */}
       {dailyData.length > 0 && (
         <div className="mt-6 rounded-xl border border-border bg-card p-4 shadow-sm">
           <h3 className="text-sm font-semibold text-foreground">
-            Daily Scans (last 30 days)
+            {t.dailyScans30}
           </h3>
           <div className="mt-3 flex h-32 items-end gap-px">
             {dailyData.map((d) => {
@@ -196,40 +210,40 @@ async function FounderDashboard() {
       <div className="mt-6 rounded-xl border border-border bg-card shadow-sm">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h3 className="text-sm font-semibold text-foreground">
-            Restaurants ({allTenants.length})
+            {t.restaurants} ({allTenants.length})
           </h3>
           <Link
             href="/admin/new"
             className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
           >
-            + Add
+            {t.add}
           </Link>
         </div>
         <div className="divide-y">
           {globalStats.perTenant.map((row) => {
-            const t = tenantMap.get(row.tenant_id);
+            const tn = tenantMap.get(row.tenant_id);
             return (
               <Link
                 key={row.tenant_id}
-                href={`/admin/${t?.slug ?? row.tenant_id}`}
+                href={`/admin/${tn?.slug ?? row.tenant_id}`}
                 className="group flex items-center justify-between px-4 py-3 hover:bg-muted"
               >
                 <div>
                   <p className="text-sm font-medium">
-                    {t?.name ?? row.tenant_id}
+                    {tn?.name ?? row.tenant_id}
                   </p>
-                  {t?.cuisine_type && (
+                  {tn?.cuisine_type && (
                     <p className="text-xs capitalize text-muted-foreground">
-                      {t.cuisine_type.replace(/_/g, " ")}
+                      {tn.cuisine_type.replace(/_/g, " ")}
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-semibold text-foreground">
-                    {row.count} scans
+                    {row.count} {t.scans.toLowerCase()}
                   </span>
                   <span className="text-xs text-muted-foreground group-hover:text-emerald-600">
-                    Manage →
+                    {t.manage} →
                   </span>
                 </div>
               </Link>
@@ -237,32 +251,32 @@ async function FounderDashboard() {
           })}
           {/* Show restaurants with zero scans */}
           {allTenants
-            .filter((t) => !globalStats.perTenant.some((r) => r.tenant_id === t.id))
-            .map((t) => (
+            .filter((tn) => !globalStats.perTenant.some((r) => r.tenant_id === tn.id))
+            .map((tn) => (
               <Link
-                key={t.id}
-                href={`/admin/${t.slug}`}
+                key={tn.id}
+                href={`/admin/${tn.slug}`}
                 className="group flex items-center justify-between px-4 py-3 hover:bg-muted"
               >
                 <div>
-                  <p className="text-sm font-medium">{t.name}</p>
-                  {t.cuisine_type && (
+                  <p className="text-sm font-medium">{tn.name}</p>
+                  {tn.cuisine_type && (
                     <p className="text-xs capitalize text-muted-foreground">
-                      {t.cuisine_type.replace(/_/g, " ")}
+                      {tn.cuisine_type.replace(/_/g, " ")}
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">0 scans</span>
+                  <span className="text-sm text-muted-foreground">0 {t.scans.toLowerCase()}</span>
                   <span className="text-xs text-muted-foreground group-hover:text-emerald-600">
-                    Manage →
+                    {t.manage} →
                   </span>
                 </div>
               </Link>
             ))}
           {allTenants.length === 0 && (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-              No restaurants yet
+              {t.noRestaurantsYet}
             </p>
           )}
         </div>
@@ -272,19 +286,19 @@ async function FounderDashboard() {
       <div className="mt-6 rounded-xl border border-border bg-card shadow-sm">
         <div className="border-b border-border px-4 py-3">
           <h3 className="text-sm font-semibold text-foreground">
-            Users ({usersWithTenants.length})
+            {t.users} ({usersWithTenants.length})
           </h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground">
               <tr>
-                <th className="px-4 py-2 font-medium">User</th>
-                <th className="px-4 py-2 font-medium">Email</th>
-                <th className="px-4 py-2 font-medium">Status</th>
-                <th className="px-4 py-2 font-medium">Restaurant</th>
-                <th className="px-4 py-2 font-medium">Registered</th>
-                <th className="px-4 py-2 font-medium">Action</th>
+                <th className="px-4 py-2 font-medium">{t.userCol}</th>
+                <th className="px-4 py-2 font-medium">{t.emailCol}</th>
+                <th className="px-4 py-2 font-medium">{t.statusCol}</th>
+                <th className="px-4 py-2 font-medium">{t.restaurantCol}</th>
+                <th className="px-4 py-2 font-medium">{t.registeredCol}</th>
+                <th className="px-4 py-2 font-medium">{t.actionCol}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -296,20 +310,20 @@ async function FounderDashboard() {
                     <div className="flex flex-col gap-1">
                       {u.emailVerified ? (
                         <span className="inline-block w-fit rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                          Email verified
+                          {t.emailVerified}
                         </span>
                       ) : (
                         <span className="inline-block w-fit rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
-                          Email unverified
+                          {t.emailUnverified}
                         </span>
                       )}
                       {u.approved ? (
                         <span className="inline-block w-fit rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                          Approved
+                          {t.approved}
                         </span>
                       ) : (
                         <span className="inline-block w-fit rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-medium text-red-600 dark:text-red-400">
-                          Pending approval
+                          {t.pendingApproval}
                         </span>
                       )}
                     </div>
@@ -326,7 +340,7 @@ async function FounderDashboard() {
                         </Link>
                       ))
                     ) : (
-                      <span className="text-xs text-muted-foreground">No restaurant</span>
+                      <span className="text-xs text-muted-foreground">{t.noRestaurant}</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-xs text-muted-foreground">

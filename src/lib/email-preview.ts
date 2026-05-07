@@ -392,6 +392,84 @@ export function _previewVerificationEmail(data: {
   `);
 }
 
+export function _previewAccountActivatedEmail(user: { name: string }) {
+  return emailShell(`
+    <!-- Logo mark -->
+    <tr><td align="center" style="padding-bottom:8px;">
+      <img src="${LOGO_URL}" alt="CarteAI" width="72" height="72" style="display:block;" />
+    </td></tr>
+
+    <!-- Wordmark -->
+    <tr><td align="center" style="padding-bottom:6px;">
+      <span style="font-family:Georgia,'Times New Roman',serif;font-size:36px;color:${C.paper};letter-spacing:-0.5px;">Carte</span><span style="font-family:'Courier New',Courier,monospace;font-size:18px;color:${C.gold};letter-spacing:2px;position:relative;top:-4px;margin-left:4px;">AI</span>
+    </td></tr>
+    <tr><td align="center" style="padding-bottom:32px;">
+      <span style="font-family:'Courier New',Courier,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:${C.muted};">DINING &middot; CONCIERGE</span>
+    </td></tr>
+
+    <!-- Gold divider -->
+    <tr><td style="padding:0 60px 32px;">
+      <div style="height:1px;background:linear-gradient(90deg,transparent,${C.gold},transparent);"></div>
+    </td></tr>
+
+    <!-- Trilingual heading -->
+    <tr><td align="center" style="padding-bottom:8px;">
+      <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:26px;color:${C.paper};letter-spacing:-0.3px;">
+        Your Account is Activated!
+      </h1>
+    </td></tr>
+    <tr><td align="center" style="padding-bottom:4px;">
+      <span style="font-family:Georgia,'Times New Roman',serif;font-size:18px;color:#8a8a92;font-style:italic;">
+        Votre compte est activ&eacute; !
+      </span>
+    </td></tr>
+    <tr><td align="center" style="padding-bottom:24px;">
+      <span style="font-size:18px;color:#8a8a92;">
+        您的账户已激活！
+      </span>
+    </td></tr>
+
+    <!-- Body text — trilingual -->
+    <tr><td style="padding:0 20px 28px;">
+      ${tri(
+        `Great news, ${escapeHtml(user.name)}! Your CarteAI account has been approved. You can now create your restaurant, upload your menu, and start offering AI-powered recommendations to your guests.`,
+        `Bonne nouvelle, ${escapeHtml(user.name)} ! Votre compte CarteAI a &eacute;t&eacute; approuv&eacute;. Vous pouvez maintenant cr&eacute;er votre restaurant, importer votre menu et commencer &agrave; offrir des recommandations IA &agrave; vos clients.`,
+        `好消息，${escapeHtml(user.name)}！您的 CarteAI 账户已通过审核。现在您可以创建餐厅、上传菜单，并开始为客人提供 AI 智能推荐。`,
+        "font-size:13px;line-height:1.65;color:#a8a8b0;text-align:center;"
+      )}
+    </td></tr>
+
+    <!-- CTA -->
+    <tr><td align="center" style="padding-bottom:28px;">
+      <a href="${BASE}/admin" style="display:inline-block;background:${C.emerald};color:#04140d;font-size:14px;font-weight:600;padding:13px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.01em;">
+        Go to Dashboard &rarr;
+      </a>
+    </td></tr>
+
+    <!-- 14-day trial reminder -->
+    <tr><td style="padding:0 24px 28px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.ink};border:1.5px solid ${C.gold};border-radius:10px;">
+        <tr><td style="padding:22px 24px;" align="center">
+          <div style="font-size:20px;margin-bottom:10px;">&#x1F389;</div>
+          ${tri(
+            `Your <strong style="color:${C.gold};">14-day free trial</strong> starts now. Enjoy full access &mdash; AI recommendations, analytics, multilingual menus, and unlimited QR scans. No credit card needed.`,
+            `Votre <strong style="color:${C.gold};">essai gratuit de 14 jours</strong> commence maintenant. Profitez d'un acc&egrave;s complet &mdash; recommandations IA, analytiques, menus multilingues et scans QR illimit&eacute;s. Sans carte bancaire.`,
+            `您的 <strong style="color:${C.gold};">14 天免费试用</strong>现在开始。尽享全部功能——AI 推荐、数据分析、多语言菜单、无限扫码。无需绑定信用卡。`,
+            "font-size:12px;line-height:1.6;color:#a8a8b0;text-align:center;"
+          )}
+        </td></tr>
+      </table>
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td align="center" style="padding:0 20px;">
+      <p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:9px;letter-spacing:0.1em;color:#3f3f46;text-transform:uppercase;">
+        CarteAI &middot; AI Dining Concierge &middot; Est. 2026
+      </p>
+    </td></tr>
+  `);
+}
+
 export function _previewAdminEmail(user: { name: string; email: string }) {
   return emailShell(`
     <tr><td align="center" style="padding-bottom:20px;">

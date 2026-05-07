@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useSession, authClient } from "@/lib/auth-client";
+import { type AuthLocale, detectAuthLocale, getAuthDict } from "@/lib/auth-i18n";
 
 export default function WelcomePage() {
   const { data: session, isPending } = useSession();
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+  const [locale, setLocale] = useState<AuthLocale>("en");
+  useEffect(() => { setLocale(detectAuthLocale()); }, []);
+  const t = getAuthDict(locale);
 
   // Fetch approved status from custom endpoint (useSession doesn't include it)
   const [approved, setApproved] = useState<boolean | null>(null);
@@ -55,15 +59,15 @@ export default function WelcomePage() {
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/icon.svg" alt="CarteAI" className="mx-auto h-12 w-12" />
-        <h1 className="mt-3 text-xl font-bold text-foreground">Session expired</h1>
+        <h1 className="mt-3 text-xl font-bold text-foreground">{t.sessionExpired}</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Please sign in again to continue.
+          {t.sessionExpiredDesc}
         </p>
         <a
           href="/login"
           className="mt-6 inline-block rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          Sign in
+          {t.signIn}
         </a>
       </div>
     );
@@ -77,7 +81,7 @@ export default function WelcomePage() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icon.svg" alt="CarteAI" className="mx-auto h-12 w-12" />
       <h1 className="mt-3 text-xl font-bold text-foreground">
-        Welcome, {userName}!
+        {t.welcome(userName)}
       </h1>
 
       {/* Step indicators */}
@@ -93,13 +97,12 @@ export default function WelcomePage() {
           <div className="mt-6 rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
             <div className="text-2xl">📧</div>
             <h2 className="mt-2 text-sm font-semibold text-foreground">
-              Step 1: Verify your email
+              {t.stepVerifyEmail}
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              We&apos;ve sent a verification link to{" "}
-              <strong className="text-foreground">{session.user.email}</strong>.
-              Please check your inbox and spam folder.
-            </p>
+            <p
+              className="mt-2 text-sm text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: t.stepVerifyEmailDesc(session.user.email) }}
+            />
           </div>
 
           <div className="mt-4 flex flex-col gap-2">
@@ -108,13 +111,13 @@ export default function WelcomePage() {
               disabled={resending || resent}
               className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
             >
-              {resent ? "Email sent!" : resending ? "Sending..." : "Resend verification email"}
+              {resent ? t.emailSentBang : resending ? t.sending : t.resendEmail}
             </button>
             <button
               onClick={() => window.location.reload()}
               className="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              I&apos;ve verified — check status
+              {t.iVerified}
             </button>
           </div>
         </>
@@ -125,33 +128,32 @@ export default function WelcomePage() {
         <div className="mt-6 rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
           <div className="text-2xl">⏳</div>
           <h2 className="mt-2 text-sm font-semibold text-foreground">
-            Step 2: Account under review
+            {t.stepAccountReview}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Your email has been verified. Your account is now being reviewed by our team.
-            Once approved, you&apos;ll be able to create your restaurant and start using CarteAI.
+            {t.stepAccountReviewDesc}
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
-            We&apos;ll notify you by email once your account is activated.
+            {t.notifyByEmail}
           </p>
           <button
             onClick={() => window.location.reload()}
             className="mt-4 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Check status
+            {t.checkStatus}
           </button>
         </div>
       )}
 
       {/* Loading state while checking approval */}
       {emailVerified && approved === null && (
-        <div className="mt-6 text-sm text-muted-foreground">Checking account status...</div>
+        <div className="mt-6 text-sm text-muted-foreground">{t.checkingStatus}</div>
       )}
 
       <p className="mt-6 text-xs text-muted-foreground">
-        Wrong email?{" "}
+        {t.wrongEmail}{" "}
         <a href="/register" className="text-foreground underline">
-          Sign up again
+          {t.signUpAgain}
         </a>
       </p>
     </div>

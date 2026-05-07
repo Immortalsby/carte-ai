@@ -79,39 +79,43 @@ export function DishDetail({ dish, lang, onClose }: DishDetailProps) {
           </div>
         )}
 
-        {/* Allergens */}
-        {dish.allergens.length > 0 && (
+        {/* Allergens — show concrete allergens, or a gentle "ask staff" hint for unknown */}
+        {dish.allergens.filter((a) => a !== "unknown").length > 0 ? (
           <div className="mt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
               {lang === "zh" ? "\u8fc7\u654f\u539f" : lang === "fr" ? "Allerg\u00e8nes" : "Allergens"}
             </h3>
             <div className="mt-1 flex flex-wrap gap-1.5">
-              {dish.allergens.map((a) => {
-                const isUnknown = a === "unknown";
-                return (
+              {dish.allergens
+                .filter((a) => a !== "unknown")
+                .map((a) => (
                   <span
                     key={a}
                     className="rounded-full px-2.5 py-0.5 text-xs font-medium"
-                    style={
-                      isUnknown
-                        ? {
-                            backgroundColor: "color-mix(in srgb, var(--carte-warning) 20%, transparent)",
-                            color: "var(--carte-warning)",
-                          }
-                        : {
-                            backgroundColor: "var(--carte-surface)",
-                            color: "var(--carte-text-muted)",
-                          }
-                    }
+                    style={{
+                      backgroundColor: "var(--carte-surface)",
+                      color: "var(--carte-text-muted)",
+                    }}
                   >
-                    {isUnknown ? "\u26a0\ufe0f " : ""}
                     {allergenLabels[a][lang] || allergenLabels[a].en}
                   </span>
-                );
-              })}
+                ))}
             </div>
           </div>
-        )}
+        ) : dish.allergens.includes("unknown") ? (
+          <div className="mt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
+              {lang === "zh" ? "\u8fc7\u654f\u539f" : lang === "fr" ? "Allerg\u00e8nes" : "Allergens"}
+            </h3>
+            <p className="mt-1 text-xs text-carte-text-dim">
+              {lang === "zh"
+                ? "过敏原信息暂未标注，请咨询店员"
+                : lang === "fr"
+                  ? "Informations sur les allergènes non disponibles — veuillez demander au personnel"
+                  : "Allergen info not available — please ask staff"}
+            </p>
+          </div>
+        ) : null}
 
         {/* Calories */}
         <div className="mt-4">
