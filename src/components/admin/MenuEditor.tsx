@@ -1,6 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  useDraggable,
+  useDroppable,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
 import type { Dish, RestaurantMenu, MenuCategory, Allergen } from "@/types/menu";
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
@@ -37,73 +49,34 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
   const [pendingImageGen, setPendingImageGen] = useState<{ count: number; time: number } | null>(null);
   const [imageGenProgress, setImageGenProgress] = useState<{ current: number; total: number; failed: number } | null>(null);
   const imageGenAbortRef = useRef(false);
-  // Drag-to-move state
-  const [movingDishId, setMovingDishId] = useState<string | null>(null);
-  const [dragOverCat, setDragOverCat] = useState<MenuCategory | null>(null);
-  const [showAddMenu, setShowAddMenu] = useState(false);
-  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
-  const addMenuRef = useRef<HTMLDivElement>(null);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Close add-dish dropdown on outside click
-  useEffect(() => {
-    if (!showAddMenu) return;
-    function handleClick(e: MouseEvent) {
-      if (addMenuRef.current && !addMenuRef.current.contains(e.target as Node)) {
-        setShowAddMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [showAddMenu]);
+  // dnd-kit sensors: pointer needs 8px movement to start (so clicks work), touch needs 250ms hold
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+  );
 
-  const cancelLongPress = useCallback(() => {
-    if (longPressRef.current) {
-      clearTimeout(longPressRef.current);
-      longPressRef.current = null;
-    }
-    pointerStartRef.current = null;
-  }, []);
-
-  function handleDishPointerDown(dishId: string, e: React.PointerEvent) {
-    if (e.button !== 0 || editingDish) return;
-    // If already in move mode, clicking the same dish cancels
-    if (movingDishId) {
-      if (movingDishId === dishId) {
-        setMovingDishId(null);
-        setDragOverCat(null);
-      }
-      return;
-    }
-    pointerStartRef.current = { x: e.clientX, y: e.clientY };
-    longPressRef.current = setTimeout(() => {
-      setMovingDishId(dishId);
-      if (navigator.vibrate) navigator.vibrate(50);
-    }, 500);
+  function handleDragStart(event: DragStartEvent) {
+    setActiveDragId(event.active.id as string);
+    setEditingDish(null);
   }
 
-  function handleDishPointerMove(e: React.PointerEvent) {
-    if (!pointerStartRef.current || movingDishId) return;
-    const dx = Math.abs(e.clientX - pointerStartRef.current.x);
-    const dy = Math.abs(e.clientY - pointerStartRef.current.y);
-    if (dx > 8 || dy > 8) cancelLongPress();
-  }
-
-  function handleDishPointerUp() {
-    cancelLongPress();
-  }
-
-  function moveDishToCategory(cat: MenuCategory) {
-    if (!movingDishId) return;
-    const dish = menu.dishes.find((d) => d.id === movingDishId);
-    if (dish && dish.category !== cat) {
-      updateDish(movingDishId, { category: cat });
-      toast(`${tAny.movedTo || "Moved to"} ${categoryLabels[cat]}`, "success");
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setActiveDragId(null);
+    if (!over) return;
+    const dishId = active.id as string;
+    const targetCategory = over.id as MenuCategory;
+    const dish = menu.dishes.find((d) => d.id === dishId);
+    if (dish && dish.category !== targetCategory) {
+      updateDish(dishId, { category: targetCategory });
+      toast(`${tAny.movedTo || "Moved to"} ${categoryLabels[targetCategory]}`, "success");
     }
-    setMovingDishId(null);
-    setDragOverCat(null);
   }
+
+  const activeDish = activeDragId ? menu.dishes.find((d) => d.id === activeDragId) : null;
 
   function updateDish(dishId: string, updates: Partial<Dish>) {
     setMenu((prev) => ({
@@ -185,7 +158,6 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
         });
         if (res.ok) {
           const data = await res.json();
-          // Update local state so UI reflects the new image immediately
           setMenu((prev) => ({
             ...prev,
             dishes: prev.dishes.map((d) =>
@@ -224,7 +196,6 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
       if (res.ok) {
         setSaved(true);
         toast(t.menuPublished, "success");
-        // Prompt to generate images for dishes that don't have one
         const missing = menu.dishes.filter(
           (d) => !d.imageUrl && (d.name.fr || d.name.en || d.name.zh),
         );
@@ -242,13 +213,6 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
       setSaving(false);
     }
   }
-
-  const grouped = categoryOrder
-    .map((cat) => ({
-      category: cat,
-      items: menu.dishes.filter((d) => d.category === cat),
-    }))
-    .filter((g) => g.items.length > 0);
 
   return (
     <div>
@@ -304,7 +268,8 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
           </div>
         </div>
       )}
-      {/* Header with save */}
+
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t.menuManagement}</h1>
@@ -322,37 +287,6 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
               {t.reImportMenu}
             </button>
           )}
-          {/* Add Dish button with category picker */}
-          <div ref={addMenuRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setShowAddMenu(!showAddMenu)}
-              className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              {tAny.addNewDish || "Add Dish"}
-            </button>
-            {showAddMenu && (
-              <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-xl border border-border bg-card p-1.5 shadow-lg">
-                <p className="px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                  {tAny.pickCategory || "Pick a category"}
-                </p>
-                {categoryOrder.map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => { addDish(cat); setShowAddMenu(false); }}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-xs text-primary">+</span>
-                    {categoryLabels[cat]}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
           <button
             type="button"
             onClick={save}
@@ -364,165 +298,149 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
         </div>
       </div>
 
-      {/* Category drop zone — shown during drag-to-move */}
-      {movingDishId && (
-        <div className="sticky top-0 z-30 -mx-4 mb-4 mt-4 border-b border-primary/20 bg-background/95 px-4 py-3 shadow-sm backdrop-blur-sm">
-          <p className="mb-2 text-center text-xs text-muted-foreground">
-            {tAny.moveDishHint || "Tap a category to move this dish"}
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {categoryOrder.map((cat) => {
-              const isCurrentCat = menu.dishes.find((d) => d.id === movingDishId)?.category === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => moveDishToCategory(cat)}
-                  onDragOver={(e) => { e.preventDefault(); setDragOverCat(cat); }}
-                  onDragLeave={() => dragOverCat === cat && setDragOverCat(null)}
-                  onDrop={(e) => { e.preventDefault(); moveDishToCategory(cat); }}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                    dragOverCat === cat
-                      ? "scale-110 bg-primary text-primary-foreground shadow-md"
-                      : isCurrentCat
-                        ? "bg-primary/20 text-primary ring-1 ring-primary/30"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {categoryLabels[cat]}
-                </button>
-              );
-            })}
-          </div>
-          <button
-            type="button"
-            onClick={() => { setMovingDishId(null); setDragOverCat(null); }}
-            className="mx-auto mt-2 block text-xs text-muted-foreground hover:text-foreground"
-          >
-            {tAny.cancel || "Cancel"}
-          </button>
-        </div>
-      )}
+      {/* Dish list by category — with dnd-kit drag and drop */}
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="mt-6 space-y-6">
+          {categoryOrder.map((category) => {
+            const items = menu.dishes.filter((d) => d.category === category);
+            // Only show categories that have items or are being dragged over
+            if (items.length === 0 && !activeDragId) return null;
+            return (
+              <DroppableCategorySection
+                key={category}
+                id={category}
+                isDragging={!!activeDragId}
+              >
+                {/* Category header with inline + button (Plan C) */}
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    {categoryLabels[category]} ({items.length})
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => addDish(category)}
+                    className="flex items-center gap-1 rounded-full border border-primary/30 px-2.5 py-0.5 text-xs font-medium text-primary/70 transition-colors hover:bg-primary/5 hover:text-primary"
+                  >
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    {tAny.addNewDish || "Add"}
+                  </button>
+                </div>
 
-      {/* Dish list by category */}
-      <div className="mt-6 space-y-6">
-        {categoryOrder.map((category) => {
-          const items = menu.dishes.filter((d) => d.category === category);
-          return (
-            <section key={category}>
-              <h2 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                {categoryLabels[category]} ({items.length})
-              </h2>
-              <div className="space-y-2">
-                {items.map((dish) => (
-                  <div key={dish.id}>
-                    <div
-                      draggable={movingDishId === dish.id}
-                      onDragStart={(e) => {
-                        e.dataTransfer.effectAllowed = "move";
-                        e.dataTransfer.setData("text/plain", dish.id);
-                      }}
-                      onDragEnd={() => { setMovingDishId(null); setDragOverCat(null); }}
-                      onPointerDown={(e) => handleDishPointerDown(dish.id, e)}
-                      onPointerMove={handleDishPointerMove}
-                      onPointerUp={handleDishPointerUp}
-                      onPointerCancel={handleDishPointerUp}
-                      className={`flex items-center justify-between rounded-lg border p-4 transition-all select-none ${
-                        movingDishId === dish.id
-                          ? "scale-[0.97] opacity-50 ring-2 ring-primary"
-                          : movingDishId
-                            ? "opacity-70"
-                            : ""
-                      }`}
-                    >
-                      {/* Drag grip handle */}
-                      <div className="mr-2 flex shrink-0 cursor-grab touch-none items-center text-muted-foreground/40">
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                          <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
-                          <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
-                          <circle cx="9" cy="19" r="1.5" /><circle cx="15" cy="19" r="1.5" />
-                        </svg>
-                      </div>
-                      {/* Dish thumbnail */}
-                      {dish.imageUrl ? (
-                        <img
-                          src={dish.imageUrl}
-                          alt={dish.name.fr || dish.name.en || ""}
-                          className="mr-3 h-12 w-12 shrink-0 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <div className="mr-3 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+                <div className="space-y-2">
+                  {items.map((dish) => (
+                    <DraggableDishCard key={dish.id} id={dish.id}>
+                      <div className={`flex items-center justify-between rounded-lg border p-4 transition-all ${
+                        activeDragId === dish.id ? "opacity-30 scale-[0.98]" : ""
+                      }`}>
+                        {/* Drag grip handle */}
+                        <div className="mr-2 flex shrink-0 cursor-grab touch-none items-center text-muted-foreground/40 hover:text-muted-foreground/70">
+                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
+                            <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+                            <circle cx="9" cy="19" r="1.5" /><circle cx="15" cy="19" r="1.5" />
                           </svg>
                         </div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          !movingDishId && setEditingDish(editingDish === dish.id ? null : dish.id)
-                        }
-                        className="min-w-0 flex-1 text-left"
-                      >
-                        <p className="font-medium">
-                          {dish.name.fr || dish.name.en || "(untitled)"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          &euro;{(dish.priceCents / 100).toFixed(2)} &middot;{" "}
-                          {dish.allergens.filter((a) => a !== "unknown").join(", ") || t.noAllergensListed}
-                        </p>
-                      </button>
-                      <div className="ml-3 flex shrink-0 items-center gap-2">
+                        {/* Dish thumbnail */}
+                        {dish.imageUrl ? (
+                          <img
+                            src={dish.imageUrl}
+                            alt={dish.name.fr || dish.name.en || ""}
+                            className="mr-3 h-12 w-12 shrink-0 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="mr-3 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+                            </svg>
+                          </div>
+                        )}
                         <button
                           type="button"
-                          onClick={() => toggleAvailability(dish.id)}
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
-                            dish.available
-                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                              : "bg-red-500/15 text-red-600 dark:text-red-400"
-                          }`}
+                          onClick={() =>
+                            setEditingDish(editingDish === dish.id ? null : dish.id)
+                          }
+                          className="min-w-0 flex-1 text-left"
                         >
-                          {dish.available ? t.available : t.unavailable}
+                          <p className="font-medium">
+                            {dish.name.fr || dish.name.en || "(untitled)"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            &euro;{(dish.priceCents / 100).toFixed(2)} &middot;{" "}
+                            {dish.allergens.filter((a) => a !== "unknown").join(", ") || t.noAllergensListed}
+                          </p>
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteDish(dish.id)}
-                          onBlur={() => confirmingDelete === dish.id && setConfirmingDelete(null)}
-                          className={`rounded-full px-2 py-1 text-xs ${confirmingDelete === dish.id ? "bg-red-500 text-white" : "text-red-400 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"}`}
-                          title={t.deleteDish}
-                        >
-                          {confirmingDelete === dish.id ? t.deleteConfirm : "×"}
-                        </button>
+                        <div className="ml-3 flex shrink-0 items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleAvailability(dish.id)}
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${
+                              dish.available
+                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                                : "bg-red-500/15 text-red-600 dark:text-red-400"
+                            }`}
+                          >
+                            {dish.available ? t.available : t.unavailable}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteDish(dish.id)}
+                            onBlur={() => confirmingDelete === dish.id && setConfirmingDelete(null)}
+                            className={`rounded-full px-2 py-1 text-xs ${confirmingDelete === dish.id ? "bg-red-500 text-white" : "text-red-400 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"}`}
+                            title={t.deleteDish}
+                          >
+                            {confirmingDelete === dish.id ? t.deleteConfirm : "×"}
+                          </button>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Inline editor */}
-                    {editingDish === dish.id && (
-                      <DishEditor
-                        dish={dish}
-                        cuisine={cuisine}
-                        slug={slug}
-                        locale={locale}
-                        onUpdate={(updates) => updateDish(dish.id, updates)}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => addDish(category)}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/[0.02] py-2.5 text-sm text-primary/70 transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                {tAny.addNewDish || "Add Dish"}
-              </button>
-            </section>
-          );
-        })}
-      </div>
+                      {/* Inline editor */}
+                      {editingDish === dish.id && (
+                        <DishEditor
+                          dish={dish}
+                          cuisine={cuisine}
+                          slug={slug}
+                          locale={locale}
+                          onUpdate={(updates) => updateDish(dish.id, updates)}
+                        />
+                      )}
+                    </DraggableDishCard>
+                  ))}
+                </div>
+
+                {/* Empty slot card (Plan B) — shown when category has < 3 items */}
+                {items.length < 3 && (
+                  <button
+                    type="button"
+                    onClick={() => addDish(category)}
+                    className="mt-2 flex w-full items-center gap-3 rounded-lg border-2 border-dashed border-primary/20 bg-primary/[0.02] p-4 text-left transition-all hover:border-primary/40 hover:bg-primary/5 group"
+                  >
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-dashed border-primary/30 bg-primary/5 transition-colors group-hover:bg-primary/10">
+                      <svg className="h-6 w-6 text-primary/50 group-hover:text-primary/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-primary/70 group-hover:text-primary">
+                        {tAny.addNewDish || "Add Dish"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {categoryLabels[category]}
+                      </p>
+                    </div>
+                  </button>
+                )}
+              </DroppableCategorySection>
+            );
+          })}
+        </div>
+
+        {/* Drag overlay — ghost card following cursor */}
+        <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
+          {activeDish && <DishCardOverlay dish={activeDish} />}
+        </DragOverlay>
+      </DndContext>
 
       {/* Bottom publish bar — sticky reminder */}
       {!saved && (
@@ -546,6 +464,86 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
     </div>
   );
 }
+
+/* ─── dnd-kit helper components ─── */
+
+function DroppableCategorySection({
+  id,
+  isDragging,
+  children,
+}: {
+  id: string;
+  isDragging: boolean;
+  children: React.ReactNode;
+}) {
+  const { isOver, setNodeRef } = useDroppable({ id });
+  return (
+    <section
+      ref={setNodeRef}
+      className={`rounded-xl p-3 transition-all duration-200 ${
+        isOver
+          ? "bg-primary/[0.06] ring-2 ring-primary/40 shadow-sm"
+          : isDragging
+            ? "ring-1 ring-border/50"
+            : ""
+      }`}
+    >
+      {children}
+    </section>
+  );
+}
+
+function DraggableDishCard({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={{ touchAction: "none" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DishCardOverlay({ dish }: { dish: Dish }) {
+  return (
+    <div className="w-80 rounded-lg border bg-card p-4 shadow-xl ring-2 ring-primary/30">
+      <div className="flex items-center gap-3">
+        {dish.imageUrl ? (
+          <img
+            src={dish.imageUrl}
+            alt=""
+            className="h-10 w-10 rounded-lg object-cover"
+          />
+        ) : (
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+            </svg>
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium">
+            {dish.name.fr || dish.name.en || "(untitled)"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            &euro;{(dish.priceCents / 100).toFixed(2)}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Dish inline editor ─── */
 
 const allergenOptions: Allergen[] = [
   "gluten", "crustaceans", "eggs", "fish", "peanuts", "soy",
@@ -582,7 +580,6 @@ function DishEditor({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // The primary name is whichever language the owner typed in
   const primaryName = dish.name.fr || dish.name.en || dish.name.zh || "";
   const hasName = primaryName.trim().length > 0;
 
@@ -714,7 +711,6 @@ function DishEditor({
             type="text"
             value={dish.name.fr || dish.name.en || dish.name.zh}
             onChange={(e) => {
-              // Detect which field to write to based on existing content or default to fr
               const lang = dish.name.fr
                 ? "fr"
                 : dish.name.en
@@ -740,7 +736,7 @@ function DishEditor({
         </div>
       </div>
 
-      {/* Translated names (read-only preview, editable) */}
+      {/* Translated names */}
       <div className="grid grid-cols-3 gap-2">
         <div>
           <label className="text-xs text-muted-foreground">{t.nameFr}</label>
@@ -938,7 +934,6 @@ function DishEditor({
       <div>
         <label className="text-xs text-muted-foreground">{t.dishImage}</label>
         <div className="mt-1 flex items-start gap-3">
-          {/* Image preview or placeholder */}
           {dish.imageUrl ? (
             <div className="relative">
               <img
@@ -958,9 +953,7 @@ function DishEditor({
             </div>
           )}
 
-          {/* Action buttons */}
           <div className="flex flex-col gap-1.5">
-            {/* Upload */}
             <input
               ref={fileInputRef}
               type="file"
@@ -1000,7 +993,6 @@ function DishEditor({
               {uploading ? t.uploading : t.uploadImage}
             </button>
 
-            {/* AI Generate (Pollinations — free) */}
             {hasName && (
               <button
                 type="button"
@@ -1012,7 +1004,6 @@ function DishEditor({
               </button>
             )}
 
-            {/* Remove / Flag */}
             {dish.imageUrl && (
               <>
                 {dish.imageUrl.includes("dish-images/") && (
