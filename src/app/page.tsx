@@ -665,7 +665,7 @@ function FooterSection({ t }: { t: Record<string, string> }) {
 
 // ---------- Page ----------
 export default function Home() {
-  const [locale, setLocale] = useState<LandingLocale>("fr");
+  const [locale, setLocale] = useState<LandingLocale>("en");
 
   useEffect(() => {
     setLocale(detectLandingLocale());

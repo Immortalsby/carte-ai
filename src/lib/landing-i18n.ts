@@ -480,9 +480,9 @@ export function getLandingDict(locale: LandingLocale) {
 }
 
 export function detectLandingLocale(): LandingLocale {
-  if (typeof navigator === "undefined") return "fr";
+  if (typeof navigator === "undefined") return "en";
   const lang = navigator.language?.split("-")[0]?.toLowerCase();
   if (lang === "zh") return "zh";
-  if (lang === "en") return "en";
-  return "fr";
+  if (lang === "fr") return "fr";
+  return "en";
 }

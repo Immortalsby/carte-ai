@@ -3,7 +3,7 @@
  *
  * Usage:  npx tsx scripts/screenshot-landing.ts
  *
- * Prerequisites: dev server running at localhost:3000
+ * Prerequisites: dev server running at localhost:3001
  * Output: public/images/landing/
  *
  * For admin pages, set env vars:
@@ -15,7 +15,7 @@
 import { chromium, type Page, type BrowserContext } from "playwright";
 import path from "path";
 
-const BASE = "http://localhost:3000";
+const BASE = "http://localhost:3001";
 const SLUG = "pokemi-roanne";
 const OUT = path.resolve(__dirname, "../public/images/landing");
 

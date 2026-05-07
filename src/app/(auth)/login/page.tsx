@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "@/lib/auth-client";
+import { type AuthLocale, detectAuthLocale, getAuthDict } from "@/lib/auth-i18n";
 
 export default function LoginPage() {
+  const [locale, setLocale] = useState<AuthLocale>("en");
+  useEffect(() => { setLocale(detectAuthLocale()); }, []);
+  const t = getAuthDict(locale);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,7 +25,7 @@ export default function LoginPage() {
             window.location.href = "/admin";
           },
           onError: () => {
-            setError("Invalid email or password.");
+            setError(t.invalidCredentials);
           },
         },
       );
@@ -38,28 +42,28 @@ export default function LoginPage() {
     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icon.svg" alt="CarteAI" className="mx-auto h-12 w-12" />
-      <h1 className="mt-3 text-center text-xl font-bold text-foreground">Sign in to CarteAI</h1>
+      <h1 className="mt-3 text-center text-xl font-bold text-foreground">{t.signInTitle}</h1>
 
       <button
         onClick={handleGoogleLogin}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
       >
         <GoogleIcon />
-        Continue with Google
+        {t.continueWithGoogle}
       </button>
 
       <div className="my-4 flex items-center gap-3">
         <div className="h-px flex-1 bg-border" />
-        <span className="text-xs text-muted-foreground">or</span>
+        <span className="text-xs text-muted-foreground">{t.or}</span>
         <div className="h-px flex-1 bg-border" />
       </div>
 
-      <form onSubmit={handleEmailLogin} className="space-y-3">
+      <form onSubmit={handleEmailLogin} method="post" className="space-y-3">
         <input
           type="email"
           name="email"
           autoComplete="email"
-          placeholder="Email"
+          placeholder={t.emailPlaceholder}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -69,32 +73,32 @@ export default function LoginPage() {
           type="password"
           name="password"
           autoComplete="current-password"
-          placeholder="Password"
+          placeholder={t.passwordPlaceholder}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
           className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
         />
 
-{error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-red-500">{error}</p>}
         <button
           type="submit"
           disabled={loading}
           className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? t.signingIn : t.signIn}
         </button>
         <p className="text-right">
           <a href="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground underline">
-            Forgot password?
+            {t.forgotPassword}
           </a>
         </p>
       </form>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        Don&apos;t have an account?{" "}
+        {t.noAccount}{" "}
         <a href="/register" className="text-foreground underline">
-          Sign up
+          {t.signUp}
         </a>
       </p>
     </div>

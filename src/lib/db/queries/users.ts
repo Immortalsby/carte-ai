@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { user } from "@/lib/db/auth-schema";
 import { tenants } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { isFounder } from "@/lib/roles";
 
 export async function getAllUsersWithTenants() {
   const users = await db.select().from(user);
@@ -14,13 +15,15 @@ export async function getAllUsersWithTenants() {
     tenantsByOwner.set(t.owner_id, existing);
   }
 
-  return users.map((u) => ({
-    id: u.id,
-    name: u.name,
-    email: u.email,
-    emailVerified: u.emailVerified,
-    approved: u.approved,
-    createdAt: u.createdAt,
-    tenants: tenantsByOwner.get(u.id) ?? [],
-  }));
+  return users
+    .filter((u) => !isFounder(u.email))
+    .map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      emailVerified: u.emailVerified,
+      approved: u.approved,
+      createdAt: u.createdAt,
+      tenants: tenantsByOwner.get(u.id) ?? [],
+    }));
 }

@@ -2,13 +2,13 @@
  * Smoke tests — verify each major area renders without crashing.
  * Run: npx playwright test tests/smoke.spec.ts
  *
- * These tests require the dev server at localhost:3000.
+ * These tests require the dev server at localhost:3001.
  * Admin tests are skipped if ADMIN_EMAIL/ADMIN_PASSWORD are not set.
  */
 
 import { test, expect } from "playwright/test";
 
-const BASE = "http://localhost:3000";
+const BASE = "http://localhost:3001";
 const SLUG = "pokemi-roanne";
 
 // ─── Landing Page (/) ───

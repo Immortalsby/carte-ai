@@ -24,10 +24,10 @@ npm run dev
 
 打开：
 
-- http://localhost:3000 —— 产品落地页
-- http://localhost:3000/demo —— 顾客 QR 体验
-- http://localhost:3000/admin —— 老板后台
-- http://localhost:3000/poster —— 可打印海报
+- http://localhost:3001 —— 产品落地页
+- http://localhost:3001/demo —— 顾客 QR 体验
+- http://localhost:3001/admin —— 老板后台
+- http://localhost:3001/poster —— 可打印海报
 
 ## 环境变量
 

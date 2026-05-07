@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { signUp, signIn } from "@/lib/auth-client";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
+import { type AuthLocale, detectAuthLocale, getAuthDict } from "@/lib/auth-i18n";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 export default function RegisterPage() {
+  const [locale, setLocale] = useState<AuthLocale>("en");
+  useEffect(() => { setLocale(detectAuthLocale()); }, []);
+  const t = getAuthDict(locale);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,10 +21,10 @@ export default function RegisterPage() {
   const turnstileRef = useRef<TurnstileInstance>(null);
 
   function validatePassword(pw: string): string | null {
-    if (pw.length < 8) return "Password must be at least 8 characters.";
-    if (!/[A-Z]/.test(pw)) return "Password must include an uppercase letter.";
-    if (!/[a-z]/.test(pw)) return "Password must include a lowercase letter.";
-    if (!/[0-9]/.test(pw)) return "Password must include a number.";
+    if (pw.length < 8) return t.pwMin8;
+    if (!/[A-Z]/.test(pw)) return t.pwUppercase;
+    if (!/[a-z]/.test(pw)) return t.pwLowercase;
+    if (!/[0-9]/.test(pw)) return t.pwNumber;
     return null;
   }
 
@@ -30,10 +34,10 @@ export default function RegisterPage() {
 
     const pwError = validatePassword(password);
     if (pwError) { setError(pwError); return; }
-    if (password !== confirmPassword) { setError("Passwords do not match."); return; }
+    if (password !== confirmPassword) { setError(t.passwordsNoMatch); return; }
 
     if (TURNSTILE_SITE_KEY && !turnstileToken) {
-      setError("Please complete the verification.");
+      setError(t.pleaseVerify);
       return;
     }
 
@@ -52,12 +56,11 @@ export default function RegisterPage() {
           },
           onError: (ctx) => {
             const msg = ctx.error.message;
-            // Show known validation messages, generic fallback for unknown errors
             const safe = msg?.includes("password") || msg?.includes("Password")
               || msg?.includes("email") || msg?.includes("already")
               || msg?.includes("verification") || msg?.includes("Bot")
               ? msg
-              : "Registration failed. Please try again.";
+              : t.registrationFailed;
             setError(safe);
             turnstileRef.current?.reset();
             setTurnstileToken(null);
@@ -77,28 +80,28 @@ export default function RegisterPage() {
     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icon.svg" alt="CarteAI" className="mx-auto h-12 w-12" />
-      <h1 className="mt-3 text-center text-xl font-bold text-foreground">Create your account</h1>
+      <h1 className="mt-3 text-center text-xl font-bold text-foreground">{t.createAccountTitle}</h1>
 
       <button
         onClick={handleGoogleLogin}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
       >
         <GoogleIcon />
-        Continue with Google
+        {t.continueWithGoogle}
       </button>
 
       <div className="my-4 flex items-center gap-3">
         <div className="h-px flex-1 bg-border" />
-        <span className="text-xs text-muted-foreground">or</span>
+        <span className="text-xs text-muted-foreground">{t.or}</span>
         <div className="h-px flex-1 bg-border" />
       </div>
 
-      <form onSubmit={handleRegister} className="space-y-3">
+      <form onSubmit={handleRegister} method="post" className="space-y-3">
         <input
           type="text"
           name="name"
           autoComplete="name"
-          placeholder="Name"
+          placeholder={t.namePlaceholder}
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -108,7 +111,7 @@ export default function RegisterPage() {
           type="email"
           name="email"
           autoComplete="email"
-          placeholder="Email"
+          placeholder={t.emailPlaceholder}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -118,7 +121,7 @@ export default function RegisterPage() {
           type="password"
           name="password"
           autoComplete="new-password"
-          placeholder="Password (min 8 characters)"
+          placeholder={t.passwordHint}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -128,16 +131,16 @@ export default function RegisterPage() {
         {password && (
           <ul className="space-y-0.5 text-xs">
             <li className={password.length >= 8 ? "text-green-500" : "text-muted-foreground"}>
-              {password.length >= 8 ? "\u2713" : "\u2022"} At least 8 characters
+              {password.length >= 8 ? "\u2713" : "\u2022"} {t.pwMin8}
             </li>
             <li className={/[A-Z]/.test(password) ? "text-green-500" : "text-muted-foreground"}>
-              {/[A-Z]/.test(password) ? "\u2713" : "\u2022"} One uppercase letter
+              {/[A-Z]/.test(password) ? "\u2713" : "\u2022"} {t.pwUppercase}
             </li>
             <li className={/[a-z]/.test(password) ? "text-green-500" : "text-muted-foreground"}>
-              {/[a-z]/.test(password) ? "\u2713" : "\u2022"} One lowercase letter
+              {/[a-z]/.test(password) ? "\u2713" : "\u2022"} {t.pwLowercase}
             </li>
             <li className={/[0-9]/.test(password) ? "text-green-500" : "text-muted-foreground"}>
-              {/[0-9]/.test(password) ? "\u2713" : "\u2022"} One number
+              {/[0-9]/.test(password) ? "\u2713" : "\u2022"} {t.pwNumber}
             </li>
           </ul>
         )}
@@ -145,7 +148,7 @@ export default function RegisterPage() {
           type="password"
           name="confirm-password"
           autoComplete="new-password"
-          placeholder="Confirm password"
+          placeholder={t.confirmPasswordPlaceholder}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
@@ -153,7 +156,7 @@ export default function RegisterPage() {
           className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
         />
         {confirmPassword && password !== confirmPassword && (
-          <p className="text-xs text-red-500">Passwords do not match.</p>
+          <p className="text-xs text-red-500">{t.passwordsNoMatch}</p>
         )}
 
         {/* Cloudflare Turnstile — invisible mode */}
@@ -174,14 +177,14 @@ export default function RegisterPage() {
           disabled={loading}
           className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
-          {loading ? "Creating account..." : "Create account"}
+          {loading ? t.creatingAccount : t.createAccount}
         </button>
       </form>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        Already have an account?{" "}
+        {t.alreadyHaveAccount}{" "}
         <a href="/login" className="text-foreground underline">
-          Sign in
+          {t.signIn}
         </a>
       </p>
     </div>
