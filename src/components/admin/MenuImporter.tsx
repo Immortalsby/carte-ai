@@ -8,6 +8,7 @@ import { getAdminDict } from "@/lib/admin-i18n";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB per file
 const MAX_FILES = 10;
+const FETCH_TIMEOUT = 55_000; // 55s — just under Vercel 60s limit
 
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -36,6 +37,7 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
   const [state, setState] = useState<ImportState>("idle");
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [result, setResult] = useState<{
     draftMenu: RestaurantMenu;
     confidence: number;
@@ -59,27 +61,43 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
 
     setState("uploading");
     setResult(null);
+    setUploadProgress(files.length > 1 ? { current: 0, total: files.length } : null);
 
     try {
       // Send files one at a time to avoid Vercel 60s function timeout,
       // then merge results client-side.
       const drafts: RestaurantMenu[] = [];
 
-      for (const file of files) {
+      for (let i = 0; i < files.length; i++) {
+        if (files.length > 1) setUploadProgress({ current: i + 1, total: files.length });
+
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", files[i]);
 
-        const res = await fetch("/api/ingest", {
-          method: "POST",
-          body: formData,
-        });
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
 
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (data.draftMenu && data.status !== "error") {
-          drafts.push(data.draftMenu);
+        try {
+          const res = await fetch("/api/ingest", {
+            method: "POST",
+            body: formData,
+            signal: controller.signal,
+          });
+          clearTimeout(timer);
+
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data.draftMenu && data.status !== "error") {
+            drafts.push(data.draftMenu);
+          }
+        } catch {
+          clearTimeout(timer);
+          // Timeout or network error for this file — skip it
+          continue;
         }
       }
+
+      setUploadProgress(null);
 
       if (drafts.length === 0) {
         setState("error");
@@ -118,6 +136,7 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
       setState("success");
       toast(t.importSuccess, "success");
     } catch {
+      setUploadProgress(null);
       setState("error");
       toast(t.importFailed);
     }
@@ -161,6 +180,11 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
         <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600 dark:border-purple-800 dark:border-t-purple-400" />
         <p className="text-lg font-medium text-purple-700 dark:text-purple-400">{t.analyzing}</p>
         <p className="mt-1 text-sm text-purple-500 dark:text-purple-400/70">{t.analysisMayTake}</p>
+        {uploadProgress && (
+          <p className="mt-2 text-xs text-purple-500 dark:text-purple-400/70">
+            {uploadProgress.current} / {uploadProgress.total}
+          </p>
+        )}
       </div>
     );
   }
