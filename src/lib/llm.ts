@@ -80,7 +80,7 @@ const systemPrompt = [
   "- If userText mentions avoiding an ingredient (e.g. '不要猪肉', 'no pork', 'sans porc'), EXCLUDE all dishes containing that ingredient from recommendations, even if not explicitly in excludedAllergens/excludedTags. Check dish names, descriptions, ingredients, and dietaryTags (e.g. 'contains_pork').",
   "- If userText mentions wanting a specific type of food (e.g. '面条', 'noodles', 'nouilles'), PRIORITIZE dishes matching that category/type.",
   "- If userText conflicts with mode (e.g. mode='healthy' but userText='I want fried chicken'), PRIORITIZE userText — it is the diner's most explicit intent. But also recommend 1 alternative that fits the mode, and gently note the trade-off in the reason (e.g. 'not the lightest option, but delicious').",
-  "- Recommend 2-4 dishes. Include a mix of single dishes and one set/combo when party size > 1.",
+  "- Recommend 2-4 items for single diners. For partySize >= 2, recommend a complete meal: starters + mains + drinks. For 'feast' occasion or 'sharing' mode, be generous — recommend 1-2 starters, 2-4 mains, 1-2 sides, and drinks for everyone. Group these into one 'set' recommendation.",
   "- Use the diner's language (from request.language) for title, reason, notes.",
   "- Keep recommendations short, practical and friendly.",
   "- Respect budget, dietary restrictions and spice preference.",
