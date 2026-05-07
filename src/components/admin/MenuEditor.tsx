@@ -61,11 +61,14 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
   function handleDragStart(event: DragStartEvent) {
     setActiveDragId(event.active.id as string);
     setEditingDish(null);
+    // Lock page scroll while dragging — pills bar is the drop target
+    document.body.style.overflow = "hidden";
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setActiveDragId(null);
+    document.body.style.overflow = "";
     if (!over) return;
     const dishId = active.id as string;
     // Drop target can be a category section or a pill (pill-{category})
@@ -301,7 +304,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
       </div>
 
       {/* Dish list by category — with dnd-kit drag and drop */}
-      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => { setActiveDragId(null); document.body.style.overflow = ""; }}>
         {/* Sticky category pills — visible only while dragging */}
         {activeDragId && (
           <div className="sticky top-0 z-40 -mx-1 mt-4 flex flex-wrap gap-2 rounded-xl border border-primary/20 bg-card/95 px-3 py-2.5 shadow-lg backdrop-blur">
