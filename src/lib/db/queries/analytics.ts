@@ -2,6 +2,18 @@ import { eq, and, gte, lte, sql, count } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { analytics_events } from "@/lib/db/schema";
 
+/**
+ * Validate and sanitize a timezone identifier so it can be safely inlined
+ * into SQL via sql.raw(). Only allows IANA-style names (e.g. "Europe/Paris",
+ * "America/New_York", "UTC", "US/Eastern").
+ */
+function safeTz(tz: string): string {
+  if (!/^[A-Za-z_\/-]+$/.test(tz)) {
+    return "UTC";
+  }
+  return tz;
+}
+
 export async function writeEvent(data: {
   tenant_id: string;
   event_type: string;
@@ -103,7 +115,7 @@ export async function getGlobalStats(from: Date, to: Date, tz = "Europe/Paris") 
 
   const dailyScans = await db
     .select({
-      date: sql<string>`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`,
+      date: sql<string>`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`,
       count: count(),
     })
     .from(analytics_events)
@@ -114,8 +126,8 @@ export async function getGlobalStats(from: Date, to: Date, tz = "Europe/Paris") 
         lte(analytics_events.created_at, to),
       ),
     )
-    .groupBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`)
-    .orderBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`);
+    .groupBy(sql`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`)
+    .orderBy(sql`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`);
 
   // Per-tenant breakdown
   const perTenant = await db
@@ -226,7 +238,7 @@ export async function getDashboardStats(
   // Daily scan trend
   const dailyScans = await db
     .select({
-      date: sql<string>`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`,
+      date: sql<string>`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`,
       count: count(),
     })
     .from(analytics_events)
@@ -238,8 +250,8 @@ export async function getDashboardStats(
         lte(analytics_events.created_at, to),
       ),
     )
-    .groupBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`)
-    .orderBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`);
+    .groupBy(sql`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`)
+    .orderBy(sql`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`);
 
   // Culture match count (FR37)
   const cultureMatches = await db
@@ -270,7 +282,7 @@ export async function getDashboardStats(
   // Daily adoption trend (FR44)
   const dailyAdoptions = await db
     .select({
-      date: sql<string>`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`,
+      date: sql<string>`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`,
       total: count(),
       adopted: sql<number>`count(*) filter (where payload->>'adopted' = 'true')`,
     })
@@ -283,8 +295,8 @@ export async function getDashboardStats(
         lte(analytics_events.created_at, to),
       ),
     )
-    .groupBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`)
-    .orderBy(sql`to_char(created_at AT TIME ZONE ${tz}, 'YYYY-MM-DD')`);
+    .groupBy(sql`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`)
+    .orderBy(sql`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`);
 
   // Dwell time distribution (FR45)
   const dwellDistribution = await db
