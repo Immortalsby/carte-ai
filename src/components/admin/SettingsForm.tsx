@@ -36,24 +36,36 @@ interface SettingsFormProps {
 }
 
 const cuisineOptions = [
-  "chinese", "japanese", "japanese_fusion", "italian", "french",
-  "indian", "thai", "mexican", "korean", "vietnamese",
-  "mediterranean", "american", "other",
+  "french", "italian", "chinese", "japanese", "japanese_fusion",
+  "korean", "thai", "vietnamese", "indian",
+  "lebanese", "moroccan", "turkish", "greek", "spanish",
+  "mexican", "brazilian", "peruvian", "caribbean",
+  "african", "mediterranean", "american", "fusion", "other",
 ] as const;
 
 const cuisineLabelKeys: Record<string, string> = {
+  french: "cuisineFrench",
+  italian: "cuisineItalian",
   chinese: "cuisineChinese",
   japanese: "cuisineJapanese",
   japanese_fusion: "cuisineJapaneseFusion",
-  italian: "cuisineItalian",
-  french: "cuisineFrench",
-  indian: "cuisineIndian",
-  thai: "cuisineThai",
-  mexican: "cuisineMexican",
   korean: "cuisineKorean",
+  thai: "cuisineThai",
   vietnamese: "cuisineVietnamese",
+  indian: "cuisineIndian",
+  lebanese: "cuisineLebanese",
+  moroccan: "cuisineMoroccan",
+  turkish: "cuisineTurkish",
+  greek: "cuisineGreek",
+  spanish: "cuisineSpanish",
+  mexican: "cuisineMexican",
+  brazilian: "cuisineBrazilian",
+  peruvian: "cuisinePeruvian",
+  caribbean: "cuisineCaribbean",
+  african: "cuisineAfrican",
   mediterranean: "cuisineMediterranean",
   american: "cuisineAmerican",
+  fusion: "cuisineFusion",
   other: "cuisineOther",
 };
 

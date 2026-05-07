@@ -248,7 +248,7 @@ export async function POST(request: Request) {
   const defaultMenu = getDefaultMenu();
 
   try {
-    // Extract each file in parallel
+    // Extract each file in parallel (within single request)
     const results = await Promise.all(
       files.map((f) => extractSingleFile(f).catch(() => null)),
     );

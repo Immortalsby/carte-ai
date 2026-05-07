@@ -28,6 +28,25 @@ const cuisineEmoji: Record<string, string> = {
   mediterranean: "\ud83e\uddc0",
   vietnamese_restaurant: "\ud83c\udf5c", // noodles
   vietnamese: "\ud83c\udf5c",
+  lebanese_restaurant: "\ud83e\uddc6",   // falafel
+  lebanese: "\ud83e\uddc6",
+  moroccan_restaurant: "\ud83c\udf72",   // pot of food (tagine)
+  moroccan: "\ud83c\udf72",
+  turkish_restaurant: "\ud83c\udf56",    // meat on bone (kebab)
+  turkish: "\ud83c\udf56",
+  greek_restaurant: "\ud83e\udd57",      // salad
+  greek: "\ud83e\udd57",
+  spanish_restaurant: "\ud83e\udd58",    // paella pan
+  spanish: "\ud83e\udd58",
+  brazilian_restaurant: "\ud83c\udf56",  // meat on bone (churrasco)
+  brazilian: "\ud83c\udf56",
+  peruvian_restaurant: "\ud83d\udc1f",   // fish (ceviche)
+  peruvian: "\ud83d\udc1f",
+  caribbean_restaurant: "\ud83c\udf34",  // palm tree
+  caribbean: "\ud83c\udf34",
+  african_restaurant: "\ud83c\udf72",    // pot of food
+  african: "\ud83c\udf72",
+  fusion: "\u2728",                      // sparkles
 };
 
 interface CuisineLoaderProps {

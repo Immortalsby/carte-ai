@@ -16,19 +16,11 @@ function slugify(text: string) {
 }
 
 const cuisineOptions = [
-  "chinese",
-  "japanese",
-  "japanese_fusion",
-  "italian",
-  "french",
-  "indian",
-  "thai",
-  "mexican",
-  "korean",
-  "vietnamese",
-  "mediterranean",
-  "american",
-  "other",
+  "french", "italian", "chinese", "japanese", "japanese_fusion",
+  "korean", "thai", "vietnamese", "indian",
+  "lebanese", "moroccan", "turkish", "greek", "spanish",
+  "mexican", "brazilian", "peruvian", "caribbean",
+  "african", "mediterranean", "american", "fusion", "other",
 ];
 
 type PlaceCandidate = {
@@ -43,18 +35,28 @@ type PlaceCandidate = {
 
 function getCuisineKey(cuisine: string): string {
   const map: Record<string, string> = {
+    french: "cuisineFrench",
+    italian: "cuisineItalian",
     chinese: "cuisineChinese",
     japanese: "cuisineJapanese",
     japanese_fusion: "cuisineJapaneseFusion",
-    italian: "cuisineItalian",
-    french: "cuisineFrench",
-    indian: "cuisineIndian",
-    thai: "cuisineThai",
-    mexican: "cuisineMexican",
     korean: "cuisineKorean",
+    thai: "cuisineThai",
     vietnamese: "cuisineVietnamese",
+    indian: "cuisineIndian",
+    lebanese: "cuisineLebanese",
+    moroccan: "cuisineMoroccan",
+    turkish: "cuisineTurkish",
+    greek: "cuisineGreek",
+    spanish: "cuisineSpanish",
+    mexican: "cuisineMexican",
+    brazilian: "cuisineBrazilian",
+    peruvian: "cuisinePeruvian",
+    caribbean: "cuisineCaribbean",
+    african: "cuisineAfrican",
     mediterranean: "cuisineMediterranean",
     american: "cuisineAmerican",
+    fusion: "cuisineFusion",
     other: "cuisineOther",
   };
   return map[cuisine] ?? cuisine;
@@ -263,7 +265,7 @@ export default function NewRestaurantPage() {
               value={slug}
               onChange={(e) => handleSlugChange(e.target.value)}
               required
-              pattern="[a-z0-9-]+"
+              pattern="[-a-z0-9]+"
               placeholder={tAny.slugPlaceholder}
               className="w-full rounded-r-lg border-l px-3 py-2 text-sm"
             />

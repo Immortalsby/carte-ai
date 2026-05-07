@@ -109,8 +109,18 @@ function cuisineHintMessage(cuisineType: string, lang: string): string | null {
     thai: { en: "Thai cuisine! How spicy do you like it?", fr: "Cuisine thaï ! Vous aimez épicé ?", zh: "泰餐来啦！你能吃多辣？" },
     vietnamese: { en: "Vietnamese flavors! Fresh and delicious.", fr: "Saveurs vietnamiennes ! Fraîches et délicieuses.", zh: "越南菜，清爽又好吃~" },
     indian: { en: "Indian cuisine! Rich flavors await.", fr: "Cuisine indienne ! Des saveurs riches vous attendent.", zh: "印度菜，风味浓郁！" },
+    lebanese: { en: "Lebanese delights! Mezze, grills & more.", fr: "Délices libanais ! Mezze, grillades et plus.", zh: "黎巴嫩美食，烤肉拼盘走起！" },
+    moroccan: { en: "Moroccan flavors! Tagine or couscous?", fr: "Saveurs marocaines ! Tagine ou couscous ?", zh: "摩洛哥风味，塔吉锅还是库斯库斯？" },
+    turkish: { en: "Turkish cuisine! Kebab, pide & baklava.", fr: "Cuisine turque ! Kebab, pide et baklava.", zh: "土耳其菜，烤肉还是甜点？" },
+    greek: { en: "Greek flavors! Fresh and sunny.", fr: "Saveurs grecques ! Fraîches et ensoleillées.", zh: "希腊美食，新鲜又阳光！" },
+    spanish: { en: "Spanish tapas & more! Let me guide you.", fr: "Tapas espagnoles et plus ! Je vous guide.", zh: "西班牙小食，帮你选？" },
     mexican: { en: "Mexican feast! Ready to explore?", fr: "Festin mexicain ! Prêt à explorer ?", zh: "墨西哥美食，准备好了吗？" },
+    brazilian: { en: "Brazilian flavors! Vibrant and bold.", fr: "Saveurs brésiliennes ! Vibrantes et audacieuses.", zh: "巴西风味，热情奔放！" },
+    peruvian: { en: "Peruvian cuisine! Ceviche and beyond.", fr: "Cuisine péruvienne ! Ceviche et bien plus.", zh: "秘鲁菜，酸橘汁腌鱼走起！" },
+    caribbean: { en: "Caribbean vibes! Tropical flavors await.", fr: "Ambiance caribéenne ! Saveurs tropicales.", zh: "加勒比风情，热带美味！" },
+    african: { en: "African cuisine! Bold and soulful.", fr: "Cuisine africaine ! Audacieuse et généreuse.", zh: "非洲美食，浓郁又暖心！" },
     mediterranean: { en: "Mediterranean gems! Let me help.", fr: "Trésors méditerranéens ! Je vous aide.", zh: "地中海风味，帮你选？" },
+    fusion: { en: "Fusion cuisine! Creative flavors await.", fr: "Cuisine fusion ! Des saveurs créatives.", zh: "融合菜，创意无限！" },
   };
   return hints[cuisineType]?.[l] ?? null;
 }

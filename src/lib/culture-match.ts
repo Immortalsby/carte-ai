@@ -24,7 +24,21 @@ const cuisineLanguageMap: Record<string, LanguageCode[]> = {
   italian: ["it"],
   mexican_restaurant: ["es"],
   mexican: ["es"],
-  // Mediterranean is multi-cultural, no single language match
+  spanish_restaurant: ["es"],
+  spanish: ["es"],
+  lebanese_restaurant: ["ar"],
+  lebanese: ["ar"],
+  moroccan_restaurant: ["ar", "fr"],
+  moroccan: ["ar", "fr"],
+  turkish_restaurant: ["tr"],
+  turkish: ["tr"],
+  greek_restaurant: ["el"],
+  greek: ["el"],
+  brazilian_restaurant: ["pt"],
+  brazilian: ["pt"],
+  peruvian_restaurant: ["es"],
+  peruvian: ["es"],
+  // Caribbean, African, Mediterranean, Fusion — multi-cultural, no single language match
 };
 
 /**

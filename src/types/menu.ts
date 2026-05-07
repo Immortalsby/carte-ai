@@ -12,6 +12,7 @@ export type LanguageCode =
   | "ko"
   | "ru"
   | "tr"
+  | "el"
   | "nl"
   | "pl"
   | "uk"

@@ -61,44 +61,62 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
     setResult(null);
 
     try {
-      const formData = new FormData();
+      // Send files one at a time to avoid Vercel 60s function timeout,
+      // then merge results client-side.
+      const drafts: RestaurantMenu[] = [];
+
       for (const file of files) {
+        const formData = new FormData();
         formData.append("file", file);
-      }
 
-      const res = await fetch("/api/ingest", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        throw new Error(`Server error: ${res.status}`);
-      }
-
-      const data = await res.json();
-
-      if (data.draftMenu && data.status !== "error") {
-        const draft: RestaurantMenu = {
-          ...data.draftMenu,
-          restaurant: {
-            ...data.draftMenu.restaurant,
-            slug,
-          },
-        };
-
-        setResult({
-          draftMenu: draft,
-          confidence: data.confidence ?? 0.5,
-          dishCount: draft.dishes?.length ?? 0,
-          message: data.message ?? "",
-          fileCount: files.length,
+        const res = await fetch("/api/ingest", {
+          method: "POST",
+          body: formData,
         });
-        setState("success");
-        toast(t.importSuccess, "success");
-      } else {
+
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data.draftMenu && data.status !== "error") {
+          drafts.push(data.draftMenu);
+        }
+      }
+
+      if (drafts.length === 0) {
         setState("error");
         toast(t.importFailed);
+        return;
       }
+
+      // Merge: use first restaurant info, combine all dishes (dedup by name)
+      const merged = drafts[0];
+      if (drafts.length > 1) {
+        const seenNames = new Set<string>();
+        const allDishes: RestaurantMenu["dishes"] = [];
+        for (const d of drafts) {
+          for (const dish of d.dishes) {
+            const key = `${dish.name.fr || ""}|${dish.name.en || ""}|${dish.name.zh || ""}`.toLowerCase();
+            if (key === "||" || seenNames.has(key)) continue;
+            seenNames.add(key);
+            allDishes.push(dish);
+          }
+        }
+        merged.dishes = allDishes;
+      }
+
+      const draft: RestaurantMenu = {
+        ...merged,
+        restaurant: { ...merged.restaurant, slug },
+      };
+
+      setResult({
+        draftMenu: draft,
+        confidence: 0.7,
+        dishCount: draft.dishes?.length ?? 0,
+        message: "",
+        fileCount: files.length,
+      });
+      setState("success");
+      toast(t.importSuccess, "success");
     } catch {
       setState("error");
       toast(t.importFailed);
