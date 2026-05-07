@@ -95,7 +95,7 @@ export default function ForgotPasswordPage() {
             onSuccess={setTurnstileToken}
             onError={() => setTurnstileToken(null)}
             onExpire={() => setTurnstileToken(null)}
-            options={{ size: "invisible" }}
+            options={{ size: "normal", theme: "auto" }}
           />
         )}
 

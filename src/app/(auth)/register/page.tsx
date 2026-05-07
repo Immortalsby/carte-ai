@@ -159,7 +159,7 @@ export default function RegisterPage() {
           <p className="text-xs text-red-500">{t.passwordsNoMatch}</p>
         )}
 
-        {/* Cloudflare Turnstile — invisible mode */}
+        {/* Cloudflare Turnstile — managed mode: auto-decides challenge type */}
         {TURNSTILE_SITE_KEY && (
           <Turnstile
             ref={turnstileRef}
@@ -167,7 +167,7 @@ export default function RegisterPage() {
             onSuccess={setTurnstileToken}
             onError={() => setTurnstileToken(null)}
             onExpire={() => setTurnstileToken(null)}
-            options={{ size: "invisible" }}
+            options={{ size: "normal", theme: "auto" }}
           />
         )}
 
