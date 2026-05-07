@@ -621,7 +621,7 @@ function DraggableDishCard({
 
 function DishCardOverlay({ dish }: { dish: Dish }) {
   return (
-    <div className="w-80 rounded-lg border bg-card p-4 shadow-xl ring-2 ring-primary/30">
+    <div className="w-80 rounded-lg border bg-card/80 p-4 shadow-xl ring-2 ring-primary/30 backdrop-blur-sm opacity-70">
       <div className="flex items-center gap-3">
         {dish.imageUrl ? (
           <img
