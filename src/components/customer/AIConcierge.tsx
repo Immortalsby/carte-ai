@@ -95,6 +95,7 @@ const prefLabels = {
   back: { en: "Back", fr: "Retour", zh: "\u8fd4\u56de" },
   noLimit: { en: "Any", fr: "Tous", zh: "\u4e0d\u9650" },
   confidence: { en: "Confidence", fr: "Confiance", zh: "\u7f6e\u4fe1\u5ea6" },
+  pickHint: { en: "Here are your options \u2014 pick your favorite!", fr: "Voici vos options \u2014 choisissez votre pr\u00e9f\u00e9r\u00e9 !", zh: "\u4e3a\u4f60\u7cbe\u9009\u4e86\u51e0\u4e2a\u65b9\u6848\uff0c\u6311\u4e00\u4e2a\u559c\u6b22\u7684\u5427~" },
 };
 
 export interface ConciergePanelProps {
@@ -498,6 +499,7 @@ export function ConciergePanel({
       {/* ── Results ── */}
       {step === "results" && results && (
         <div className="mt-3 space-y-3">
+          <p className="text-center text-[11px] text-carte-text-muted">{pl("pickHint")}</p>
           {results.recommendations.map((item, i) => (
             <motion.div
               key={item.id}
