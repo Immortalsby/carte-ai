@@ -67,6 +67,11 @@ const flow: Record<string, Record<string, string>> = {
     fr: "Attention : info allergènes ci-dessous",
     zh: "注意：有过敏原信息",
   },
+  fallback: {
+    en: "Oops, I'm feeling a bit sick... These are basic picks, not my best work!",
+    fr: "Oups, je suis un peu malade... Ce sont des suggestions basiques, pas mon meilleur travail !",
+    zh: "呜呜，我生病了...这些是基础推荐，不是我的最佳发挥！",
+  },
 };
 
 /* ─── Contextual message generators ─── */

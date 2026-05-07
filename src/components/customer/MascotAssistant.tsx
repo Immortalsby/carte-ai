@@ -247,6 +247,7 @@ export function MascotAssistant({
   function handleStepChange(
     step: ConciergeStep,
     hasAllergenWarning?: boolean,
+    fallbackUsed?: boolean,
   ) {
     switch (step) {
       case "occasion":
@@ -266,7 +267,10 @@ export function MascotAssistant({
         setBubbleMessage(getFlowMessage("loading", lang));
         break;
       case "results":
-        if (hasAllergenWarning) {
+        if (fallbackUsed) {
+          setMascotState("concerned");
+          setBubbleMessage(getFlowMessage("fallback", lang));
+        } else if (hasAllergenWarning) {
           setMascotState("concerned");
           setBubbleMessage(getFlowMessage("concerned", lang));
         } else {

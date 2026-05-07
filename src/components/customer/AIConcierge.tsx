@@ -106,7 +106,7 @@ export interface ConciergePanelProps {
   allowDrinksOnly?: boolean;
   onResults?: () => void;
   onClose: () => void;
-  onStepChange?: (step: ConciergeStep, hasAllergenWarning?: boolean) => void;
+  onStepChange?: (step: ConciergeStep, hasAllergenWarning?: boolean, fallbackUsed?: boolean) => void;
   savedDishIds?: string[];
   onToggleSave?: (dishIds: string[]) => void;
 }
@@ -146,9 +146,9 @@ export function ConciergePanel({
     prefLabels[key][lang as "en" | "fr" | "zh"] || prefLabels[key].en;
 
   // Notify parent on step change
-  function changeStep(newStep: ConciergeStep, hasAllergenWarning?: boolean) {
+  function changeStep(newStep: ConciergeStep, hasAllergenWarning?: boolean, fallbackUsed?: boolean) {
     setStep(newStep);
-    onStepChange?.(newStep, hasAllergenWarning);
+    onStepChange?.(newStep, hasAllergenWarning, fallbackUsed);
   }
 
   // ─── Voice input (FR19) ───
@@ -241,7 +241,7 @@ export function ConciergePanel({
       const hasAllergenWarning = data.recommendations?.some(
         (r: RecommendationItem) => r.allergenWarning,
       );
-      changeStep("results", hasAllergenWarning);
+      changeStep("results", hasAllergenWarning, data.fallbackUsed);
       onResults?.();
       trackEvent(
         tenantId,

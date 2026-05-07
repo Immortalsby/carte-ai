@@ -60,110 +60,99 @@ export async function POST(request: Request) {
       maxSpiceLevel: parsed.maxSpiceLevel,
       userText: parsed.userText,
     };
-    const local = recommendFromMenu(menu, localRequest);
-
     // Resolve actual tenant UUID from slug for logging/quota (FR32)
     const tenant = await getTenantBySlug(menu.restaurant.slug).catch(() => null);
     const tenantId = tenant?.id ?? menu.restaurant.id;
+    const tenantSettings = (tenant?.settings ?? {}) as Record<string, unknown>;
 
-    // FR53/59: Check LLM quota before calling LLM
+    // ── Build candidate pool: all dishes passing hard safety filters ──
+    const candidates = menu.dishes
+      .filter((dish) => {
+        if (!dish.available) return false;
+        if (parsed.maxSpiceLevel !== undefined && dish.spiceLevel > parsed.maxSpiceLevel) return false;
+        if (parsed.excludedAllergens.some((a) => dish.allergens.includes(a))) return false;
+        if (parsed.excludedTags.some((t) => dish.dietaryTags.includes(t))) return false;
+        return true;
+      })
+      .map((dish) => ({
+        id: dish.id,
+        category: dish.category,
+        name: getLocalizedText(dish.name, parsed.language),
+        description: getLocalizedText(dish.description, parsed.language),
+        priceCents: dish.priceCents,
+        ingredients: dish.ingredients,
+        allergens: dish.allergens,
+        dietaryTags: dish.dietaryTags,
+        caloriesKcal: dish.caloriesKcal ?? null,
+        spiceLevel: dish.spiceLevel,
+      }));
+
+    // ── LLM-first: try AI recommendation with full candidate pool ──
     let quotaExceeded = false;
     try {
-      const tenantSettings = (tenant?.settings ?? {}) as Record<string, unknown>;
       const llmQuotaCalls = (tenantSettings.llm_quota_calls as number) || 5000;
       if (tenant) {
         const currentUsage = await getLlmUsage(tenantId);
-        if (currentUsage.call_count >= llmQuotaCalls) {
-          quotaExceeded = true;
+        if (currentUsage.call_count >= llmQuotaCalls) quotaExceeded = true;
+      }
+    } catch {
+      // If quota check fails, allow LLM call (fail-open)
+    }
+
+    if (!quotaExceeded) {
+      try {
+        const llmOptions = {
+          provider: (tenantSettings.llm_provider as string) || undefined,
+          model: (tenantSettings.llm_model as string) || undefined,
+        };
+
+        const llm = await recommendWithLlm({
+          request: localRequest,
+          candidates,
+        }, llmOptions);
+
+        if (llm) {
+          const ai = llm.result;
+
+          // Guardrail: strip any hallucinated dishIds not in candidates
+          const validDishIds = new Set(candidates.map((c) => c.id));
+          const validatedRecs = ai.recommendations.filter(
+            (item: Record<string, unknown>) => {
+              const ids = item.dishIds as string[] | undefined;
+              return ids?.every((id) => validDishIds.has(id)) ?? false;
+            },
+          );
+
+          if (validatedRecs.length > 0) {
+            const response = {
+              ...ai,
+              recommendations: validatedRecs.map(
+                (item: Record<string, unknown>, index: number) => ({
+                  id: `rec-ai-${index + 1}`,
+                  ...item,
+                }),
+              ),
+              fallbackUsed: false,
+              provider: llm.provider,
+            };
+
+            const estimatedTokens = estimateTokens(JSON.stringify(response));
+            incrementLlmUsage(tenantId, estimatedTokens, LLM_COST_CENTS_PER_CALL).catch(() => {});
+            logRecommendation(tenantId, localRequest, response, llm.provider, Date.now() - startTime, parsed.excludedAllergens);
+            return NextResponse.json(response);
+          }
+          // All dish IDs hallucinated — fall through to local
         }
+      } catch {
+        // LLM failed — fall through to local
       }
-    } catch {
-      // If quota check fails, allow LLM call (fail-open for user experience)
     }
 
-    if (quotaExceeded) {
-      // FR53: Auto-degrade to local rules when quota exceeded
-      logRecommendation(tenantId, localRequest, local, "quota_exceeded", Date.now() - startTime, parsed.excludedAllergens);
-      return NextResponse.json(local);
-    }
-
-    try {
-      const candidateIds = new Set(local.recommendations.flatMap((item) => item.dishIds));
-      const candidates = menu.dishes
-        .filter((dish) => candidateIds.has(dish.id))
-        .map((dish) => ({
-          id: dish.id,
-          category: dish.category,
-          name: getLocalizedText(dish.name, parsed.language),
-          description: getLocalizedText(dish.description, parsed.language),
-          priceCents: dish.priceCents,
-          ingredients: dish.ingredients,
-          allergens: dish.allergens,
-          dietaryTags: dish.dietaryTags,
-          caloriesKcal: dish.caloriesKcal ?? null,
-          spiceLevel: dish.spiceLevel,
-        }));
-
-      // Read tenant-level LLM provider/model preferences
-      const tenantSettings = (tenant?.settings ?? {}) as Record<string, unknown>;
-      const llmOptions = {
-        provider: (tenantSettings.llm_provider as string) || undefined,
-        model: (tenantSettings.llm_model as string) || undefined,
-      };
-
-      const llm = await recommendWithLlm({
-        request: localRequest,
-        candidates,
-        localRecommendations: local.recommendations,
-      }, llmOptions);
-
-      if (!llm) {
-        // Log local-only recommendation (FR32)
-        logRecommendation(tenantId, localRequest, local, null, Date.now() - startTime, parsed.excludedAllergens);
-        return NextResponse.json(local);
-      }
-
-      const ai = llm.result;
-
-      // Guardrail #1 enforcement: strip any LLM-recommended dishIds not in candidates
-      const validDishIds = new Set(candidates.map((c) => c.id));
-      const validatedRecs = ai.recommendations.filter(
-        (item: Record<string, unknown>) => {
-          const ids = item.dishIds as string[] | undefined;
-          return ids?.every((id) => validDishIds.has(id)) ?? false;
-        },
-      );
-
-      // If LLM hallucinated all dish IDs, fall back to local results
-      if (validatedRecs.length === 0) {
-        logRecommendation(tenantId, localRequest, local, "guardrail_fallback", Date.now() - startTime, parsed.excludedAllergens);
-        return NextResponse.json(local);
-      }
-
-      const response = {
-        ...ai,
-        recommendations: validatedRecs.map(
-          (item: Record<string, unknown>, index: number) => ({
-            id: `rec-ai-${index + 1}`,
-            ...item,
-          }),
-        ),
-        fallbackUsed: false,
-        provider: llm.provider,
-      };
-
-      // FR53/60: Track LLM usage (fire-and-forget)
-      const estimatedTokens = estimateTokens(JSON.stringify(response));
-      incrementLlmUsage(tenantId, estimatedTokens, LLM_COST_CENTS_PER_CALL).catch(() => {});
-
-      // Log LLM-enhanced recommendation (FR32)
-      logRecommendation(tenantId, localRequest, response, llm.provider, Date.now() - startTime, parsed.excludedAllergens);
-      return NextResponse.json(response);
-    } catch {
-      // Log fallback recommendation (FR32)
-      logRecommendation(tenantId, localRequest, local, "fallback", Date.now() - startTime, parsed.excludedAllergens);
-      return NextResponse.json(local);
-    }
+    // ── Fallback: local rules (LLM unavailable / quota exceeded / error) ──
+    const local = recommendFromMenu(menu, localRequest);
+    const fallbackReason = quotaExceeded ? "quota_exceeded" : "fallback";
+    logRecommendation(tenantId, localRequest, local, fallbackReason, Date.now() - startTime, parsed.excludedAllergens);
+    return NextResponse.json(local);
   } catch (error) {
     console.error("[API] recommend error:", error);
     return NextResponse.json(
