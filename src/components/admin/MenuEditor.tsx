@@ -305,9 +305,9 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
 
       {/* Dish list by category — with dnd-kit drag and drop */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => { setActiveDragId(null); document.body.style.overflow = ""; }}>
-        {/* Sticky category pills — visible only while dragging */}
+        {/* Floating category pills on the left — visible only while dragging */}
         {activeDragId && (
-          <div className="sticky top-0 z-40 -mx-1 mt-4 flex flex-wrap gap-2 rounded-xl border border-primary/20 bg-card/95 px-3 py-2.5 shadow-lg backdrop-blur">
+          <div className="fixed left-0 top-1/2 z-50 -translate-y-1/2 flex flex-col gap-2 rounded-r-2xl border border-l-0 border-primary/20 bg-card/95 px-3 py-4 shadow-2xl backdrop-blur">
             {categoryOrder.map((cat) => {
               const draggedDish = menu.dishes.find((d) => d.id === activeDragId);
               const isCurrent = draggedDish?.category === cat;
@@ -503,11 +503,11 @@ function DroppablePill({
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
+      className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 ${
         isCurrent
-          ? "bg-muted text-muted-foreground opacity-50"
+          ? "bg-muted text-muted-foreground opacity-40"
           : isOver
-            ? "bg-primary text-primary-foreground scale-110 shadow-md"
+            ? "bg-primary text-primary-foreground scale-110 shadow-lg ring-2 ring-primary/50"
             : "bg-primary/10 text-primary hover:bg-primary/20"
       }`}
     >
