@@ -309,10 +309,10 @@ function HowItWorks({ t }: { t: Record<string, string> }) {
 // ---------- Features ----------
 function Features({ t }: { t: Record<string, string> }) {
   const features = [
-    { tag: t.feat1_tag, title: t.feat1_title, desc: t.feat1_desc, bullets: [t.feat1_b1, t.feat1_b2, t.feat1_b3, t.feat1_b4], image: "/images/landing/feature-upload.jpg" },
-    { tag: t.feat2_tag, title: t.feat2_title, desc: t.feat2_desc, bullets: [t.feat2_b1, t.feat2_b2, t.feat2_b3, t.feat2_b4], image: "/images/landing/feature-multilang.jpg", reverse: true },
-    { tag: t.feat3_tag, title: t.feat3_title, desc: t.feat3_desc, bullets: [t.feat3_b1, t.feat3_b2, t.feat3_b3, t.feat3_b4], image: "/images/landing/feature-allergen.jpg" },
-    { tag: t.feat4_tag, title: t.feat4_title, desc: t.feat4_desc, bullets: [t.feat4_b1, t.feat4_b2, t.feat4_b3, t.feat4_b4], image: "/images/landing/feature-analytics.jpg", reverse: true },
+    { tag: t.feat1_tag, title: t.feat1_title, desc: t.feat1_desc, bullets: [t.feat1_b1, t.feat1_b2, t.feat1_b3, t.feat1_b4], image: "/images/landing/feature-upload.png" },
+    { tag: t.feat2_tag, title: t.feat2_title, desc: t.feat2_desc, bullets: [t.feat2_b1, t.feat2_b2, t.feat2_b3, t.feat2_b4], image: "/images/landing/feature-multilang.png", reverse: true },
+    { tag: t.feat3_tag, title: t.feat3_title, desc: t.feat3_desc, bullets: [t.feat3_b1, t.feat3_b2, t.feat3_b3, t.feat3_b4], image: "/images/landing/feature-allergen.png" },
+    { tag: t.feat4_tag, title: t.feat4_title, desc: t.feat4_desc, bullets: [t.feat4_b1, t.feat4_b2, t.feat4_b3, t.feat4_b4], image: "/images/landing/feature-analytics.png", reverse: true },
   ];
 
   return (
