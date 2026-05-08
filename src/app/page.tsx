@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { CookieConsent } from "@/components/CookieConsent";
 import {
   ArrowRight,
   Building,
@@ -646,6 +647,9 @@ function FooterSection({ t }: { t: Record<string, string> }) {
             <ul className="mt-4 space-y-2.5">
               <li><Link href="/privacy" className="text-sm text-white/45 hover:text-white transition">{t.footer_privacy}</Link></li>
               <li><Link href="/terms" className="text-sm text-white/45 hover:text-white transition">{t.footer_terms}</Link></li>
+              <li><Link href="/cgv" className="text-sm text-white/45 hover:text-white transition">{t.footer_cgv}</Link></li>
+              <li><Link href="/mentions-legales" className="text-sm text-white/45 hover:text-white transition">{t.footer_mentions}</Link></li>
+              <li><Link href="/cookies" className="text-sm text-white/45 hover:text-white transition">{t.footer_cookies}</Link></li>
             </ul>
           </div>
           <div>
@@ -694,6 +698,7 @@ export default function Home() {
       <Partners t={t} />
       <FinalCTA t={t} />
       <FooterSection t={t} />
+      <CookieConsent />
     </main>
   );
 }

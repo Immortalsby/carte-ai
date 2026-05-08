@@ -466,6 +466,9 @@ const dict = {
   footer_contact: { en: "Contact", fr: "Contact", zh: "联系" },
   footer_privacy: { en: "Privacy Policy", fr: "Politique de confidentialite", zh: "隐私政策" },
   footer_terms: { en: "Terms of Service", fr: "Conditions d\u2019utilisation", zh: "服务条款" },
+  footer_cgv: { en: "General Terms of Sale", fr: "CGV", zh: "销售条款" },
+  footer_mentions: { en: "Legal Notice", fr: "Mentions l\u00e9gales", zh: "法律声明" },
+  footer_cookies: { en: "Cookie Policy", fr: "Politique de cookies", zh: "Cookie 政策" },
   footer_rights: { en: "All rights reserved.", fr: "Tous droits reserves.", zh: "保留所有权利。" },
 } as const;
 

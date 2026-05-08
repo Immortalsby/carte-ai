@@ -16,6 +16,7 @@ import { RestaurantHeader } from "./RestaurantHeader";
 import { PostMealPrompt } from "./PostMealPrompt";
 import { SharePanel } from "./SharePanel";
 import { WishlistPanel } from "./WishlistPanel";
+import { ClocheCookieConsent } from "./ClocheCookieConsent";
 
 export type ExperienceMode = "tourist" | "group_meal";
 
@@ -109,6 +110,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
 
   return (
     <div dir={dir}>
+      <ClocheCookieConsent lang={lang} />
       {/* Restaurant header with cuisine theming */}
       <RestaurantHeader
         name={menu.restaurant.name}
