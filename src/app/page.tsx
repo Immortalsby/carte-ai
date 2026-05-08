@@ -403,7 +403,7 @@ function Pricing({ t }: { t: Record<string, string> }) {
     {
       name: t.price_pro, price: "39\u20ac", period: t.price_mo, desc: t.price_pro_desc, highlight: true,
       features: [t.price_pro_f1, t.price_pro_f2, t.price_pro_f3, t.price_pro_f4, t.price_pro_f5, t.price_pro_f6, t.price_pro_f7],
-      cta: t.price_cta_trial, ctaHref: "/register",
+      cta: t.price_cta_contact, ctaHref: "mailto:contact@carte-ai.link?subject=Pro%20Plan",
     },
     {
       name: t.price_enterprise, price: t.price_enterprise_custom, period: "", desc: t.price_enterprise_desc, highlight: false,

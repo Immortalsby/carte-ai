@@ -15,6 +15,12 @@ const dict = {
     themeDark: "Dark",
     themeSystem: "System",
 
+    // Trial
+    trialActive: "Free trial active",
+    trialDaysLeft: (days: number) => `${days} day${days !== 1 ? "s" : ""} left in your free trial`,
+    trialExpired: "Your free trial has expired",
+    upgradeNow: "Upgrade",
+
     // Settings page
     settingsTitle: "Settings",
     restaurantName: "Restaurant Name",
@@ -39,6 +45,14 @@ const dict = {
 
     // Menu editor
     menuManagement: "Menu Management",
+    versionHistory: "Version History",
+    versionLabel: (v: number) => `v${v}`,
+    currentVersion: "Current",
+    rollbackTo: "Restore",
+    rollbackConfirm: (v: number) => `Restore menu to version ${v}? This creates a new version from the old content.`,
+    rollbackSuccess: "Menu restored successfully",
+    rollbackMaxNotice: "Only the last 10 versions are kept.",
+    noVersions: "No previous versions available.",
     publishChanges: "Publish Changes",
     publishing: "Publishing...",
     published: "Published",
@@ -415,6 +429,11 @@ const dict = {
     themeDark: "Sombre",
     themeSystem: "Système",
 
+    trialActive: "Essai gratuit actif",
+    trialDaysLeft: (days: number) => `${days} jour${days !== 1 ? "s" : ""} restant${days !== 1 ? "s" : ""} dans votre essai gratuit`,
+    trialExpired: "Votre essai gratuit a expiré",
+    upgradeNow: "Mettre à niveau",
+
     settingsTitle: "Paramètres",
     restaurantName: "Nom du restaurant",
     cuisineType: "Type de cuisine",
@@ -437,6 +456,14 @@ const dict = {
     networkError: "Erreur réseau — veuillez réessayer",
 
     menuManagement: "Gestion du menu",
+    versionHistory: "Historique des versions",
+    versionLabel: (v: number) => `v${v}`,
+    currentVersion: "Actuelle",
+    rollbackTo: "Restaurer",
+    rollbackConfirm: (v: number) => `Restaurer le menu à la version ${v} ? Cela crée une nouvelle version à partir de l'ancien contenu.`,
+    rollbackSuccess: "Menu restauré avec succès",
+    rollbackMaxNotice: "Seules les 10 dernières versions sont conservées.",
+    noVersions: "Aucune version précédente disponible.",
     publishChanges: "Publier les modifications",
     publishing: "Publication...",
     published: "Publié",
@@ -801,6 +828,11 @@ const dict = {
     themeDark: "深色",
     themeSystem: "跟随系统",
 
+    trialActive: "免费试用中",
+    trialDaysLeft: (days: number) => `免费试用还剩 ${days} 天`,
+    trialExpired: "免费试用已过期",
+    upgradeNow: "升级",
+
     settingsTitle: "设置",
     restaurantName: "餐馆名称",
     cuisineType: "菜系类型",
@@ -823,6 +855,14 @@ const dict = {
     networkError: "网络错误，请重试",
 
     menuManagement: "菜单管理",
+    versionHistory: "版本历史",
+    versionLabel: (v: number) => `v${v}`,
+    currentVersion: "当前版本",
+    rollbackTo: "恢复",
+    rollbackConfirm: (v: number) => `确定恢复到版本 ${v}？这会以旧版内容创建一个新版本。`,
+    rollbackSuccess: "菜单已成功恢复",
+    rollbackMaxNotice: "仅保留最近 10 个版本。",
+    noVersions: "没有可用的历史版本。",
     publishChanges: "发布更改",
     publishing: "发布中...",
     published: "已发布",

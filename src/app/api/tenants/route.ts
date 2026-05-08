@@ -41,10 +41,15 @@ export async function POST(request: Request) {
     // Auto-resolve slug collisions by appending numeric suffix (FR3)
     const uniqueSlug = await findUniqueSlug(parsed.slug);
 
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
     const tenant = await createTenant({
       ...parsed,
       slug: uniqueSlug,
       owner_id: session.user.id,
+      plan: "trial",
+      trial_ends_at: trialEndsAt,
     });
 
     return NextResponse.json(tenant, { status: 201 });

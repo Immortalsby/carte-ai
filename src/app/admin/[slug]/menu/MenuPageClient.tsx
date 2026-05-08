@@ -6,6 +6,7 @@ import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
 import { MenuEditor } from "@/components/admin/MenuEditor";
 import { MenuImporter } from "@/components/admin/MenuImporter";
+import { VersionHistory } from "@/components/admin/VersionHistory";
 
 interface MenuPageProps {
   menu: RestaurantMenu | null;
@@ -51,10 +52,27 @@ export function MenuPage({ menu: initialMenu, slug, version, cuisine, locale = "
     );
   }
 
-  // Has menu — show editor with re-import button
+  // Has menu — show editor with version history + re-import
   if (menu) {
     return (
       <div>
+        <div className="mb-4 flex justify-end">
+          <VersionHistory
+            slug={slug}
+            currentVersion={version}
+            labels={{
+              versionHistory: t.versionHistory,
+              versionLabel: t.versionLabel,
+              currentVersion: t.currentVersion,
+              rollbackTo: t.rollbackTo,
+              rollbackConfirm: t.rollbackConfirm,
+              rollbackSuccess: t.rollbackSuccess,
+              rollbackMaxNotice: t.rollbackMaxNotice,
+              noVersions: t.noVersions,
+            }}
+            onRollback={() => window.location.reload()}
+          />
+        </div>
         <MenuEditor
           menu={menu}
           slug={slug}

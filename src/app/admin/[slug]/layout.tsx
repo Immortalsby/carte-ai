@@ -11,6 +11,7 @@ import { SignOutButton } from "@/components/admin/SignOutButton";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
 import { TzCookie } from "@/components/admin/TzCookie";
 import { Link as LinkIcon, SignOut as SignOutIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrialBanner } from "@/components/admin/TrialBanner";
 
 export default async function AdminLayout({
   children,
@@ -117,7 +118,19 @@ export default async function AdminLayout({
       </div>
 
       {/* Main content */}
-      <main className="flex-1 p-4 lg:p-6">{children}</main>
+      <main className="flex-1 p-4 lg:p-6">
+        <TrialBanner
+          plan={tenant.plan}
+          trialEndsAt={tenant.trial_ends_at?.toISOString() ?? null}
+          labels={{
+            trialActive: t.trialActive,
+            trialDaysLeft: t.trialDaysLeft,
+            trialExpired: t.trialExpired,
+            upgradeNow: t.upgradeNow,
+          }}
+        />
+        {children}
+      </main>
       <TzCookie />
     </div>
   );

@@ -9,6 +9,7 @@ import { recommendations_log } from "@/lib/db/schema";
 import { getLlmUsage, incrementLlmUsage } from "@/lib/db/queries/llm-usage";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { recommendRateLimit } from "@/lib/rate-limit";
+import { hasActiveAccess } from "@/lib/trial";
 
 /** Estimate token count from a string (rough: 1 token ≈ 4 chars) */
 function estimateTokens(text: string): number {
@@ -88,7 +89,9 @@ export async function POST(request: Request) {
       }));
 
     // ── LLM-first: try AI recommendation with full candidate pool ──
-    let quotaExceeded = false;
+    // Block LLM if trial expired (local rules still work)
+    const trialActive = tenant ? hasActiveAccess(tenant) : true;
+    let quotaExceeded = !trialActive;
     try {
       const llmQuotaCalls = (tenantSettings.llm_quota_calls as number) || 5000;
       if (tenant) {

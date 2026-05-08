@@ -1,4 +1,4 @@
-import { eq, and, desc, isNotNull } from "drizzle-orm";
+import { eq, and, desc, isNotNull, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { menus } from "@/lib/db/schema";
 import type { RestaurantMenu } from "@/types/menu";
@@ -48,6 +48,9 @@ export async function patchDishImageUrl(
     .where(eq(menus.id, menu.id));
 }
 
+/** Maximum number of menu versions to keep per tenant */
+const MAX_VERSIONS = 10;
+
 export async function createMenuVersion(tenantId: string, payload: unknown) {
   const latest = await getLatestMenu(tenantId);
   const nextVersion = latest ? latest.version + 1 : 1;
@@ -61,5 +64,47 @@ export async function createMenuVersion(tenantId: string, payload: unknown) {
       published_at: new Date(),
     })
     .returning();
+
+  // Prune old versions beyond MAX_VERSIONS (fire-and-forget)
+  pruneOldVersions(tenantId, nextVersion).catch(() => {});
+
   return result[0];
+}
+
+/** Get all available versions for a tenant (most recent first, max MAX_VERSIONS) */
+export async function getMenuVersions(tenantId: string) {
+  return db
+    .select({
+      id: menus.id,
+      version: menus.version,
+      published_at: menus.published_at,
+      created_at: menus.created_at,
+    })
+    .from(menus)
+    .where(eq(menus.tenant_id, tenantId))
+    .orderBy(desc(menus.version))
+    .limit(MAX_VERSIONS);
+}
+
+/** Get a specific version's full payload */
+export async function getMenuByVersion(tenantId: string, version: number) {
+  const result = await db
+    .select()
+    .from(menus)
+    .where(and(eq(menus.tenant_id, tenantId), eq(menus.version, version)))
+    .limit(1);
+  return result[0] ?? null;
+}
+
+async function pruneOldVersions(tenantId: string, currentVersion: number) {
+  const cutoff = currentVersion - MAX_VERSIONS;
+  if (cutoff <= 0) return;
+  await db
+    .delete(menus)
+    .where(
+      and(
+        eq(menus.tenant_id, tenantId),
+        lt(menus.version, cutoff),
+      ),
+    );
 }

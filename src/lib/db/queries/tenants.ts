@@ -30,6 +30,8 @@ export async function createTenant(data: {
   google_place_id?: string;
   rating?: string;
   address?: string;
+  plan?: string;
+  trial_ends_at?: Date;
 }) {
   const result = await db.insert(tenants).values(data).returning();
   return result[0];
