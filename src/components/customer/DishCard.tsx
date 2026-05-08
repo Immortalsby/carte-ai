@@ -89,7 +89,7 @@ export function DishCard({ dish, lang, cuisine, tenantId, onTap }: DishCardProps
           {/* AI Generated badge (FR24) */}
           {displayImage.includes("dish-images/") && (
             <span className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5 text-center text-[7px] leading-tight text-white/80">
-              AI Generated &middot; For Reference
+              {lang === "zh" ? "AI 生成 · 仅供参考" : lang === "fr" ? "IA · Indicatif" : "AI Generated · For Reference"}
             </span>
           )}
         </div>

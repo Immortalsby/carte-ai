@@ -10,6 +10,7 @@ import type { ConciergeStep } from "./AIConcierge";
 import { CSSMascot } from "./CSSMascot";
 import { ConciergePanel } from "./AIConcierge";
 import { SpeechBubble } from "./SpeechBubble";
+import { trackEvent } from "@/lib/analytics-client";
 import {
   pickIdleMessage,
   pickContextualMessage,
@@ -89,6 +90,9 @@ interface MascotAssistantProps {
   onToggleSave?: (dishIds: string[]) => void;
   getTurnstileToken?: () => string | null;
   googleMapsUrl?: string;
+  /** Delay (ms) before Cloche asks "did you order?" after results. Default 90s */
+  postMealDelayMs?: number;
+  onPostMealDone?: () => void;
 }
 
 export function MascotAssistant({
@@ -107,12 +111,20 @@ export function MascotAssistant({
   onToggleSave,
   getTurnstileToken,
   googleMapsUrl,
+  postMealDelayMs = 90_000,
+  onPostMealDone,
 }: MascotAssistantProps) {
   const isExpired = planStatus === "trial_expired";
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelKey, setPanelKey] = useState(0); // increment to force ConciergePanel remount
   const [mascotState, setMascotState] = useState<MascotState>(isExpired ? "sad" : "idle");
   const [warpPhase, setWarpPhase] = useState<WarpPhase>(null);
+
+  // ─── Post-meal adoption flow (Cloche asks "did you order?") ───
+  type PostMealPhase = "idle" | "asking" | "review" | "done";
+  const [postMealPhase, setPostMealPhase] = useState<PostMealPhase>("idle");
+  const postMealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasShownPostMeal = useRef(false);
 
   // ─── Intro ───
   const [introStep, setIntroStep] = useState<IntroStep>(null);
@@ -189,6 +201,58 @@ export function MascotAssistant({
       setMascotState("happy");
     }
   }, [shareMessage]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Post-meal: start timer when results are shown ───
+  const startPostMealTimer = useCallback(() => {
+    if (hasShownPostMeal.current || isExpired) return;
+    if (postMealTimerRef.current) clearTimeout(postMealTimerRef.current);
+    postMealTimerRef.current = setTimeout(() => {
+      if (hasShownPostMeal.current) return;
+      hasShownPostMeal.current = true;
+      setPostMealPhase("asking");
+      // Show Cloche's question bubble (idle mascot, not inside panel)
+      if (timerRef.current) clearTimeout(timerRef.current);
+      setBubbleMessage(getFlowMessage("postMealAsk", lang));
+      setBubbleVisible(true);
+      setMascotState("talking");
+    }, postMealDelayMs);
+  }, [isExpired, lang, postMealDelayMs]);
+
+  useEffect(() => {
+    return () => { if (postMealTimerRef.current) clearTimeout(postMealTimerRef.current); };
+  }, []);
+
+  function handlePostMealAnswer(adopted: boolean) {
+    trackEvent(tenantId, "adoption", { adopted }, lang);
+    if (adopted && googleMapsUrl) {
+      setPostMealPhase("review");
+      setBubbleMessage(getFlowMessage("postMealReview", lang));
+      setBubbleVisible(true);
+      setMascotState("happy");
+    } else {
+      setPostMealPhase("done");
+      setBubbleMessage(
+        getFlowMessage(adopted ? "postMealThanks" : "postMealNoWorries", lang),
+      );
+      setBubbleVisible(true);
+      setMascotState(adopted ? "happy" : "idle");
+      setTimeout(() => {
+        setPostMealPhase("idle");
+        onPostMealDone?.();
+      }, 3000);
+    }
+  }
+
+  function handlePostMealReviewDone() {
+    setPostMealPhase("done");
+    setBubbleMessage(getFlowMessage("postMealThanks", lang));
+    setBubbleVisible(true);
+    setMascotState("happy");
+    setTimeout(() => {
+      setPostMealPhase("idle");
+      onPostMealDone?.();
+    }, 3000);
+  }
 
   // ─── Intro interactions ───
   function dismissIntro() {
@@ -304,6 +368,7 @@ export function MascotAssistant({
           setMascotState("happy");
           setBubbleMessage(getFlowMessage("results", lang));
         }
+        startPostMealTimer();
         break;
     }
     setBubbleVisible(true);
@@ -499,7 +564,6 @@ export function MascotAssistant({
                   savedDishIds={savedDishIds}
                   onToggleSave={onToggleSave}
                   getTurnstileToken={getTurnstileToken}
-                  googleMapsUrl={googleMapsUrl}
                 />
               </motion.div>
             </div>
@@ -517,8 +581,74 @@ export function MascotAssistant({
             <SpeechBubble
               message={bubbleMessage}
               visible={bubbleVisible && warpPhase === null}
-              onClick={shareMessage ? onShareClick : openPanel}
+              onClick={
+                postMealPhase === "asking" || postMealPhase === "review"
+                  ? undefined
+                  : shareMessage
+                    ? onShareClick
+                    : openPanel
+              }
             />
+
+            {/* Post-meal: yes/no buttons under the bubble */}
+            <AnimatePresence>
+              {postMealPhase === "asking" && (
+                <motion.div
+                  key="post-meal-ask"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  className="mb-1 flex gap-2"
+                >
+                  <button
+                    type="button"
+                    onClick={() => handlePostMealAnswer(true)}
+                    className="min-h-[36px] rounded-full px-4 py-1.5 text-xs font-semibold text-carte-bg"
+                    style={{ backgroundColor: "var(--carte-primary)" }}
+                  >
+                    {lang === "zh" ? "点了！" : lang === "fr" ? "Oui !" : "Yes!"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePostMealAnswer(false)}
+                    className="min-h-[36px] rounded-full border border-carte-border px-4 py-1.5 text-xs font-medium text-carte-text-muted hover:bg-carte-surface"
+                  >
+                    {lang === "zh" ? "没有" : lang === "fr" ? "Non" : "Not yet"}
+                  </button>
+                </motion.div>
+              )}
+              {postMealPhase === "review" && googleMapsUrl && (
+                <motion.div
+                  key="post-meal-review"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  className="mb-1 flex gap-2"
+                >
+                  <a
+                    href={googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      trackEvent(tenantId, "review_click", { source: "cloche_post_meal" }, lang);
+                      handlePostMealReviewDone();
+                    }}
+                    className="min-h-[36px] rounded-full px-4 py-1.5 text-xs font-semibold text-carte-bg"
+                    style={{ backgroundColor: "var(--carte-accent)" }}
+                  >
+                    ⭐ Google
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handlePostMealReviewDone}
+                    className="min-h-[36px] rounded-full border border-carte-border px-4 py-1.5 text-xs font-medium text-carte-text-muted hover:bg-carte-surface"
+                  >
+                    {lang === "zh" ? "下次吧" : lang === "fr" ? "Plus tard" : "Maybe later"}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="relative">
               <AnimatePresence>
                 {vortexAtSrc && <Vortex key="vortex-src" />}

@@ -14,7 +14,6 @@ import { AllergenFilter } from "./AllergenFilter";
 import { MascotAssistant } from "./MascotAssistant";
 import { MenuBrowser } from "./MenuBrowser";
 import { RestaurantHeader } from "./RestaurantHeader";
-import { PostMealPrompt } from "./PostMealPrompt";
 import { SharePanel } from "./SharePanel";
 import { WishlistPanel } from "./WishlistPanel";
 import { ClocheCookieConsent } from "./ClocheCookieConsent";
@@ -28,19 +27,17 @@ interface CustomerExperienceProps {
   cuisineType?: string | null;
   rating?: string | null;
   address?: string | null;
-  googlePlaceId?: string | null;
   planStatus?: PlanStatus;
   allowDrinksOnly?: boolean;
   googleMapsUrl?: string;
   enableReviewNudge?: boolean;
 }
 
-export function CustomerExperience({ menu, tenantId, cuisineType, rating, address, googlePlaceId, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false }: CustomerExperienceProps) {
+export function CustomerExperience({ menu, tenantId, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false }: CustomerExperienceProps) {
   const [lang, setLang] = useState<LanguageCode>("fr");
   const [excludedAllergens, setExcludedAllergens] = useState<Allergen[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [experienceMode, setExperienceMode] = useState<ExperienceMode>("tourist");
-  const [showPostMeal, setShowPostMeal] = useState(false);
   const [showShareBubble, setShowShareBubble] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
@@ -169,7 +166,9 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
             : null
         }
         onShareClick={() => { setShowShareBubble(false); setShowShare(true); }}
-        onResults={() => setShowPostMeal(true)}
+        onResults={() => {}}
+        postMealDelayMs={90_000}
+        onPostMealDone={() => setTimeout(() => setShowShareBubble(true), 3000)}
         savedDishIds={wishlist.savedIds}
         onToggleSave={handleToggleSave}
       />
@@ -238,18 +237,6 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         </button>
       </div>
 
-      {/* Post-meal adoption prompt (FR36) */}
-      {showPostMeal && (
-        <PostMealPrompt
-          lang={lang}
-          tenantId={tenantId}
-          googlePlaceId={googlePlaceId}
-          onDismiss={() => {
-            setShowPostMeal(false);
-            setTimeout(() => setShowShareBubble(true), 3000);
-          }}
-        />
-      )}
 
       {/* Wishlist floating button (bottom-left, same height as mascot) */}
       <AnimatePresence>

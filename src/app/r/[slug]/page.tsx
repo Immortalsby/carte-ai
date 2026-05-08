@@ -51,7 +51,6 @@ export default async function CustomerPage({
           cuisineType={tenant.cuisine_type}
           rating={tenant.rating}
           address={tenant.address}
-          googlePlaceId={tenant.google_place_id}
           planStatus={getPlanStatus(tenant)}
           allowDrinksOnly={
             ((tenant.settings as Record<string, unknown> | null)?.allow_drinks_only as boolean) ?? true

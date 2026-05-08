@@ -98,7 +98,6 @@ const prefLabels = {
   next: { en: "Get recommendations", fr: "Obtenir les recommandations", zh: "\u83b7\u53d6\u63a8\u8350" },
   back: { en: "Back", fr: "Retour", zh: "\u8fd4\u56de" },
   noLimit: { en: "Any", fr: "Tous", zh: "\u4e0d\u9650" },
-  confidence: { en: "Confidence", fr: "Confiance", zh: "\u7f6e\u4fe1\u5ea6" },
   pickHint: { en: "Here are your options \u2014 pick your favorite!", fr: "Voici vos options \u2014 choisissez votre pr\u00e9f\u00e9r\u00e9 !", zh: "\u4e3a\u4f60\u7cbe\u9009\u4e86\u51e0\u4e2a\u65b9\u6848\uff0c\u6311\u4e00\u4e2a\u559c\u6b22\u7684\u5427~" },
 };
 
@@ -115,7 +114,6 @@ export interface ConciergePanelProps {
   savedDishIds?: string[];
   onToggleSave?: (dishIds: string[]) => void;
   getTurnstileToken?: () => string | null;
-  googleMapsUrl?: string;
 }
 
 export function ConciergePanel({
@@ -131,7 +129,6 @@ export function ConciergePanel({
   savedDishIds = [],
   onToggleSave,
   getTurnstileToken,
-  googleMapsUrl,
 }: ConciergePanelProps) {
   const [step, setStep] = useState<ConciergeStep>("occasion");
   const [occasion, setOccasion] = useState<DiningOccasion | null>(null);
@@ -145,10 +142,6 @@ export function ConciergePanel({
 
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const [reviewNudgeDismissed, setReviewNudgeDismissed] = useState(() => {
-    try { return sessionStorage.getItem("carte_review_nudged") === "1"; } catch { return false; }
-  });
-
   const dict = getDictionary(lang);
   const { toast } = useToast();
   const isGroupMeal = experienceMode === "group_meal";
@@ -539,18 +532,6 @@ export function ConciergePanel({
             </p>
           )}
 
-          {/* Google review nudge — once per session */}
-          {googleMapsUrl && !reviewNudgeDismissed && (
-            <ReviewNudge
-              lang={lang}
-              url={googleMapsUrl}
-              onDismiss={() => {
-                setReviewNudgeDismissed(true);
-                try { sessionStorage.setItem("carte_review_nudged", "1"); } catch {}
-              }}
-            />
-          )}
-
           <button
             type="button"
             onClick={resetFlow}
@@ -608,36 +589,6 @@ function PillButton({
     >
       {label}
     </button>
-  );
-}
-
-/* ─── Confidence bar (FR14) ─── */
-function ConfidenceBar({ value, lang }: { value: number; lang: LanguageCode }) {
-  const pct = Number.isFinite(value) ? Math.round(value * 100) : 55;
-  const label =
-    prefLabels.confidence[lang as "en" | "fr" | "zh"] ||
-    prefLabels.confidence.en;
-
-  const color =
-    pct >= 80
-      ? "var(--carte-success)"
-      : pct >= 50
-        ? "var(--carte-accent)"
-        : "var(--carte-warning)";
-
-  return (
-    <div className="mt-1.5 flex items-center gap-2">
-      <span className="text-[10px] text-carte-text-dim">{label}</span>
-      <div className="flex-1 overflow-hidden rounded-full bg-carte-border" style={{ height: 4 }}>
-        <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
-      </div>
-      <span className="text-[10px] font-medium tabular-nums" style={{ color }}>
-        {pct}%
-      </span>
-    </div>
   );
 }
 
@@ -715,53 +666,7 @@ function RecommendationCard({
           {item.allergenWarning}
         </p>
       )}
-      <ConfidenceBar value={item.confidence} lang={lang} />
     </article>
   );
 }
 
-/* ─── Google review nudge card ─── */
-const reviewNudgeText = {
-  title: { en: "Enjoying your meal?", fr: "Vous avez apprécié ?", zh: "用餐愉快吗？" },
-  body: { en: "Leave us a review on Google!", fr: "Laissez-nous un avis sur Google !", zh: "在 Google 上给我们留个好评吧！" },
-  cta: { en: "Leave a review", fr: "Laisser un avis", zh: "去评价" },
-  dismiss: { en: "Maybe later", fr: "Plus tard", zh: "以后再说" },
-};
-
-function ReviewNudge({ lang, url, onDismiss }: { lang: LanguageCode; url: string; onDismiss: () => void }) {
-  const l = (lang as string).startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5, duration: 0.3 }}
-      className="rounded-lg border p-3"
-      style={{
-        borderColor: "color-mix(in srgb, var(--carte-accent) 40%, transparent)",
-        backgroundColor: "color-mix(in srgb, var(--carte-accent) 8%, transparent)",
-      }}
-    >
-      <p className="text-xs font-semibold text-carte-text">{reviewNudgeText.title[l]}</p>
-      <p className="mt-0.5 text-[11px] text-carte-text-muted">{reviewNudgeText.body[l]}</p>
-      <div className="mt-2 flex gap-2">
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={onDismiss}
-          className="flex-1 rounded-lg px-3 py-1.5 text-center text-xs font-medium text-carte-bg transition-colors"
-          style={{ backgroundColor: "var(--carte-accent)" }}
-        >
-          ⭐ {reviewNudgeText.cta[l]}
-        </a>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="rounded-lg border border-carte-border px-3 py-1.5 text-xs text-carte-text-dim hover:bg-carte-surface"
-        >
-          {reviewNudgeText.dismiss[l]}
-        </button>
-      </div>
-    </motion.div>
-  );
-}

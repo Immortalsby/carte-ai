@@ -72,6 +72,26 @@ const flow: Record<string, Record<string, string>> = {
     fr: "Oups, je suis un peu malade... Ce sont des suggestions basiques, pas mon meilleur travail !",
     zh: "呜呜，我生病了...这些是基础推荐，不是我的最佳发挥！",
   },
+  postMealAsk: {
+    en: "Did you order one of my picks? 🍽️",
+    fr: "Vous avez commandé un de mes choix ? 🍽️",
+    zh: "点了我推荐的菜吗？🍽️",
+  },
+  postMealThanks: {
+    en: "Awesome, thanks for the feedback!",
+    fr: "Super, merci pour le retour !",
+    zh: "太好了，谢谢反馈！",
+  },
+  postMealNoWorries: {
+    en: "No worries! Maybe next time~",
+    fr: "Pas de souci ! Peut-être la prochaine fois~",
+    zh: "没关系！下次再说~",
+  },
+  postMealReview: {
+    en: "Glad you liked it! Leave a review? ⭐",
+    fr: "Content que ça vous ait plu ! Un avis ? ⭐",
+    zh: "开心你喜欢！去评价一下？⭐",
+  },
 };
 
 /* ─── Contextual message generators ─── */

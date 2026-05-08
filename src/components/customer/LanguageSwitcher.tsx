@@ -99,17 +99,17 @@ export function LanguageSwitcher({ current, onChange }: LanguageSwitcherProps) {
               animate={{ y: 0, scale: 1 }}
               exit={{ y: 30, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="w-full rounded-2xl border border-[#2a2a32] bg-[#1a1a20] p-5 shadow-2xl"
+              className="w-full rounded-2xl border border-carte-border bg-carte-bg p-5 shadow-2xl"
               style={{ maxWidth: 360 }}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-sm font-medium text-[#f0ece3]">
+                <h3 className="text-sm font-medium text-carte-text">
                   {current === "zh" ? "选择语言" : current === "fr" ? "Choisir la langue" : "Choose language"}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="text-lg text-[#7a7a82] hover:text-[#f0ece3]"
+                  className="text-lg text-carte-text-dim hover:text-carte-text"
                 >
                   &times;
                 </button>
@@ -120,11 +120,12 @@ export function LanguageSwitcher({ current, onChange }: LanguageSwitcherProps) {
                     key={lang}
                     type="button"
                     onClick={() => selectLanguage(lang)}
-                    className={`min-h-[44px] rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
+                    className="min-h-[44px] rounded-xl px-3 py-2.5 text-left text-sm transition-colors"
+                    style={
                       current === lang
-                        ? "bg-emerald-500/20 text-emerald-400"
-                        : "text-[#f0ece3] hover:bg-[#2a2a32]"
-                    }`}
+                        ? { backgroundColor: "color-mix(in srgb, var(--carte-primary) 20%, transparent)", color: "var(--carte-primary)" }
+                        : { color: "var(--carte-text)", backgroundColor: "transparent" }
+                    }
                   >
                     {languageNames[lang]}
                   </button>
