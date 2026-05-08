@@ -99,6 +99,23 @@ export const auth = betterAuth({
           ]).catch((err) => console.error("Post-verification email failed:", err));
         }
       }
+
+      // Send welcome + admin notification for new OAuth users
+      // OAuth users skip email verification, so we trigger here instead
+      if (ctx.path.startsWith("/callback")) {
+        const session = ctx.context.newSession;
+        if (session?.user?.email) {
+          const user = session.user as { name: string; email: string; createdAt: Date };
+          const createdAt = new Date(user.createdAt);
+          const isNewUser = Date.now() - createdAt.getTime() < 60_000;
+          if (isNewUser) {
+            Promise.all([
+              sendUserRegistrationEmail({ name: user.name, email: user.email }),
+              sendAdminNewUserNotification({ name: user.name, email: user.email }),
+            ]).catch((err) => console.error("Post-OAuth registration email failed:", err));
+          }
+        }
+      }
     }),
   },
 });
