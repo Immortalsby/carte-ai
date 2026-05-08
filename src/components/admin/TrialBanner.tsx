@@ -9,7 +9,7 @@ interface TrialBannerProps {
   slug: string;
   labels: {
     trialActive: string;
-    trialDaysLeft: (days: number) => string;
+    trialDaysLeft: string;
     trialExpired: string;
     upgradeNow: string;
   };
@@ -46,7 +46,7 @@ export function TrialBanner({ plan, trialEndsAt, slug, labels }: TrialBannerProp
         {expired
           ? labels.trialExpired
           : daysLeft !== null
-            ? labels.trialDaysLeft(daysLeft)
+            ? labels.trialDaysLeft
             : labels.trialActive}
       </span>
       <a

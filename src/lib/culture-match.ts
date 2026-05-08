@@ -32,8 +32,6 @@ const cuisineLanguageMap: Record<string, LanguageCode[]> = {
   moroccan: ["ar", "fr"],
   turkish_restaurant: ["tr"],
   turkish: ["tr"],
-  greek_restaurant: ["el"],
-  greek: ["el"],
   brazilian_restaurant: ["pt"],
   brazilian: ["pt"],
   peruvian_restaurant: ["es"],

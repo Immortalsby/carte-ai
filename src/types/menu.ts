@@ -1,25 +1,6 @@
-export type LanguageCode =
-  | "fr"
-  | "en"
-  | "zh"
-  | "zh-Hant"
-  | "es"
-  | "it"
-  | "de"
-  | "pt"
-  | "ar"
-  | "ja"
-  | "ko"
-  | "ru"
-  | "tr"
-  | "el"
-  | "nl"
-  | "pl"
-  | "uk"
-  | "ro"
-  | "vi"
-  | "th"
-  | "hi";
+/** Re-exported from languages.ts — the single source of truth */
+export type { LanguageCode } from "@/lib/languages";
+import type { LanguageCode } from "@/lib/languages";
 
 export type MenuCategory =
   | "starter"

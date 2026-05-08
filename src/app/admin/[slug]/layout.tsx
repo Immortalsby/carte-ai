@@ -125,7 +125,11 @@ export default async function AdminLayout({
           slug={slug}
           labels={{
             trialActive: t.trialActive,
-            trialDaysLeft: t.trialDaysLeft,
+            trialDaysLeft: (() => {
+              if (tenant.plan !== "trial" || !tenant.trial_ends_at) return t.trialActive;
+              const diff = Math.ceil((tenant.trial_ends_at.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              return t.trialDaysLeft(Math.max(0, diff));
+            })(),
             trialExpired: t.trialExpired,
             upgradeNow: t.upgradeNow,
           }}

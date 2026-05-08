@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/ui/Providers";
+import { SUPPORTED_LANGUAGE_COUNT } from "@/lib/languages";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,7 +24,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "CarteAI — AI Dining Concierge",
   description:
-    "AI menu concierge for restaurant QR ordering. 20 languages, allergen safety, personalized recommendations in 3 seconds.",
+    `AI menu concierge for restaurant QR ordering. ${SUPPORTED_LANGUAGE_COUNT} languages, allergen safety, personalized recommendations in 3 seconds.`,
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "32x32" },

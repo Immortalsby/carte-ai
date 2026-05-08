@@ -23,6 +23,7 @@ import {
   Zap,
 } from "lucide-react";
 import { type LandingLocale, getLandingDict, detectLandingLocale } from "@/lib/landing-i18n";
+import { SUPPORTED_LANGUAGE_COUNT } from "@/lib/languages";
 
 /* ------------------------------------------------------------------ */
 /*  Landing page — CarteAI (trilingual: FR / EN / ZH)                 */
@@ -36,8 +37,8 @@ function LangSwitch({
   current: LandingLocale;
   onChange: (l: LandingLocale) => void;
 }) {
-  const locales: LandingLocale[] = ["fr", "en", "zh"];
-  const labels: Record<LandingLocale, string> = { fr: "FR", en: "EN", zh: "中" };
+  const locales: LandingLocale[] = ["fr", "en", "zh", "tr"];
+  const labels: Record<LandingLocale, string> = { fr: "FR", en: "EN", zh: "中", tr: "TR" };
   return (
     <div className="flex rounded-full border border-white/15 p-0.5">
       {locales.map((l) => (
@@ -179,7 +180,7 @@ function Hero({ t }: { t: Record<string, string> }) {
           </a>
         </div>
         <div className="mt-10 flex gap-8">
-          <div><p className="text-2xl font-bold text-white">20</p><p className="text-xs text-white/45">{t.hero_stat_langs}</p></div>
+          <div><p className="text-2xl font-bold text-white">{SUPPORTED_LANGUAGE_COUNT}</p><p className="text-xs text-white/45">{t.hero_stat_langs}</p></div>
           <div><p className="text-2xl font-bold text-white">3s</p><p className="text-xs text-white/45">{t.hero_stat_speed}</p></div>
           <div><p className="text-2xl font-bold text-white">95%</p><p className="text-xs text-white/45">{t.hero_stat_revenue}</p></div>
           <div><p className="text-2xl font-bold text-white">0&euro;</p><p className="text-xs text-white/45">{t.hero_stat_free}</p></div>

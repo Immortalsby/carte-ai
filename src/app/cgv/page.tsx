@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { SUPPORTED_LANGUAGE_COUNT } from "@/lib/languages";
 
 export default function CGVPage() {
   return (
@@ -31,7 +32,7 @@ export default function CGVPage() {
               <li>Importer et num&eacute;riser leur carte (PDF, photo, CSV)</li>
               <li>G&eacute;n&eacute;rer un QR code pour consultation en salle</li>
               <li>Proposer &agrave; leurs clients des recommandations de plats personnalis&eacute;es par IA</li>
-              <li>Afficher la carte en 20 langues avec d&eacute;tection automatique</li>
+              <li>Afficher la carte en {SUPPORTED_LANGUAGE_COUNT} langues avec d&eacute;tection automatique</li>
               <li>G&eacute;rer les 14 allerg&egrave;nes europ&eacute;ens r&egrave;glementaires</li>
               <li>Acc&eacute;der &agrave; un tableau de bord analytique</li>
             </ul>

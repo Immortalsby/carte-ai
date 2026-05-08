@@ -1,3 +1,5 @@
+import { detectLanguage } from "@/lib/languages";
+
 export type AuthLocale = "en" | "fr" | "zh";
 
 const dict = {
@@ -259,10 +261,6 @@ export function getAuthDict(locale: AuthLocale): AuthDict {
 
 /** Detect locale from browser navigator.language */
 export function detectAuthLocale(): AuthLocale {
-  if (typeof navigator === "undefined") return "en";
-  const lang = navigator.language?.split("-")[0]?.toLowerCase();
-  if (lang === "zh") return "zh";
-  if (lang === "fr") return "fr";
-  return "en";
+  return detectLanguage({ supportedSet: ["en", "fr", "zh"], fallback: "en" }) as AuthLocale;
 }
 

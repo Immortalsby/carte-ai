@@ -1,3 +1,5 @@
+import { SUPPORTED_LANGUAGE_COUNT as N, detectLanguage } from "@/lib/languages";
+
 export type AdminLocale = "en" | "fr" | "zh";
 
 const dict = {
@@ -378,7 +380,7 @@ const dict = {
     posterHeadline: "Let AI help you choose.",
     posterSubtitle: (name: string) => `Scan for a smart menu recommendation at ${name}.`,
     posterBadge1: "Budget · Taste · Allergens",
-    posterBadge2: "AI Menu · 20 Languages",
+    posterBadge2: `AI Menu · ${N} Languages`,
     posterScanLabel: "Scan the AI menu",
 
     // Danger zone
@@ -787,7 +789,7 @@ const dict = {
     posterHeadline: "Laissez l'IA vous aider à choisir.",
     posterSubtitle: (name: string) => `Scannez pour une recommandation au ${name}.`,
     posterBadge1: "Budget · Goût · Allergènes",
-    posterBadge2: "Menu IA · 20 langues",
+    posterBadge2: `Menu IA · ${N} langues`,
     posterScanLabel: "Scannez le menu IA",
 
     // Danger zone
@@ -1194,7 +1196,7 @@ const dict = {
     posterHeadline: "让 AI 帮你选菜。",
     posterSubtitle: (name: string) => `扫码获取 ${name} 的智能菜品推荐。`,
     posterBadge1: "预算 · 口味 · 过敏原",
-    posterBadge2: "AI 菜单 · 支持 20 种语言",
+    posterBadge2: `AI 菜单 · 支持 ${N} 种语言`,
     posterScanLabel: "扫码查看 AI 菜单",
 
     // Danger zone
@@ -1257,17 +1259,11 @@ export function detectAdminLocale(
   cookieValue?: string | null,
   acceptLanguage?: string | null,
 ): AdminLocale {
-  // 1. Explicit preference from cookie
-  if (cookieValue && (cookieValue === "en" || cookieValue === "fr" || cookieValue === "zh")) {
-    return cookieValue;
-  }
-  // 2. Browser Accept-Language
-  if (acceptLanguage) {
-    const primary = acceptLanguage.split(",")[0]?.split("-")[0]?.toLowerCase();
-    if (primary === "zh") return "zh";
-    if (primary === "fr") return "fr";
-    if (primary === "en") return "en";
-  }
-  // 3. Default
-  return "en";
+  const accept = acceptLanguage ? acceptLanguage.split(",").map((s) => s.split(";")[0].trim()) : undefined;
+  return detectLanguage({
+    cookie: cookieValue ?? undefined,
+    accept,
+    supportedSet: ["en", "fr", "zh"],
+    fallback: "en",
+  }) as AdminLocale;
 }

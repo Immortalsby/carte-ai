@@ -1,5 +1,6 @@
-import type { LanguageCode, LocalizedText } from "@/types/menu";
-import { isSupportedLanguage } from "./languages";
+import type { LocalizedText } from "@/types/menu";
+import type { LanguageCode } from "./languages";
+import { detectLanguage } from "./languages";
 
 type Dictionary = {
   concierge: string;
@@ -478,17 +479,7 @@ export function getLocalizedText(text: LocalizedText, language: LanguageCode) {
   );
 }
 
+/** @deprecated Use detectLanguage() from languages.ts directly */
 export function detectBrowserLanguage(languages: readonly string[]) {
-  for (const raw of languages) {
-    const normalized = raw.toLowerCase();
-    if (normalized === "zh-tw" || normalized === "zh-hk" || normalized === "zh-mo") {
-      return "zh-Hant";
-    }
-    if (normalized.startsWith("zh")) return "zh";
-    const primary = normalized.split("-")[0];
-    if (isSupportedLanguage(raw)) return raw;
-    if (isSupportedLanguage(primary)) return primary;
-  }
-
-  return "fr";
+  return detectLanguage({ accept: languages, fallback: "fr" }) as LanguageCode;
 }
