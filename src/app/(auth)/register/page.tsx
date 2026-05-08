@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnstileRef = useRef<TurnstileInstance>(null);
 
@@ -33,6 +34,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
+    if (!agreedTerms) { setError(t.mustAgreeTerms); return; }
     const pwError = validatePassword(password);
     if (pwError) { setError(pwError); return; }
     if (password !== confirmPassword) { setError(t.passwordsNoMatch); return; }
@@ -180,6 +182,21 @@ export default function RegisterPage() {
         {confirmPassword && password !== confirmPassword && (
           <p className="text-xs text-red-500">{t.passwordsNoMatch}</p>
         )}
+
+        <label className="flex items-start gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={agreedTerms}
+            onChange={(e) => setAgreedTerms(e.target.checked)}
+            className="mt-0.5 rounded border-border"
+          />
+          <span>
+            {t.agreeTerms}{" "}
+            <a href="/terms" target="_blank" className="text-foreground underline">{t.termsOfService}</a>
+            {" "}{t.andThe}{" "}
+            <a href="/privacy" target="_blank" className="text-foreground underline">{t.privacyPolicy}</a>
+          </span>
+        </label>
 
         {/* Cloudflare Turnstile — managed mode: auto-decides challenge type */}
         {TURNSTILE_SITE_KEY && (
