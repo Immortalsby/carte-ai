@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { Camera } from "@phosphor-icons/react";
 import {
   DndContext,
   DragOverlay,
@@ -1058,7 +1059,7 @@ function DishEditor({
             </div>
           ) : (
             <div className="flex h-24 w-24 items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted">
-              <span className="text-2xl text-muted-foreground">📷</span>
+              <Camera weight="duotone" className="h-8 w-8 text-muted-foreground" />
             </div>
           )}
 

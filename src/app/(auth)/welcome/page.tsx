@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession, authClient } from "@/lib/auth-client";
 import { type AuthLocale, detectAuthLocale, getAuthDict } from "@/lib/auth-i18n";
+import { Envelope, HourglassMedium, Check } from "@phosphor-icons/react";
 
 export default function WelcomePage() {
   const { data: session, isPending } = useSession();
@@ -95,7 +96,7 @@ export default function WelcomePage() {
       {!emailVerified && (
         <>
           <div className="mt-6 rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
-            <div className="text-2xl">📧</div>
+            <Envelope weight="duotone" className="h-7 w-7 text-amber-500" />
             <h2 className="mt-2 text-sm font-semibold text-foreground">
               {t.stepVerifyEmail}
             </h2>
@@ -126,7 +127,7 @@ export default function WelcomePage() {
       {/* State 2: Email verified, pending approval */}
       {emailVerified && approved === false && (
         <div className="mt-6 rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
-          <div className="text-2xl">⏳</div>
+          <HourglassMedium weight="duotone" className="h-7 w-7 text-blue-500" />
           <h2 className="mt-2 text-sm font-semibold text-foreground">
             {t.stepAccountReview}
           </h2>
@@ -169,7 +170,7 @@ function StepDot({ done, num }: { done: boolean; num: number }) {
           : "border border-border bg-muted text-muted-foreground"
       }`}
     >
-      {done ? "✓" : num}
+      {done ? <Check weight="bold" className="h-4 w-4" /> : num}
     </div>
   );
 }

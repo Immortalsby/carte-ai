@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import type { LanguageCode, Allergen, RestaurantMenu } from "@/types/menu";
 import type {
@@ -14,31 +14,35 @@ import { getDictionary } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics-client";
 import { useToast } from "@/components/ui/Toast";
 import { CuisineLoader } from "./CuisineLoader";
+import {
+  BeerStein, ForkKnife, BowlFood, Sparkle, CurrencyEur, Star,
+  Leaf, Question, Users, UsersThree, UsersFour, Fire, Snowflake, Pepper,
+} from "@phosphor-icons/react";
 
 /* ─── Step definitions ─── */
 export type ConciergeStep = "occasion" | "mode" | "preferences" | "loading" | "results";
 
 const occasionOptions: Array<{
   occasion: DiningOccasion;
-  icon: string;
+  icon: ReactNode;
   label: { en: string; fr: string; zh: string };
   desc: { en: string; fr: string; zh: string };
 }> = [
   {
     occasion: "drinks",
-    icon: "\ud83c\udf7b",
+    icon: <BeerStein weight="duotone" />,
     label: { en: "Just drinks", fr: "Juste un verre", zh: "\u559d\u4e00\u676f" },
     desc: { en: "Drinks + a few bites to share", fr: "Boissons + quelques bouchées à partager", zh: "\u996e\u54c1\u4e3a\u4e3b\uff0c\u70b9\u51e0\u4e2a\u5c0f\u98df\u5206\u4eab" },
   },
   {
     occasion: "meal",
-    icon: "\ud83c\udf7d\ufe0f",
+    icon: <ForkKnife weight="duotone" />,
     label: { en: "A proper meal", fr: "Un vrai repas", zh: "\u6b63\u7ecf\u5403\u996d" },
     desc: { en: "One dish per person + drinks", fr: "Un plat par personne + boissons", zh: "\u6bcf\u4eba\u4e00\u4efd\u4e3b\u83dc + \u996e\u54c1" },
   },
   {
     occasion: "feast",
-    icon: "\ud83e\udd62",
+    icon: <BowlFood weight="duotone" />,
     label: { en: "Sharing feast", fr: "Festin à partager", zh: "\u5927\u5feb\u6735\u9890" },
     desc: { en: "Order many dishes to share family-style", fr: "Plein de plats à partager entre tous", zh: "\u591a\u70b9\u51e0\u4e2a\u83dc\u5927\u5bb6\u4e00\u8d77\u5403" },
   },
@@ -47,7 +51,7 @@ const occasionOptions: Array<{
 type ModeEntry = {
   mode: RecommendationMode;
   dictKey: keyof ReturnType<typeof getDictionary>;
-  icon: string;
+  icon: ReactNode;
   partySize?: 1 | 2 | 3 | 4;
   defaults?: {
     budgetCents?: number;
@@ -56,28 +60,28 @@ type ModeEntry = {
 };
 
 const touristModes: ModeEntry[] = [
-  { mode: "first_time", dictKey: "firstTime", icon: "\ud83c\udd95" },
-  { mode: "cheap", dictKey: "cheap", icon: "\ud83d\udcb0", defaults: { budgetCents: 1000 } },
-  { mode: "signature", dictKey: "signature", icon: "\u2b50" },
-  { mode: "healthy", dictKey: "healthy", icon: "\ud83e\udd57" },
-  { mode: "sharing", dictKey: "sharing", icon: "\ud83c\udf7b" },
-  { mode: "not_sure", dictKey: "prompt", icon: "\ud83e\udd14" },
+  { mode: "first_time", dictKey: "firstTime", icon: <Sparkle weight="duotone" /> },
+  { mode: "cheap", dictKey: "cheap", icon: <CurrencyEur weight="duotone" />, defaults: { budgetCents: 1000 } },
+  { mode: "signature", dictKey: "signature", icon: <Star weight="duotone" /> },
+  { mode: "healthy", dictKey: "healthy", icon: <Leaf weight="duotone" /> },
+  { mode: "sharing", dictKey: "sharing", icon: <BeerStein weight="duotone" /> },
+  { mode: "not_sure", dictKey: "prompt", icon: <Question weight="duotone" /> },
 ];
 
 const groupMealModes: ModeEntry[] = [
-  { mode: "sharing", dictKey: "twoPersons", icon: "\ud83d\udc65", partySize: 2 },
-  { mode: "sharing", dictKey: "threePersons", icon: "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67", partySize: 3 },
-  { mode: "sharing", dictKey: "fourPersons", icon: "\ud83c\udf89", partySize: 4 },
-  { mode: "signature", dictKey: "hotAndCold", icon: "\ud83c\udf36\ufe0f\u2744\ufe0f" },
-  { mode: "healthy", dictKey: "lightMeal", icon: "\ud83e\udd57" },
-  { mode: "not_sure", dictKey: "prompt", icon: "\ud83e\udd14" },
+  { mode: "sharing", dictKey: "twoPersons", icon: <Users weight="duotone" />, partySize: 2 },
+  { mode: "sharing", dictKey: "threePersons", icon: <UsersThree weight="duotone" />, partySize: 3 },
+  { mode: "sharing", dictKey: "fourPersons", icon: <UsersFour weight="duotone" />, partySize: 4 },
+  { mode: "signature", dictKey: "hotAndCold", icon: <><Fire weight="duotone" /><Snowflake weight="duotone" /></> },
+  { mode: "healthy", dictKey: "lightMeal", icon: <Leaf weight="duotone" /> },
+  { mode: "not_sure", dictKey: "prompt", icon: <Question weight="duotone" /> },
 ];
 
 const spiceLevels = [
-  { value: 0 as const, label: { en: "No spice", fr: "Non \u00e9pic\u00e9", zh: "\u4e0d\u8fa3" }, icon: "\u2744\ufe0f" },
-  { value: 1 as const, label: { en: "Mild", fr: "L\u00e9ger", zh: "\u5fae\u8fa3" }, icon: "\ud83c\udf36\ufe0f" },
-  { value: 2 as const, label: { en: "Medium", fr: "Moyen", zh: "\u4e2d\u8fa3" }, icon: "\ud83c\udf36\ufe0f\ud83c\udf36\ufe0f" },
-  { value: 3 as const, label: { en: "Hot", fr: "Fort", zh: "\u91cd\u8fa3" }, icon: "\ud83c\udf36\ufe0f\ud83c\udf36\ufe0f\ud83c\udf36\ufe0f" },
+  { value: 0 as const, label: { en: "No spice", fr: "Non \u00e9pic\u00e9", zh: "\u4e0d\u8fa3" }, icon: <Snowflake weight="duotone" /> },
+  { value: 1 as const, label: { en: "Mild", fr: "L\u00e9ger", zh: "\u5fae\u8fa3" }, icon: <Pepper weight="duotone" /> },
+  { value: 2 as const, label: { en: "Medium", fr: "Moyen", zh: "\u4e2d\u8fa3" }, icon: <><Pepper weight="duotone" /><Pepper weight="duotone" /></> },
+  { value: 3 as const, label: { en: "Hot", fr: "Fort", zh: "\u91cd\u8fa3" }, icon: <><Pepper weight="duotone" /><Pepper weight="duotone" /><Pepper weight="duotone" /></> },
 ];
 
 const budgetPresets = [
@@ -298,7 +302,7 @@ export function ConciergePanel({
                 }}
                 className="flex w-full items-center gap-3 rounded-lg border border-carte-border bg-carte-surface px-4 py-3 text-left transition-colors hover:bg-carte-surface-hover hover:border-carte-primary/30"
               >
-                <span className="text-2xl">{opt.icon}</span>
+                <span className="flex shrink-0 items-center text-carte-primary [&>svg]:h-6 [&>svg]:w-6">{opt.icon}</span>
                 <div className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold text-carte-text">{opt.label[l]}</span>
                   <span className="block text-xs text-carte-text-muted">{opt.desc[l]}</span>
@@ -316,7 +320,7 @@ export function ConciergePanel({
             <div className="mb-2 flex items-center gap-2 rounded-lg px-3 py-2"
               style={{ backgroundColor: "color-mix(in srgb, var(--carte-primary) 10%, transparent)" }}
             >
-              <span className="text-base">{occasionOptions.find((o) => o.occasion === occasion)?.icon}</span>
+              <span className="flex items-center text-carte-primary [&>svg]:h-4 [&>svg]:w-4">{occasionOptions.find((o) => o.occasion === occasion)?.icon}</span>
               <span className="text-xs font-medium text-carte-primary">
                 {occasionOptions.find((o) => o.occasion === occasion)?.label[
                   (lang as string).startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en"
@@ -339,7 +343,7 @@ export function ConciergePanel({
                 onClick={() => handleModeSelect(entry)}
                 className="min-h-[44px] rounded-lg border border-carte-border bg-carte-surface px-3 py-2.5 text-xs font-medium text-carte-text transition-colors hover:bg-carte-surface-hover hover:border-carte-primary/30"
               >
-                <span className="mr-1.5">{entry.icon}</span>
+                <span className="mr-1.5 inline-flex items-center text-carte-primary [&>svg]:h-4 [&>svg]:w-4">{entry.icon}</span>
                 {dict[entry.dictKey]}
               </button>
             ))}
@@ -353,7 +357,7 @@ export function ConciergePanel({
           <div className="flex items-center gap-2 rounded-lg px-3 py-2"
             style={{ backgroundColor: "color-mix(in srgb, var(--carte-primary) 10%, transparent)" }}
           >
-            <span className="text-base">{selectedMode.icon}</span>
+            <span className="flex items-center text-carte-primary [&>svg]:h-4 [&>svg]:w-4">{selectedMode.icon}</span>
             <span className="text-xs font-medium text-carte-primary">
               {dict[selectedMode.dictKey]}
             </span>
@@ -404,7 +408,7 @@ export function ConciergePanel({
                         }
                   }
                 >
-                  <span className="text-[10px]">{sl.icon}</span>
+                  <span className="inline-flex items-center [&>svg]:h-3 [&>svg]:w-3">{sl.icon}</span>
                   <span className="hidden sm:inline">
                     {sl.label[lang as "en" | "fr" | "zh"] || sl.label.en}
                   </span>

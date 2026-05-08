@@ -43,7 +43,7 @@ type Dictionary = {
 };
 
 const en: Dictionary = {
-  concierge: "AI Menu Concierge",
+  concierge: "Ask Cloché",
   prompt: "How do you want to eat today?",
   recommend: "Recommend for me",
   browseMenu: "Browse full menu",
@@ -86,7 +86,7 @@ const en: Dictionary = {
 
 const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
   fr: {
-    concierge: "Concierge menu IA",
+    concierge: "Ask Cloché",
     prompt: "Comment voulez-vous manger aujourd'hui ?",
     recommend: "Me recommander",
     browseMenu: "Voir tout le menu",
@@ -125,7 +125,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     lightMeal: "Repas léger",
   },
   zh: {
-    concierge: "AI 菜单顾问",
+    concierge: "Ask Cloché",
     prompt: "你今天想怎么吃？",
     recommend: "帮我推荐",
     browseMenu: "浏览完整菜单",
@@ -164,7 +164,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     lightMeal: "简单吃点",
   },
   "zh-Hant": {
-    concierge: "AI 菜單顧問",
+    concierge: "Ask Cloché",
     prompt: "你今天想怎麼吃？",
     recommend: "幫我推薦",
     browseMenu: "瀏覽完整菜單",
@@ -192,7 +192,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     aiImageNotice: "AI 生成參考圖，請向店員確認或以真實菜單圖片為準。",
   },
   es: {
-    concierge: "Conserje de menú IA",
+    concierge: "Ask Cloché",
     prompt: "¿Cómo quieres comer hoy?",
     recommend: "Recomiéndame",
     browseMenu: "Ver menú completo",
@@ -218,7 +218,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     aiImageNotice: "Imagen de referencia generada por IA. Confirme con el personal o la foto real del menú.",
   },
   it: {
-    concierge: "Concierge menu IA",
+    concierge: "Ask Cloché",
     prompt: "Come vuoi mangiare oggi?",
     recommend: "Consigliami",
     browseMenu: "Vedi tutto il menu",
@@ -236,7 +236,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     unknownCalories: "Non fornito",
   },
   de: {
-    concierge: "KI-Menü Concierge",
+    concierge: "Ask Cloché",
     prompt: "Wie möchten Sie heute essen?",
     recommend: "Empfehlen",
     browseMenu: "Ganzes Menü ansehen",
@@ -272,7 +272,7 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     unknownCalories: "Não fornecido",
   },
   ar: {
-    concierge: "مساعد قائمة الطعام بالذكاء الاصطناعي",
+    concierge: "Ask Cloché",
     prompt: "كيف تريد أن تأكل اليوم؟",
     recommend: "اقترح لي",
     browseMenu: "عرض القائمة كاملة",

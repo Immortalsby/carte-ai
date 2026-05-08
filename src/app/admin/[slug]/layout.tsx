@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/admin/ThemeToggle";
 import { SignOutButton } from "@/components/admin/SignOutButton";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
 import { TzCookie } from "@/components/admin/TzCookie";
+import { Link as LinkIcon, SignOut as SignOutIcon } from "@phosphor-icons/react/dist/ssr";
 
 export default async function AdminLayout({
   children,
@@ -86,7 +87,7 @@ export default async function AdminLayout({
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <span>🔗</span>
+            <LinkIcon weight="duotone" className="h-4 w-4 shrink-0" />
             {t.previewCustomerPage}
           </Link>
           <div className="px-3 py-2">

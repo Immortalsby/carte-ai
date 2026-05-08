@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from "react";
+import { Check, X, Info } from "@phosphor-icons/react";
 
 type ToastType = "success" | "error" | "info";
 
@@ -67,10 +68,10 @@ function ToastBubble({
     info: "bg-gray-800 text-white",
   };
 
-  const icons = {
-    success: "✓",
-    error: "✕",
-    info: "ℹ",
+  const icons: Record<ToastType, ReactNode> = {
+    success: <Check weight="bold" className="h-4 w-4" />,
+    error: <X weight="bold" className="h-4 w-4" />,
+    info: <Info weight="bold" className="h-4 w-4" />,
   };
 
   return (
@@ -78,14 +79,14 @@ function ToastBubble({
       className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-lg animate-in slide-in-from-right ${styles[item.type]}`}
       style={{ animation: "slideIn 0.2s ease-out" }}
     >
-      <span className="text-base">{icons[item.type]}</span>
+      <span className="flex items-center">{icons[item.type]}</span>
       <span>{item.message}</span>
       <button
         type="button"
         onClick={onDismiss}
         className="ml-2 opacity-70 hover:opacity-100"
       >
-        ×
+        <X weight="bold" className="h-3.5 w-3.5" />
       </button>
       <style>{`
         @keyframes slideIn {

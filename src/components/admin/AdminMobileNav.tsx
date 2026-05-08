@@ -1,9 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { signOut } from "@/lib/auth-client";
 import { ThemeToggle } from "./ThemeToggle";
+import { ChartBar, ListBullets, ChartLineUp, Image, Gear, SignOut } from "@phosphor-icons/react";
+
+const navIcons: Record<string, ReactNode> = {
+  "📊": <ChartBar weight="duotone" className="h-[18px] w-[18px]" />,
+  "📋": <ListBullets weight="duotone" className="h-[18px] w-[18px]" />,
+  "📈": <ChartLineUp weight="duotone" className="h-[18px] w-[18px]" />,
+  "🖼️": <Image weight="duotone" className="h-[18px] w-[18px]" />,
+  "⚙️": <Gear weight="duotone" className="h-[18px] w-[18px]" />,
+};
 
 interface NavItem {
   href: string;
@@ -50,7 +60,7 @@ export function AdminMobileNav({ slug, email, navItems, themeLabels }: AdminMobi
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-foreground/80 hover:bg-muted"
                 >
-                  <span>{item.icon}</span>
+                  <span className="flex items-center">{navIcons[item.icon] ?? item.icon}</span>
                   {item.label}
                 </Link>
               </li>
@@ -70,7 +80,7 @@ export function AdminMobileNav({ slug, email, navItems, themeLabels }: AdminMobi
               }}
               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-red-500 hover:bg-red-500/10 dark:text-red-400"
             >
-              <span>🚪</span>
+              <SignOut weight="duotone" className="h-4 w-4" />
               Sign out
             </button>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { signOut } from "@/lib/auth-client";
+import { SignOut } from "@phosphor-icons/react";
 
 export function SignOutButton({
   label,
@@ -17,7 +18,7 @@ export function SignOutButton({
       }}
       className={className}
     >
-      <span>🚪</span>
+      <SignOut weight="duotone" className="h-4 w-4" />
       {label}
     </button>
   );
