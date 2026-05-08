@@ -114,6 +114,8 @@ export interface ConciergePanelProps {
   onStepChange?: (step: ConciergeStep, hasAllergenWarning?: boolean, fallbackUsed?: boolean) => void;
   savedDishIds?: string[];
   onToggleSave?: (dishIds: string[]) => void;
+  getTurnstileToken?: () => string | null;
+  googleMapsUrl?: string;
 }
 
 export function ConciergePanel({
@@ -128,6 +130,8 @@ export function ConciergePanel({
   onStepChange,
   savedDishIds = [],
   onToggleSave,
+  getTurnstileToken,
+  googleMapsUrl,
 }: ConciergePanelProps) {
   const [step, setStep] = useState<ConciergeStep>("occasion");
   const [occasion, setOccasion] = useState<DiningOccasion | null>(null);
@@ -141,6 +145,9 @@ export function ConciergePanel({
 
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [reviewNudgeDismissed, setReviewNudgeDismissed] = useState(() => {
+    try { return sessionStorage.getItem("carte_review_nudged") === "1"; } catch { return false; }
+  });
 
   const dict = getDictionary(lang);
   const { toast } = useToast();
@@ -220,9 +227,13 @@ export function ConciergePanel({
     try {
       const partySize =
         selectedMode.partySize ?? (selectedMode.mode === "sharing" ? 2 : 1);
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const turnstileToken = getTurnstileToken?.();
+      if (turnstileToken) headers["x-turnstile-token"] = turnstileToken;
+
       const res = await fetch("/api/recommend", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           language: lang,
           mode: selectedMode.mode,
@@ -528,6 +539,18 @@ export function ConciergePanel({
             </p>
           )}
 
+          {/* Google review nudge — once per session */}
+          {googleMapsUrl && !reviewNudgeDismissed && (
+            <ReviewNudge
+              lang={lang}
+              url={googleMapsUrl}
+              onDismiss={() => {
+                setReviewNudgeDismissed(true);
+                try { sessionStorage.setItem("carte_review_nudged", "1"); } catch {}
+              }}
+            />
+          )}
+
           <button
             type="button"
             onClick={resetFlow}
@@ -694,5 +717,51 @@ function RecommendationCard({
       )}
       <ConfidenceBar value={item.confidence} lang={lang} />
     </article>
+  );
+}
+
+/* ─── Google review nudge card ─── */
+const reviewNudgeText = {
+  title: { en: "Enjoying your meal?", fr: "Vous avez apprécié ?", zh: "用餐愉快吗？" },
+  body: { en: "Leave us a review on Google!", fr: "Laissez-nous un avis sur Google !", zh: "在 Google 上给我们留个好评吧！" },
+  cta: { en: "Leave a review", fr: "Laisser un avis", zh: "去评价" },
+  dismiss: { en: "Maybe later", fr: "Plus tard", zh: "以后再说" },
+};
+
+function ReviewNudge({ lang, url, onDismiss }: { lang: LanguageCode; url: string; onDismiss: () => void }) {
+  const l = (lang as string).startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5, duration: 0.3 }}
+      className="rounded-lg border p-3"
+      style={{
+        borderColor: "color-mix(in srgb, var(--carte-accent) 40%, transparent)",
+        backgroundColor: "color-mix(in srgb, var(--carte-accent) 8%, transparent)",
+      }}
+    >
+      <p className="text-xs font-semibold text-carte-text">{reviewNudgeText.title[l]}</p>
+      <p className="mt-0.5 text-[11px] text-carte-text-muted">{reviewNudgeText.body[l]}</p>
+      <div className="mt-2 flex gap-2">
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onDismiss}
+          className="flex-1 rounded-lg px-3 py-1.5 text-center text-xs font-medium text-carte-bg transition-colors"
+          style={{ backgroundColor: "var(--carte-accent)" }}
+        >
+          ⭐ {reviewNudgeText.cta[l]}
+        </a>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="rounded-lg border border-carte-border px-3 py-1.5 text-xs text-carte-text-dim hover:bg-carte-surface"
+        >
+          {reviewNudgeText.dismiss[l]}
+        </button>
+      </div>
+    </motion.div>
   );
 }

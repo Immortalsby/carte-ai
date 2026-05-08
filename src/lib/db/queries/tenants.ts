@@ -31,7 +31,7 @@ export async function createTenant(data: {
   rating?: string;
   address?: string;
   plan?: string;
-  trial_ends_at?: Date;
+  trial_ends_at?: Date | null;
 }) {
   const result = await db.insert(tenants).values(data).returning();
   return result[0];
@@ -68,6 +68,7 @@ export async function updateTenant(
     rating: string;
     address: string;
     plan: string;
+    trial_ends_at: Date | null;
     stripe_customer_id: string | null;
     stripe_subscription_id: string | null;
     settings: Record<string, unknown>;

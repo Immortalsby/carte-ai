@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode, Allergen, RestaurantMenu } from "@/types/menu";
+import type { PlanStatus } from "@/lib/trial";
 import { detectLanguage } from "@/lib/languages";
 import { trackEvent } from "@/lib/analytics-client";
 import { isCultureMatch } from "@/lib/culture-match";
@@ -17,6 +18,7 @@ import { PostMealPrompt } from "./PostMealPrompt";
 import { SharePanel } from "./SharePanel";
 import { WishlistPanel } from "./WishlistPanel";
 import { ClocheCookieConsent } from "./ClocheCookieConsent";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 export type ExperienceMode = "tourist" | "group_meal";
 
@@ -27,10 +29,13 @@ interface CustomerExperienceProps {
   rating?: string | null;
   address?: string | null;
   googlePlaceId?: string | null;
+  planStatus?: PlanStatus;
   allowDrinksOnly?: boolean;
+  googleMapsUrl?: string;
+  enableReviewNudge?: boolean;
 }
 
-export function CustomerExperience({ menu, tenantId, cuisineType, rating, address, googlePlaceId, allowDrinksOnly = true }: CustomerExperienceProps) {
+export function CustomerExperience({ menu, tenantId, cuisineType, rating, address, googlePlaceId, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false }: CustomerExperienceProps) {
   const [lang, setLang] = useState<LanguageCode>("fr");
   const [excludedAllergens, setExcludedAllergens] = useState<Allergen[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -40,6 +45,10 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
   const [showShare, setShowShare] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
   const wishlist = useWishlist();
+  const turnstileTokenRef = useRef<string | null>(null);
+  const handleTurnstileSuccess = useCallback((token: string) => {
+    turnstileTokenRef.current = token;
+  }, []);
 
   // Auto-detect browser language on mount + track scan + culture match (FR16)
   useEffect(() => {
@@ -85,6 +94,15 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
     return !dish.allergens.some((a) => excludedAllergens.includes(a));
   });
 
+  // Wrap wishlist toggle to fire analytics event
+  const handleToggleSave = (dishIds: string[]) => {
+    for (const id of dishIds) {
+      const willBeSaved = !wishlist.isSaved(id);
+      trackEvent(tenantId, "wishlist_heart", { dishId: id, saved: willBeSaved }, lang);
+    }
+    wishlist.toggle(dishIds);
+  };
+
   const filterLabel =
     lang === "zh"
       ? `\u8fc7\u6ee4 ${excludedAllergens.length > 0 ? `(${excludedAllergens.length})` : ""}`
@@ -111,6 +129,14 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
   return (
     <div dir={dir}>
       <ClocheCookieConsent lang={lang} />
+      {/* Invisible Turnstile widget for bot protection */}
+      {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+        <Turnstile
+          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          options={{ size: "invisible" }}
+          onSuccess={handleTurnstileSuccess}
+        />
+      )}
       {/* Restaurant header with cuisine theming */}
       <RestaurantHeader
         name={menu.restaurant.name}
@@ -133,7 +159,10 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         tenantId={tenantId}
         experienceMode={experienceMode}
         cuisineType={cuisineType}
+        planStatus={planStatus}
         allowDrinksOnly={allowDrinksOnly}
+        googleMapsUrl={enableReviewNudge ? googleMapsUrl : undefined}
+        getTurnstileToken={() => turnstileTokenRef.current}
         shareMessage={
           showShareBubble && !showShare
             ? lang === "zh" ? "用得不错？分享给朋友吧~" : lang === "fr" ? "Vous aimez ? Partagez !" : "Enjoying it? Share with friends!"
@@ -142,7 +171,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         onShareClick={() => { setShowShareBubble(false); setShowShare(true); }}
         onResults={() => setShowPostMeal(true)}
         savedDishIds={wishlist.savedIds}
-        onToggleSave={wishlist.toggle}
+        onToggleSave={handleToggleSave}
       />
 
       {/* Filter toggle */}
@@ -232,7 +261,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
             onClick={() => setShowWishlist(true)}
-            className="fixed z-40 flex items-center gap-1.5 rounded-full border border-carte-border bg-carte-surface/80 backdrop-blur-md px-3 py-2.5 shadow-md transition-colors hover:border-carte-primary/30"
+            className="fixed z-50 flex items-center gap-1.5 rounded-full border border-carte-border bg-carte-surface/80 backdrop-blur-md px-3 py-2.5 shadow-md transition-colors hover:border-carte-primary/30"
             style={{ insetInlineStart: "1rem", bottom: "calc(clamp(120px,24vw,140px) / 2 - 0.2rem)", transform: "translateY(50%)" }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -258,7 +287,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
           .filter(Boolean) as import("@/types/menu").Dish[]}
         cuisine={cuisineType ?? undefined}
         tenantId={tenantId}
-        onRemove={(id) => wishlist.toggle([id])}
+        onRemove={(id) => handleToggleSave([id])}
         onClear={wishlist.clear}
         onClose={() => setShowWishlist(false)}
       />

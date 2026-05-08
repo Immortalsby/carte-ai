@@ -120,6 +120,22 @@ export const analytics_events = pgTable(
   ],
 );
 
+// ─── OCR Uploads (daily limit tracking) ────────────────
+
+export const ocr_uploads = pgTable(
+  "ocr_uploads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenant_id: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    uploaded_at: timestamp("uploaded_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_ocr_uploads_tenant_date").on(table.tenant_id, table.uploaded_at),
+  ],
+);
+
 // ─── LLM Usage ──────────────────────────────────────────
 
 export const llm_usage = pgTable(

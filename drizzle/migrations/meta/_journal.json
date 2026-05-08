@@ -22,6 +22,13 @@
       "when": 1778245539770,
       "tag": "0002_faulty_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778267953772,
+      "tag": "0003_harsh_cloak",
+      "breakpoints": true
     }
   ]
 }

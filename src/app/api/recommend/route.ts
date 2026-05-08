@@ -10,6 +10,7 @@ import { getLlmUsage, incrementLlmUsage } from "@/lib/db/queries/llm-usage";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { recommendRateLimit } from "@/lib/rate-limit";
 import { hasActiveAccess } from "@/lib/trial";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 /** Estimate token count from a string (rough: 1 token ≈ 4 chars) */
 function estimateTokens(text: string): number {
@@ -43,6 +44,24 @@ export async function POST(request: Request) {
     }
   } catch {
     // If Redis is down, fail open — per-tenant quota is the backstop
+  }
+
+  // Turnstile bot protection
+  const turnstileToken = request.headers.get("x-turnstile-token");
+  if (turnstileToken) {
+    const valid = await verifyTurnstile(turnstileToken);
+    if (!valid) {
+      return NextResponse.json(
+        { error: "Bot verification failed." },
+        { status: 403 },
+      );
+    }
+  } else if (process.env.TURNSTILE_SECRET_KEY) {
+    // Token required in production when Turnstile is configured
+    return NextResponse.json(
+      { error: "Missing verification token." },
+      { status: 403 },
+    );
   }
 
   const startTime = Date.now();

@@ -80,6 +80,23 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
 
       const allOcrTexts: string[] = [];
 
+      // Claim an upload slot (atomic check + record)
+      try {
+        const limitRes = await fetchWithTimeout(`/api/ingest/limit?slug=${encodeURIComponent(slug)}`, {
+          method: "POST",
+        });
+        if (!limitRes.ok) {
+          const data = await limitRes.json();
+          setState("error");
+          toast(data.error || t.importFailed);
+          return;
+        }
+      } catch {
+        setState("error");
+        toast(t.importFailed);
+        return;
+      }
+
       // Step 1: OCR for vision files (Gemini)
       for (let i = 0; i < visionFiles.length; i++) {
         if (files.length > 1) setProgress({ current: i + 1, total: files.length });

@@ -1,4 +1,4 @@
-type EventType = "scan" | "recommend_view" | "adoption" | "dwell" | "mode_switch" | "share" | "culture_match" | "review_click";
+type EventType = "scan" | "recommend_view" | "adoption" | "dwell" | "mode_switch" | "share" | "culture_match" | "review_click" | "wishlist_heart";
 
 let sessionId: string | null = null;
 

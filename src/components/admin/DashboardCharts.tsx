@@ -56,6 +56,7 @@ interface DashboardChartsProps {
   dailyAdoptions?: AdoptionData[];
   dwellDistribution?: ChartData[];
   providerDistribution?: ChartData[];
+  wishlistHearts?: ChartData[];
   locale?: AdminLocale;
 }
 
@@ -66,6 +67,7 @@ export function DashboardCharts({
   dailyAdoptions,
   dwellDistribution,
   providerDistribution,
+  wishlistHearts,
   locale = "en",
 }: DashboardChartsProps) {
   const t = getAdminDict(locale);
@@ -170,6 +172,21 @@ export function DashboardCharts({
                 <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                 <Tooltip />
                 <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Wishlist hearts per dish */}
+        {wishlistHearts && wishlistHearts.length > 0 && (
+          <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h3 className="text-sm font-semibold text-foreground">{t.wishlistHearts}</h3>
+            <ResponsiveContainer width="100%" height={Math.max(220, wishlistHearts.slice(0, 10).length * 32)}>
+              <BarChart data={wishlistHearts.slice(0, 10)} layout="vertical">
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
+                <Tooltip />
+                <Bar dataKey="value" fill="#ef4444" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

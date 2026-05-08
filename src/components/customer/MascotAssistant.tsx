@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode, Allergen, RestaurantMenu } from "@/types/menu";
+import type { PlanStatus } from "@/lib/trial";
 import type { ExperienceMode } from "./CustomerExperience";
 import type { MascotState } from "./CSSMascot";
 import type { ConciergeStep } from "./AIConcierge";
@@ -12,6 +13,7 @@ import { SpeechBubble } from "./SpeechBubble";
 import {
   pickIdleMessage,
   pickContextualMessage,
+  pickSadMessage,
   getFlowMessage,
   getIntroMessages,
 } from "@/lib/mascot-messages";
@@ -78,12 +80,15 @@ interface MascotAssistantProps {
   tenantId: string;
   experienceMode: ExperienceMode;
   cuisineType?: string | null;
+  planStatus?: PlanStatus;
   allowDrinksOnly?: boolean;
   shareMessage?: string | null;
   onShareClick?: () => void;
   onResults?: () => void;
   savedDishIds?: string[];
   onToggleSave?: (dishIds: string[]) => void;
+  getTurnstileToken?: () => string | null;
+  googleMapsUrl?: string;
 }
 
 export function MascotAssistant({
@@ -93,16 +98,20 @@ export function MascotAssistant({
   tenantId,
   experienceMode,
   cuisineType,
+  planStatus,
   allowDrinksOnly = true,
   shareMessage,
   onShareClick,
   onResults,
   savedDishIds,
   onToggleSave,
+  getTurnstileToken,
+  googleMapsUrl,
 }: MascotAssistantProps) {
+  const isExpired = planStatus === "trial_expired";
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelKey, setPanelKey] = useState(0); // increment to force ConciergePanel remount
-  const [mascotState, setMascotState] = useState<MascotState>("idle");
+  const [mascotState, setMascotState] = useState<MascotState>(isExpired ? "sad" : "idle");
   const [warpPhase, setWarpPhase] = useState<WarpPhase>(null);
 
   // ─── Intro ───
@@ -110,6 +119,7 @@ export function MascotAssistant({
   const [introExiting, setIntroExiting] = useState(false);
 
   useEffect(() => {
+    if (isExpired) return; // no intro for expired trials
     if (
       !document.cookie
         .split("; ")
@@ -118,7 +128,7 @@ export function MascotAssistant({
       setIntroStep("greeting");
       setMascotState("talking");
     }
-  }, []);
+  }, [isExpired]);
 
   // ─── Speech bubble ───
   const [bubbleMessage, setBubbleMessage] = useState("");
@@ -127,6 +137,11 @@ export function MascotAssistant({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showNextIdleMessage = useCallback(() => {
+    if (isExpired) {
+      setBubbleMessage(pickSadMessage(lang));
+      setBubbleVisible(true);
+      return;
+    }
     const contextual =
       Math.random() < 0.3
         ? pickContextualMessage(lang, menu, cuisineType)
@@ -139,7 +154,7 @@ export function MascotAssistant({
       setBubbleMessage(message);
     }
     setBubbleVisible(true);
-  }, [lang, menu, cuisineType]);
+  }, [lang, menu, cuisineType, isExpired]);
 
   const scheduleNextMessage = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -199,6 +214,18 @@ export function MascotAssistant({
   // ─── Panel open (with warp) ───
   function openPanel() {
     if (warpPhase !== null) return;
+
+    // Expired trial: show a random sad phrase instead of opening concierge
+    if (isExpired) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      setBubbleMessage(pickSadMessage(lang));
+      setBubbleVisible(true);
+      setMascotState("sad");
+      // Auto-hide after 4s
+      timerRef.current = setTimeout(() => setBubbleVisible(false), 4000);
+      return;
+    }
+
     if (timerRef.current) clearTimeout(timerRef.current);
     setBubbleVisible(false);
 
@@ -314,7 +341,7 @@ export function MascotAssistant({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6"
+            className="fixed inset-0 z-[60] flex flex-col items-center justify-center p-6"
             style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
           >
             <motion.div
@@ -411,7 +438,7 @@ export function MascotAssistant({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
             style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
             onClick={(e) => {
               if (e.target === e.currentTarget) closePanel();
@@ -471,6 +498,8 @@ export function MascotAssistant({
                   onStepChange={handleStepChange}
                   savedDishIds={savedDishIds}
                   onToggleSave={onToggleSave}
+                  getTurnstileToken={getTurnstileToken}
+                  googleMapsUrl={googleMapsUrl}
                 />
               </motion.div>
             </div>
@@ -481,7 +510,7 @@ export function MascotAssistant({
       {/* ── Idle mascot (bottom-right) ── */}
       {!showIntro && !panelOpen && (
         <div
-          className="fixed bottom-4 z-40"
+          className="fixed bottom-4 z-50"
           style={{ insetInlineEnd: "1rem" }}
         >
           <div className="flex flex-col items-end">
@@ -533,7 +562,7 @@ export function MascotAssistant({
               scale: 0.55,
             }}
             transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-            className="z-50"
+            className="z-[60]"
             style={{ position: "fixed" }}
           >
             <CSSMascot

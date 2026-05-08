@@ -9,9 +9,11 @@ import { AdminSidebarNav } from "@/components/admin/AdminSidebarNav";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
 import { SignOutButton } from "@/components/admin/SignOutButton";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
+import { isTrialExpired } from "@/lib/trial";
 import { TzCookie } from "@/components/admin/TzCookie";
 import { Link as LinkIcon, SignOut as SignOutIcon } from "@phosphor-icons/react/dist/ssr";
 import { TrialBanner } from "@/components/admin/TrialBanner";
+import { ExpiredGate } from "@/components/admin/ExpiredGate";
 
 export default async function AdminLayout({
   children,
@@ -43,11 +45,14 @@ export default async function AdminLayout({
   const locale = detectAdminLocale(localeCookie, acceptLang);
   const t = getAdminDict(locale);
 
+  const expired = !founder && isTrialExpired(tenant);
+
   const navItems = [
     { href: "", label: t.dashboard, icon: "📊" },
     { href: "/menu", label: t.menu, icon: "📋" },
     { href: "/analytics", label: t.analytics, icon: "📈" },
     { href: "/poster", label: t.qrPoster, icon: "🖼️" },
+    { href: "/billing", label: t.billing, icon: "💳" },
     { href: "/settings", label: t.settings, icon: "⚙️" },
   ];
 
@@ -123,22 +128,28 @@ export default async function AdminLayout({
           plan={tenant.plan}
           daysLeft={
             tenant.plan === "trial" && tenant.trial_ends_at
-              ? Math.max(0, Math.ceil((tenant.trial_ends_at.getTime() - Date.now()) / 86400000))
+              ? Math.max(0, Math.ceil((new Date(tenant.trial_ends_at).getTime() - Date.now()) / 86400000))
               : null
           }
           slug={slug}
+          isFounder={founder}
+          isExpired={expired}
           labels={{
             trialActive: t.trialActive,
             trialDaysLeft: (() => {
               if (tenant.plan !== "trial" || !tenant.trial_ends_at) return t.trialActive;
-              const diff = Math.ceil((tenant.trial_ends_at.getTime() - Date.now()) / 86400000);
+              const diff = Math.ceil((new Date(tenant.trial_ends_at).getTime() - Date.now()) / 86400000);
               return t.trialDaysLeft(Math.max(0, diff));
             })(),
             trialExpired: t.trialExpired,
             upgradeNow: t.upgradeNow,
           }}
         />
-        {children}
+        {expired ? (
+          <ExpiredGate slug={slug}>{children}</ExpiredGate>
+        ) : (
+          children
+        )}
       </main>
       <TzCookie />
     </div>

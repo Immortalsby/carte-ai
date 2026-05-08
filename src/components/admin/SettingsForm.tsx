@@ -27,6 +27,8 @@ interface SettingsFormProps {
   initialCuisineType: string;
   initialAddress: string;
   initialAllowDrinksOnly?: boolean;
+  initialGoogleMapsLink?: string;
+  initialEnableReviewNudge?: boolean;
   initialLlmQuotaCalls?: number;
   initialLlmConfig?: LlmConfig;
   initialVisionConfig?: VisionConfig;
@@ -75,6 +77,8 @@ export function SettingsForm({
   initialCuisineType,
   initialAddress,
   initialAllowDrinksOnly = true,
+  initialGoogleMapsLink = "",
+  initialEnableReviewNudge = false,
   initialLlmQuotaCalls,
   initialLlmConfig,
   initialVisionConfig,
@@ -88,6 +92,8 @@ export function SettingsForm({
   const [cuisineType, setCuisineType] = useState(initialCuisineType);
   const [address, setAddress] = useState(initialAddress);
   const [allowDrinksOnly, setAllowDrinksOnly] = useState(initialAllowDrinksOnly);
+  const [googleMapsLink, setGoogleMapsLink] = useState(initialGoogleMapsLink);
+  const [enableReviewNudge, setEnableReviewNudge] = useState(initialEnableReviewNudge);
   const [llmQuotaCalls, setLlmQuotaCalls] = useState(initialLlmQuotaCalls ?? 5000);
   const [llmProvider, setLlmProvider] = useState(initialLlmConfig?.provider ?? "auto");
   const [llmModel, setLlmModel] = useState(initialLlmConfig?.model ?? "");
@@ -99,6 +105,7 @@ export function SettingsForm({
   const [visionTesting, setVisionTesting] = useState(false);
   const [visionTestResult, setVisionTestResult] = useState<{ success: boolean; model?: string; response?: string; error?: string; latencyMs?: number } | null>(null);
   const { toast } = useToast();
+  const dirty = !saved && !saving;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -115,6 +122,8 @@ export function SettingsForm({
           address,
           settings: {
             allow_drinks_only: allowDrinksOnly,
+            google_maps_url: googleMapsLink || undefined,
+            enable_review_nudge: enableReviewNudge,
             ...(showLlmQuota && {
               llm_quota_calls: llmQuotaCalls,
             }),
@@ -199,8 +208,38 @@ export function SettingsForm({
         </div>
       </div>
 
-      {/* AI Models — unified config */}
-      {aiModels && (
+      {/* Google Maps link */}
+      <div>
+        <label className="text-sm font-medium text-foreground">{t.googleMapsLink}</label>
+        <p className="mt-0.5 text-xs text-muted-foreground">{t.googleMapsLinkHint}</p>
+        <input
+          type="url"
+          value={googleMapsLink}
+          onChange={(e) => { setGoogleMapsLink(e.target.value); setSaved(false); }}
+          placeholder={t.googleMapsLinkPlaceholder}
+          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+        />
+      </div>
+
+      {/* Review nudge toggle */}
+      <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/50 p-4">
+        <label className="relative mt-0.5 inline-flex cursor-pointer items-center">
+          <input
+            type="checkbox"
+            checked={enableReviewNudge}
+            onChange={(e) => { setEnableReviewNudge(e.target.checked); setSaved(false); }}
+            className="peer sr-only"
+          />
+          <div className="h-5 w-9 rounded-full bg-muted-foreground/30 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-background after:transition-all peer-checked:bg-emerald-500 peer-checked:after:translate-x-full" />
+        </label>
+        <div>
+          <span className="text-sm font-medium text-foreground">{t.enableReviewNudge}</span>
+          <p className="mt-0.5 text-xs text-gray-400">{t.enableReviewNudgeHint}</p>
+        </div>
+      </div>
+
+      {/* AI Models — unified config (founder only) */}
+      {isFounder && aiModels && (
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
           <h3 className="text-sm font-semibold text-primary">{t.aiModelsTitle}</h3>
 
@@ -399,18 +438,30 @@ export function SettingsForm({
         </div>
       )}
 
-      <div>
-        <label className="text-sm font-medium text-foreground">{t.slug}</label>
-        <p className="mt-1 font-mono text-sm text-muted-foreground">/r/{slug}</p>
-      </div>
+      {isFounder && (
+        <div>
+          <label className="text-sm font-medium text-foreground">{t.slug}</label>
+          <p className="mt-1 font-mono text-sm text-muted-foreground">/r/{slug}</p>
+        </div>
+      )}
 
-      <button
-        type="submit"
-        disabled={saving || saved}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-      >
-        {saving ? t.saving : saved ? t.saved : t.saveChanges}
-      </button>
+      {/* Sticky save bar */}
+      <div className="sticky bottom-0 -mx-4 mt-6 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={saving || saved}
+            className="rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {saving ? t.saving : saved ? `✓ ${t.saved}` : t.saveChanges}
+          </button>
+          {dirty && (
+            <span className="text-xs text-amber-600 dark:text-amber-400">
+              {t.unsavedChanges}
+            </span>
+          )}
+        </div>
+      </div>
     </form>
   );
 }

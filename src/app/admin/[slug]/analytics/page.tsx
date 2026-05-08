@@ -5,6 +5,8 @@ import { isFounder } from "@/lib/roles";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { getDashboardStats } from "@/lib/db/queries/analytics";
 import { getLlmProviderStats } from "@/lib/db/queries/llm-usage";
+import { getPublishedMenu } from "@/lib/db/queries/menus";
+import type { RestaurantMenu } from "@/types/menu";
 import { DashboardCharts } from "@/components/admin/DashboardCharts";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
 
@@ -14,7 +16,8 @@ export default async function AnalyticsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
+  const headerStore = await headers();
+  const session = await auth.api.getSession({ headers: headerStore });
   if (!session) redirect("/login");
 
   const tenant = await getTenantBySlug(slug);
@@ -25,16 +28,17 @@ export default async function AnalyticsPage({
   const cookieStore = await cookies();
   const locale = detectAdminLocale(
     cookieStore.get("admin_locale")?.value,
-    (await headers()).get("accept-language"),
+    headerStore.get("accept-language"),
   );
   const t = getAdminDict(locale);
 
   const tz = cookieStore.get("tz")?.value || "Europe/Paris";
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const [stats, llmProviderStats] = await Promise.all([
+  const [stats, llmProviderStats, publishedMenu] = await Promise.all([
     getDashboardStats(tenant.id, thirtyDaysAgo, now, tz),
     founder ? getLlmProviderStats(tenant.id, thirtyDaysAgo, now) : Promise.resolve({ totalCount: 0, fallbackCount: 0, providerDistribution: [] }),
+    getPublishedMenu(tenant.id),
   ]);
 
   const languageData = stats.languageDistribution.map((d) => ({
@@ -62,6 +66,19 @@ export default async function AnalyticsPage({
     value: d.count,
   }));
 
+  // Map dish IDs to names for wishlist chart
+  const menuData = publishedMenu?.payload as RestaurantMenu | null;
+  const dishMap = new Map<string, string>();
+  if (menuData?.dishes) {
+    for (const d of menuData.dishes) {
+      dishMap.set(d.id, d.name.fr || d.name.en || d.name.zh || d.id.slice(0, 8));
+    }
+  }
+  const wishlistData = stats.wishlistHearts.map((h) => ({
+    name: dishMap.get(h.dishId) || h.dishId.slice(0, 8),
+    value: h.count,
+  }));
+
   return (
     <div>
       <h1 className="text-2xl font-bold">{t.analyticsTitle}</h1>
@@ -77,6 +94,7 @@ export default async function AnalyticsPage({
           subtitle={`${stats.adoptions} ${t.adoptions}`}
         />
         <MiniStat label={t.shares} value={stats.shares} />
+        <MiniStat label={t.wishlistHearts} value={stats.totalHearts} subtitle={`${stats.wishlistHearts.length} ${t.dishes}`} />
       </div>
 
       <DashboardCharts
@@ -86,6 +104,7 @@ export default async function AnalyticsPage({
         dailyAdoptions={adoptionData}
         dwellDistribution={dwellData}
         providerDistribution={founder ? llmProviderStats.providerDistribution : undefined}
+        wishlistHearts={wishlistData}
         locale={locale}
       />
     </div>

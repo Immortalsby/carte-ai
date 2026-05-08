@@ -5,8 +5,6 @@ import { isFounder } from "@/lib/roles";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { hasCloudLlm, hasGeminiVision } from "@/lib/llm";
 import { SettingsForm } from "@/components/admin/SettingsForm";
-import { BillingSection } from "@/components/admin/BillingSection";
-import { BillingFeedback } from "@/components/admin/BillingFeedback";
 import { DeleteRestaurant } from "@/components/admin/DeleteRestaurant";
 import { AdminLocaleSelector } from "@/components/admin/AdminLocaleSelector";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
@@ -52,7 +50,6 @@ export default async function SettingsPage({
 
   return (
     <div>
-      <BillingFeedback labels={{ billingSuccess: t.billingSuccess, billingCancelled: t.billingCancelled }} />
       <h1 className="text-2xl font-bold">{t.settingsTitle}</h1>
 
       <div className="mt-6 max-w-2xl">
@@ -87,12 +84,18 @@ export default async function SettingsPage({
           initialAllowDrinksOnly={
             ((tenant.settings as Record<string, unknown> | null)?.allow_drinks_only as boolean) ?? true
           }
+          initialGoogleMapsLink={
+            ((tenant.settings as Record<string, unknown> | null)?.google_maps_url as string) ?? ""
+          }
+          initialEnableReviewNudge={
+            ((tenant.settings as Record<string, unknown> | null)?.enable_review_nudge as boolean) ?? false
+          }
           initialLlmQuotaCalls={
             founder
               ? ((tenant.settings as Record<string, unknown> | null)?.llm_quota_calls as number) || 5000
               : undefined
           }
-          aiModels={aiModels}
+          aiModels={founder ? aiModels : undefined}
           isFounder={founder}
           initialLlmConfig={
             founder
@@ -113,24 +116,14 @@ export default async function SettingsPage({
           locale={locale}
         />
 
-        <BillingSection
-          slug={slug}
-          currentPlan={tenant.plan}
-          hasStripeSubscription={!!tenant.stripe_subscription_id}
-          labels={{
-            billingTitle: t.billingTitle,
-            currentPlan: t.currentPlan,
-            subscribeTo: t.subscribeTo,
-            manageBilling: t.manageBilling,
-            billingFree: t.billingFree,
-          }}
-        />
-
-        <DeleteRestaurant
-          slug={slug}
-          restaurantName={tenant.name}
-          locale={locale}
-        />
+        {/* Delete restaurant — founder only */}
+        {founder && (
+          <DeleteRestaurant
+            slug={slug}
+            restaurantName={tenant.name}
+            locale={locale}
+          />
+        )}
       </div>
     </div>
   );

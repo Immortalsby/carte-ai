@@ -327,6 +327,36 @@ export async function getDashboardStats(
       else '2min+'
     end`);
 
+  // Wishlist heart events — per-dish breakdown
+  const wishlistHearts = await db
+    .select({
+      dishId: sql<string>`payload->>'dishId'`,
+      count: count(),
+    })
+    .from(analytics_events)
+    .where(
+      and(
+        eq(analytics_events.tenant_id, tenantId),
+        eq(analytics_events.event_type, "wishlist_heart"),
+        gte(analytics_events.created_at, from),
+        lte(analytics_events.created_at, to),
+      ),
+    )
+    .groupBy(sql`payload->>'dishId'`)
+    .orderBy(sql`count(*) desc`);
+
+  const totalHearts = await db
+    .select({ count: count() })
+    .from(analytics_events)
+    .where(
+      and(
+        eq(analytics_events.tenant_id, tenantId),
+        eq(analytics_events.event_type, "wishlist_heart"),
+        gte(analytics_events.created_at, from),
+        lte(analytics_events.created_at, to),
+      ),
+    );
+
   // Mode switch count (FR46)
   const modeSwitches = await db
     .select({ count: count() })
@@ -341,24 +371,26 @@ export async function getDashboardStats(
     );
 
   return {
-    scans: scans[0]?.count ?? 0,
-    recommendations: recommendations[0]?.count ?? 0,
-    adoptions: adoptions[0]?.count ?? 0,
+    scans: Number(scans[0]?.count ?? 0),
+    recommendations: Number(recommendations[0]?.count ?? 0),
+    adoptions: Number(adoptions[0]?.count ?? 0),
     adoptionRate:
-      recommendations[0]?.count
-        ? (adoptions[0]?.count ?? 0) / recommendations[0].count
+      Number(recommendations[0]?.count)
+        ? Number(adoptions[0]?.count ?? 0) / Number(recommendations[0].count)
         : 0,
-    cultureMatches: cultureMatches[0]?.count ?? 0,
+    cultureMatches: Number(cultureMatches[0]?.count ?? 0),
     cultureMatchRate:
-      scans[0]?.count
-        ? (cultureMatches[0]?.count ?? 0) / scans[0].count
+      Number(scans[0]?.count)
+        ? Number(cultureMatches[0]?.count ?? 0) / Number(scans[0].count)
         : 0,
-    modeSwitches: modeSwitches[0]?.count ?? 0,
+    modeSwitches: Number(modeSwitches[0]?.count ?? 0),
     modeSwitchRate:
-      scans[0]?.count
-        ? (modeSwitches[0]?.count ?? 0) / scans[0].count
+      Number(scans[0]?.count)
+        ? Number(modeSwitches[0]?.count ?? 0) / Number(scans[0].count)
         : 0,
-    shares: shares[0]?.count ?? 0,
+    shares: Number(shares[0]?.count ?? 0),
+    totalHearts: Number(totalHearts[0]?.count ?? 0),
+    wishlistHearts,
     languageDistribution,
     modeDistribution,
     dailyScans,

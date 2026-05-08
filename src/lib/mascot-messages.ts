@@ -165,6 +165,31 @@ const intro: Record<string, { greeting: string; features: string[] ; gotIt: stri
   },
 };
 
+/* ─── Sad messages (expired trial — AI disabled) ─── */
+const sad: Record<string, string[]> = {
+  en: [
+    "I'm taking a little break... My AI powers are resting.",
+    "Sorry, I can't help right now. The menu is still all yours!",
+    "I'm feeling sleepy... but the menu is right there for you!",
+    "My recommendations are on pause. Browse the menu above!",
+    "I miss helping you... Ask the restaurant about CarteAI!",
+  ],
+  fr: [
+    "Je fais une petite pause... Mes pouvoirs IA se reposent.",
+    "Désolé, je ne peux pas aider pour l'instant. Le menu est là !",
+    "Je suis un peu endormi... mais le menu est juste au-dessus !",
+    "Mes recommandations sont en pause. Parcourez le menu !",
+    "Vous me manquez... Demandez au restaurant pour CarteAI !",
+  ],
+  zh: [
+    "我在休息一下...我的AI能力暂时关机了。",
+    "抱歉，现在帮不了你。菜单还在上面哦！",
+    "有点困了...不过菜单就在上面，自己看看吧~",
+    "推荐功能暂停中。快去看看菜单吧！",
+    "好想帮你...让餐厅了解一下CarteAI吧！",
+  ],
+};
+
 /* ─── Public API ─── */
 
 /** Pick an idle message, avoiding consecutive repeats */
@@ -225,6 +250,13 @@ export function getFlowMessage(
 ): string {
   const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
   return flow[step]?.[l] ?? flow[step]?.en ?? "";
+}
+
+/** Pick a random sad message (expired trial) */
+export function pickSadMessage(lang: LanguageCode): string {
+  const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
+  const pool = sad[l] ?? sad.en;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 /** Get intro messages for the first-visit onboarding */

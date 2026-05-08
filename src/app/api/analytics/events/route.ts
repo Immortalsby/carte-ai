@@ -14,6 +14,7 @@ const eventSchema = z.object({
     "share",
     "culture_match",
     "review_click",
+    "wishlist_heart",
   ]),
   payload: z.record(z.string(), z.unknown()).optional(),
   session_id: z.string().optional(),

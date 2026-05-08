@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 
-export type MascotState = "idle" | "talking" | "thinking" | "happy" | "concerned";
+export type MascotState = "idle" | "talking" | "thinking" | "happy" | "concerned" | "sad";
 
 /** Map component state names to CSS class suffixes */
 const STATE_CLASS: Record<MascotState, string> = {
@@ -11,6 +11,7 @@ const STATE_CLASS: Record<MascotState, string> = {
   thinking: "state-thinking",
   happy: "state-happy",
   concerned: "state-concerned",
+  sad: "state-sad",
 };
 
 interface CSSMascotProps {
@@ -103,6 +104,17 @@ function CSSMascotInner({ state, onClick, className = "" }: CSSMascotProps) {
         .state-concerned .m-dome{animation:m-dome-concerned 4s ease-in-out infinite}
         .state-concerned .m-eye-expr{animation:m-eye-concerned 3.2s ease-in-out infinite}
         .state-concerned .m-sparkle{animation:m-sparkle-concerned 3.8s ease-in-out infinite}
+
+        /* ══ STATE: sad ══ */
+        @keyframes m-body-sad{0%,100%{transform:translateY(6px)}50%{transform:translateY(8px)}}
+        @keyframes m-dome-sad{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(-3deg)}}
+        @keyframes m-eye-sad{0%,100%{transform:translate(0,3px) scaleY(.7)}50%{transform:translate(0,4px) scaleY(.65)}}
+        @keyframes m-sparkle-sad{0%,100%{transform:scale(.5) rotate(0);opacity:.3}50%{transform:scale(.55) rotate(-4deg);opacity:.38}}
+        .state-sad .m-body{animation:m-body-sad 4.5s ease-in-out infinite}
+        .state-sad .m-mouth{transform:scaleY(.18)}
+        .state-sad .m-dome{animation:m-dome-sad 5s ease-in-out infinite}
+        .state-sad .m-eye-expr{animation:m-eye-sad 4s ease-in-out infinite}
+        .state-sad .m-sparkle{animation:m-sparkle-sad 5s ease-in-out infinite}
       `}</style>
 
       <svg viewBox="0 0 600 600" width="100%" height="100%" className={svgClass}>

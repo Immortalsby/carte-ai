@@ -5,15 +5,16 @@ export type PlanStatus =
   | "trial_expired"
   | "alacarte"
   | "prixfixe"
-  | "surmesure"
-  | "free";
+  | "degustation"
+  | "surmesure";
 
 interface Tenant {
   plan: string;
   trial_ends_at: Date | string | null;
 }
 
-const VALID_PLANS = new Set<string>(["trial", "alacarte", "prixfixe", "surmesure", "free"]);
+const PAID_PLANS = new Set<string>(["alacarte", "prixfixe", "degustation", "surmesure"]);
+const VALID_PLANS = new Set<string>(["trial", ...PAID_PLANS]);
 
 /** Resolve the effective plan status, accounting for trial expiry */
 export function getPlanStatus(tenant: Tenant): PlanStatus {
@@ -24,9 +25,14 @@ export function getPlanStatus(tenant: Tenant): PlanStatus {
   }
   if (!VALID_PLANS.has(tenant.plan)) {
     console.error(`[trial] Unknown plan: ${tenant.plan}`);
-    return "free";
+    return "trial_expired";
   }
   return tenant.plan as PlanStatus;
+}
+
+/** Whether the trial has expired */
+export function isTrialExpired(tenant: Tenant): boolean {
+  return getPlanStatus(tenant) === "trial_expired";
 }
 
 /** Days remaining in trial (0 if expired or not on trial) */
@@ -41,7 +47,29 @@ export function trialDaysLeft(tenant: Tenant): number {
 /** Whether the tenant has an active paid or trial plan */
 export function hasActiveAccess(tenant: Tenant): boolean {
   const status = getPlanStatus(tenant);
-  return status === "trial" || status === "alacarte" || status === "prixfixe" || status === "surmesure";
+  return status !== "trial_expired";
+}
+
+/** Whether the tenant can use AI features (concierge, recommendations) */
+export function canUseAI(tenant: Tenant): boolean {
+  return hasActiveAccess(tenant);
+}
+
+/** Daily OCR upload limit per plan. Returns 0 for expired trial. */
+export function dailyUploadLimit(tenant: Tenant): number {
+  const status = getPlanStatus(tenant);
+  switch (status) {
+    case "trial":
+    case "alacarte":
+      return 1;
+    case "prixfixe":
+      return 10;
+    case "degustation":
+    case "surmesure":
+      return 50;
+    case "trial_expired":
+      return 0;
+  }
 }
 
 /** Display name for a plan */
@@ -50,8 +78,8 @@ export function planDisplayName(plan: string): string {
     trial: "Trial",
     alacarte: "À La Carte",
     prixfixe: "Prix Fixe",
+    degustation: "Dégustation",
     surmesure: "Sur Mesure",
-    free: "Free",
   };
   return names[plan] ?? plan;
 }

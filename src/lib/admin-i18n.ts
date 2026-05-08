@@ -210,6 +210,7 @@ const dict = {
     modeSwitches: "Mode Switches",
     ofScans: "of scans",
     shares: "Shares",
+    wishlistHearts: "Wishlist Hearts",
     llmCostMonth: "LLM Cost (month)",
     calls: "calls",
     approachingQuota: "Approaching quota limit. Requests will fallback to local rules when exceeded.",
@@ -382,6 +383,21 @@ const dict = {
     posterBadge1: "Budget · Taste · Allergens",
     posterBadge2: `AI Menu · ${N} Languages`,
     posterScanLabel: "Scan the AI menu",
+
+    // Billing nav
+    billing: "Billing",
+    downloadInvoice: "Download Invoice",
+    downloadingInvoice: "Downloading...",
+
+    // Google Maps & Review
+    googleMapsLink: "Google Maps Link",
+    googleMapsLinkHint: "Customers can find directions to your restaurant.",
+    googleMapsLinkPlaceholder: "https://maps.google.com/...",
+    enableReviewNudge: "Ask for Google reviews",
+    enableReviewNudgeHint: "Cloche will occasionally suggest customers leave a Google review after their meal.",
+
+    // Unsaved changes
+    unsavedChanges: "You have unsaved changes",
 
     // Danger zone
     dangerZone: "Danger Zone",
@@ -625,6 +641,7 @@ const dict = {
     modeSwitches: "Changements de mode",
     ofScans: "des scans",
     shares: "Partages",
+    wishlistHearts: "Coups de cœur",
     llmCostMonth: "Coût LLM (mois)",
     calls: "appels",
     approachingQuota: "Quota presque atteint. Les requêtes excédentaires utiliseront les règles locales.",
@@ -792,7 +809,18 @@ const dict = {
     posterBadge2: `Menu IA · ${N} langues`,
     posterScanLabel: "Scannez le menu IA",
 
-    // Danger zone
+    billing: "Facturation",
+    downloadInvoice: "Télécharger la facture",
+    downloadingInvoice: "Téléchargement...",
+
+    googleMapsLink: "Lien Google Maps",
+    googleMapsLinkHint: "Les clients peuvent trouver l'itinéraire vers votre restaurant.",
+    googleMapsLinkPlaceholder: "https://maps.google.com/...",
+    enableReviewNudge: "Demander des avis Google",
+    enableReviewNudgeHint: "Cloche suggérera occasionnellement aux clients de laisser un avis Google après leur repas.",
+
+    unsavedChanges: "Modifications non enregistrées",
+
     dangerZone: "Zone de danger",
     deleteRestaurant: "Supprimer le restaurant",
     deleteRestaurantDesc: "Supprimez définitivement ce restaurant et toutes ses données. Cette action est irréversible.",
@@ -1032,6 +1060,7 @@ const dict = {
     modeSwitches: "模式切换",
     ofScans: "的扫描",
     shares: "分享次数",
+    wishlistHearts: "收藏",
     llmCostMonth: "LLM 成本（月）",
     calls: "次调用",
     approachingQuota: "即将达到配额上限。超出后将降级为本地规则。",
@@ -1199,7 +1228,18 @@ const dict = {
     posterBadge2: `AI 菜单 · 支持 ${N} 种语言`,
     posterScanLabel: "扫码查看 AI 菜单",
 
-    // Danger zone
+    billing: "账单",
+    downloadInvoice: "下载发票",
+    downloadingInvoice: "下载中...",
+
+    googleMapsLink: "Google Maps 链接",
+    googleMapsLinkHint: "顾客可以找到前往餐厅的路线。",
+    googleMapsLinkPlaceholder: "https://maps.google.com/...",
+    enableReviewNudge: "请求 Google 评价",
+    enableReviewNudgeHint: "Cloche 会在用餐后偶尔建议顾客留下 Google 评价。",
+
+    unsavedChanges: "有未保存的更改",
+
     dangerZone: "危险操作",
     deleteRestaurant: "删除餐厅",
     deleteRestaurantDesc: "永久删除此餐厅及其所有数据，此操作不可撤销。",

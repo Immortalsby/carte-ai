@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { createTenant, getTenantBySlug } from "@/lib/db/queries/tenants";
+import { isFounder } from "@/lib/roles";
 
 const createTenantSchema = z.object({
   name: z.string().min(1).max(100),
@@ -41,14 +42,16 @@ export async function POST(request: Request) {
     // Auto-resolve slug collisions by appending numeric suffix (FR3)
     const uniqueSlug = await findUniqueSlug(parsed.slug);
 
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+    // Founders default to alacarte (no trial); regular users get 14-day trial
+    const founder = isFounder(session.user.email);
+    const plan = founder ? "alacarte" : "trial";
+    const trialEndsAt = founder ? null : new Date(Date.now() + 14 * 86400000);
 
     const tenant = await createTenant({
       ...parsed,
       slug: uniqueSlug,
       owner_id: session.user.id,
-      plan: "trial",
+      plan,
       trial_ends_at: trialEndsAt,
     });
 

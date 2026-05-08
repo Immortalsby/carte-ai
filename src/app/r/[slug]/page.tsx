@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { getPublishedMenu } from "@/lib/db/queries/menus";
 import type { RestaurantMenu } from "@/types/menu";
+import { getPlanStatus } from "@/lib/trial";
 import { CustomerExperience } from "@/components/customer/CustomerExperience";
 
 export async function generateMetadata({
@@ -50,8 +51,15 @@ export default async function CustomerPage({
           rating={tenant.rating}
           address={tenant.address}
           googlePlaceId={tenant.google_place_id}
+          planStatus={getPlanStatus(tenant)}
           allowDrinksOnly={
             ((tenant.settings as Record<string, unknown> | null)?.allow_drinks_only as boolean) ?? true
+          }
+          googleMapsUrl={
+            ((tenant.settings as Record<string, unknown> | null)?.google_maps_url as string) || undefined
+          }
+          enableReviewNudge={
+            ((tenant.settings as Record<string, unknown> | null)?.enable_review_nudge as boolean) ?? false
           }
         />
       ) : (

@@ -214,7 +214,7 @@ export function PosterEditor({
                 onClick={() => setPosterLocale(opt.value)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                   posterLocale === opt.value
-                    ? "border-black bg-black text-white"
+                    ? "border-foreground bg-foreground text-background"
                     : "border-border bg-card text-muted-foreground hover:bg-muted"
                 }`}
               >
@@ -233,11 +233,13 @@ export function PosterEditor({
                 key={th.nameKey}
                 type="button"
                 onClick={() => { setTheme(th); setCustomBg(""); setCustomAccent(""); }}
-                className="group flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all"
-                style={{
-                  borderColor: theme.nameKey === th.nameKey ? th.accent : "#e5e7eb",
-                  backgroundColor: theme.nameKey === th.nameKey ? hexToRgba(th.accent, 0.08) : "white",
-                }}
+                className={`group flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
+                  theme.nameKey === th.nameKey ? "" : "border-border bg-card text-muted-foreground hover:bg-muted"
+                }`}
+                style={theme.nameKey === th.nameKey ? {
+                  borderColor: th.accent,
+                  backgroundColor: hexToRgba(th.accent, 0.08),
+                } : undefined}
               >
                 <span
                   className="h-4 w-4 rounded-full border border-white/20"
@@ -299,12 +301,14 @@ export function PosterEditor({
                   key={el.key}
                   type="button"
                   onClick={() => toggleElement(el.key)}
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all"
-                  style={{
-                    backgroundColor: active ? hexToRgba(activeAccent, 0.15) : "#f3f4f6",
-                    color: active ? activeAccent : "#6b7280",
-                    boxShadow: active ? `inset 0 0 0 1px ${hexToRgba(activeAccent, 0.4)}` : "none",
-                  }}
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
+                    active ? "" : "bg-muted text-muted-foreground"
+                  }`}
+                  style={active ? {
+                    backgroundColor: hexToRgba(activeAccent, 0.15),
+                    color: activeAccent,
+                    boxShadow: `inset 0 0 0 1px ${hexToRgba(activeAccent, 0.4)}`,
+                  } : undefined}
                 >
                   <span>{el.emoji}</span>
                   <span>{tAny[el.labelKey]}</span>
@@ -337,7 +341,7 @@ export function PosterEditor({
             type="button"
             onClick={downloadPdf}
             disabled={downloadingPdf}
-            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+            className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:opacity-50"
           >
             {downloadingPdf ? t.generatingPdf : t.downloadPdf}
           </button>
