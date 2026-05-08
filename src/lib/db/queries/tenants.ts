@@ -68,8 +68,8 @@ export async function updateTenant(
     rating: string;
     address: string;
     plan: string;
-    stripe_customer_id: string;
-    stripe_subscription_id: string;
+    stripe_customer_id: string | null;
+    stripe_subscription_id: string | null;
     settings: Record<string, unknown>;
   }>,
 ) {

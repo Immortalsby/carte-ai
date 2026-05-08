@@ -18,7 +18,7 @@ interface BillingSectionProps {
 }
 
 const PLAN_DISPLAY: Record<string, string> = {
-  trial: "Trial",
+  trial: "Trial (14 jours)",
   alacarte: "À La Carte — 19€/mois",
   prixfixe: "Prix Fixe — 39€/mois",
   surmesure: "Sur Mesure",
@@ -84,7 +84,7 @@ export function BillingSection({
   const isPaid = currentPlan === "alacarte" || currentPlan === "prixfixe" || currentPlan === "surmesure";
 
   return (
-    <div className="mt-8 rounded-lg border border-border p-6">
+    <div id="billing" className="mt-8 scroll-mt-4 rounded-lg border border-border p-6">
       <div className="flex items-center gap-2">
         <CreditCard weight="duotone" className="h-5 w-5 text-foreground" />
         <h2 className="text-lg font-semibold">{labels.billingTitle}</h2>
@@ -96,9 +96,12 @@ export function BillingSection({
         <p className="mt-1 text-base font-semibold text-foreground">
           {PLAN_DISPLAY[currentPlan] ?? currentPlan}
         </p>
+        {!isPaid && currentPlan !== "trial" && (
+          <p className="mt-1 text-xs text-muted-foreground">{labels.billingFree}</p>
+        )}
       </div>
 
-      {/* Manage existing subscription */}
+      {/* Manage existing subscription (upgrade/downgrade/cancel via Stripe Portal) */}
       {hasStripeSubscription && (
         <button
           type="button"
@@ -111,8 +114,8 @@ export function BillingSection({
         </button>
       )}
 
-      {/* Subscribe buttons for non-paid plans */}
-      {!isPaid && (
+      {/* Subscribe buttons — only for users without an active subscription */}
+      {!isPaid && !hasStripeSubscription && (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {AVAILABLE_PLANS.map((p) => (
             <button
@@ -125,20 +128,6 @@ export function BillingSection({
               {loading === p.code ? "..." : `${labels.subscribeTo} ${p.name} — ${p.price}`}
             </button>
           ))}
-        </div>
-      )}
-
-      {/* Upgrade option for À La Carte users */}
-      {currentPlan === "alacarte" && (
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => handleCheckout("prixfixe")}
-            disabled={loading !== null}
-            className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {loading === "prixfixe" ? "..." : `${labels.subscribeTo} Prix Fixe — 39€/mois`}
-          </button>
         </div>
       )}
     </div>

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { Clock, Warning } from "@phosphor-icons/react";
 
 interface TrialBannerProps {
   plan: string;
   trialEndsAt: string | null;
   slug: string;
-  /** i18n labels */
   labels: {
     trialActive: string;
     trialDaysLeft: (days: number) => string;
@@ -17,16 +16,11 @@ interface TrialBannerProps {
 }
 
 export function TrialBanner({ plan, trialEndsAt, slug, labels }: TrialBannerProps) {
-  const [daysLeft, setDaysLeft] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (plan !== "trial" || !trialEndsAt) {
-      setDaysLeft(null);
-      return;
-    }
+  const daysLeft = useMemo(() => {
+    if (plan !== "trial" || !trialEndsAt) return null;
     const ends = new Date(trialEndsAt);
     const diff = Math.ceil((ends.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    setDaysLeft(Math.max(0, diff));
+    return Math.max(0, diff);
   }, [plan, trialEndsAt]);
 
   if (plan !== "trial") return null;
@@ -35,7 +29,7 @@ export function TrialBanner({ plan, trialEndsAt, slug, labels }: TrialBannerProp
 
   return (
     <div
-      className={`flex items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-medium ${
+      className={`mb-4 flex items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-medium ${
         expired
           ? "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
           : daysLeft !== null && daysLeft <= 3

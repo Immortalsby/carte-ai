@@ -18,8 +18,13 @@ export async function POST(request: Request) {
     }
 
     const { slug, plan } = await request.json();
-    if (!slug || !plan) {
-      return NextResponse.json({ error: "slug and plan are required" }, { status: 400 });
+
+    // Validate inputs
+    if (!slug || typeof slug !== "string" || !/^[a-z0-9-]+$/.test(slug)) {
+      return NextResponse.json({ error: "Invalid slug" }, { status: 400 });
+    }
+    if (plan !== "alacarte" && plan !== "prixfixe") {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
     const priceId = priceIdFromPlan(plan);
@@ -30,6 +35,14 @@ export async function POST(request: Request) {
     const tenant = await getTenantBySlug(slug);
     if (!tenant || (tenant.owner_id !== session.user.id && !isFounder(session.user.email))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Block if already has an active subscription — use portal to change plans
+    if (tenant.stripe_subscription_id) {
+      return NextResponse.json(
+        { error: "Active subscription exists. Use billing portal to change plans." },
+        { status: 409 },
+      );
     }
 
     // Reuse or create Stripe customer
@@ -44,7 +57,7 @@ export async function POST(request: Request) {
       await updateTenant(tenant.id, { stripe_customer_id: customerId });
     }
 
-    const origin = request.headers.get("origin") || "https://carte-ai.link";
+    const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "https://carte-ai.link";
 
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,

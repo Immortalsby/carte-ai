@@ -13,12 +13,18 @@ interface Tenant {
   trial_ends_at: Date | string | null;
 }
 
+const VALID_PLANS = new Set<string>(["trial", "alacarte", "prixfixe", "surmesure", "free"]);
+
 /** Resolve the effective plan status, accounting for trial expiry */
 export function getPlanStatus(tenant: Tenant): PlanStatus {
   if (tenant.plan === "trial") {
     if (!tenant.trial_ends_at) return "trial_expired";
     const ends = new Date(tenant.trial_ends_at);
     return ends > new Date() ? "trial" : "trial_expired";
+  }
+  if (!VALID_PLANS.has(tenant.plan)) {
+    console.error(`[trial] Unknown plan: ${tenant.plan}`);
+    return "free";
   }
   return tenant.plan as PlanStatus;
 }

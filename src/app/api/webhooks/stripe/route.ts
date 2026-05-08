@@ -51,7 +51,8 @@ export async function POST(request: Request) {
     }
   } catch (err) {
     console.error(`[Stripe Webhook] Error handling ${event.type}:`, err);
-    // Return 200 to prevent Stripe retries for application errors
+    // Return 500 so Stripe retries on transient errors (DB down, network)
+    return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
@@ -112,7 +113,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   await updateTenant(tenant.id, {
     plan: "free",
-    stripe_subscription_id: "",
+    stripe_subscription_id: null,
   });
 
   console.log(`[Stripe Webhook] Subscription cancelled: tenant=${tenant.id} → free`);

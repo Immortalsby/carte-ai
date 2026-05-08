@@ -6,6 +6,7 @@ import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { hasCloudLlm, hasGeminiVision } from "@/lib/llm";
 import { SettingsForm } from "@/components/admin/SettingsForm";
 import { BillingSection } from "@/components/admin/BillingSection";
+import { BillingFeedback } from "@/components/admin/BillingFeedback";
 import { DeleteRestaurant } from "@/components/admin/DeleteRestaurant";
 import { AdminLocaleSelector } from "@/components/admin/AdminLocaleSelector";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
@@ -51,6 +52,7 @@ export default async function SettingsPage({
 
   return (
     <div>
+      <BillingFeedback labels={{ billingSuccess: t.billingSuccess, billingCancelled: t.billingCancelled }} />
       <h1 className="text-2xl font-bold">{t.settingsTitle}</h1>
 
       <div className="mt-6 max-w-2xl">
