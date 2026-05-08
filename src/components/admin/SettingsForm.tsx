@@ -296,7 +296,7 @@ export function SettingsForm({
                       onChange={(e) => { setLlmQuotaCalls(parseInt(e.target.value) || 5000); setSaved(false); }}
                       min={100}
                       max={100000}
-                      step={500}
+                      step={100}
                       className="w-24 rounded border px-2 py-1 text-xs"
                     />
                   </div>
