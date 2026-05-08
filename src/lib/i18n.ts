@@ -1,6 +1,5 @@
 import type { LocalizedText } from "@/types/menu";
 import type { LanguageCode } from "./languages";
-import { detectLanguage } from "./languages";
 
 type Dictionary = {
   concierge: string;
@@ -479,7 +478,3 @@ export function getLocalizedText(text: LocalizedText, language: LanguageCode) {
   );
 }
 
-/** @deprecated Use detectLanguage() from languages.ts directly */
-export function detectBrowserLanguage(languages: readonly string[]) {
-  return detectLanguage({ accept: languages, fallback: "fr" }) as LanguageCode;
-}

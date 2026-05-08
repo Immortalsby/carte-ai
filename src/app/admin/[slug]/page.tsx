@@ -175,10 +175,18 @@ export default async function AdminDashboard({
           />
           <StatCard
             label={t.providers}
-            value={llmProviderStats.providerDistribution
-              .filter((p) => p.name !== "fallback" && p.name !== "local")
-              .map((p) => p.name)
-              .join(", ") || "—"}
+            value={(() => {
+              const degraded = new Set(["fallback", "local", "guardrail_fallback", "quota_exceeded"]);
+              const labels: Record<string, string> = {
+                openai: "OpenAI",
+                "anthropic-foundry": "Anthropic Foundry",
+                anthropic: "Anthropic",
+              };
+              const names = llmProviderStats.providerDistribution
+                .filter((p) => !degraded.has(p.name))
+                .map((p) => labels[p.name] || p.name);
+              return names.length > 0 ? names.join(", ") : "—";
+            })()}
           />
         </div>
       )}

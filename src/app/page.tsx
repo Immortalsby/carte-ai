@@ -26,7 +26,7 @@ import { type LandingLocale, getLandingDict, detectLandingLocale } from "@/lib/l
 import { SUPPORTED_LANGUAGE_COUNT } from "@/lib/languages";
 
 /* ------------------------------------------------------------------ */
-/*  Landing page — CarteAI (trilingual: FR / EN / ZH)                 */
+/*  Landing page — CarteAI (FR / EN / ZH / TR)                        */
 /* ------------------------------------------------------------------ */
 
 // ---------- Language switcher ----------

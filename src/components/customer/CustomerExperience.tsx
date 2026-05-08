@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode, Allergen, RestaurantMenu } from "@/types/menu";
-import { detectBrowserLanguage } from "@/lib/i18n";
+import { detectLanguage } from "@/lib/languages";
 import { trackEvent } from "@/lib/analytics-client";
 import { isCultureMatch } from "@/lib/culture-match";
 import { languageDirection } from "@/lib/languages";
@@ -43,12 +43,12 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
 
   // Auto-detect browser language on mount + track scan + culture match (FR16)
   useEffect(() => {
-    const detected = detectBrowserLanguage(navigator.languages);
-    setLang(detected as LanguageCode);
+    const detected = detectLanguage({ accept: [...navigator.languages], fallback: "fr" }) as LanguageCode;
+    setLang(detected);
     trackEvent(tenantId, "scan", { slug: menu.restaurant.slug }, detected);
 
     // Cultural awareness: auto-switch to group meal mode (FR16)
-    if (isCultureMatch(detected as LanguageCode, cuisineType)) {
+    if (isCultureMatch(detected, cuisineType)) {
       setExperienceMode("group_meal");
       trackEvent(tenantId, "culture_match", { cuisineType, detectedLang: detected }, detected);
     }

@@ -24,6 +24,16 @@ const COLORS = [
   "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#6366f1",
 ];
 
+const PROVIDER_LABELS: Record<string, string> = {
+  openai: "OpenAI",
+  "anthropic-foundry": "Anthropic Foundry",
+  anthropic: "Anthropic",
+  fallback: "Fallback",
+  local: "Local",
+  guardrail_fallback: "Guardrail",
+  quota_exceeded: "Quota Exceeded",
+};
+
 interface ChartData {
   name: string;
   value: number;
@@ -174,7 +184,7 @@ export function DashboardCharts({
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
-                  data={providerDistribution}
+                  data={providerDistribution.map((p) => ({ ...p, name: PROVIDER_LABELS[p.name] || p.name }))}
                   cx="50%"
                   cy="50%"
                   innerRadius={50}

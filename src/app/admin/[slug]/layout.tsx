@@ -121,13 +121,17 @@ export default async function AdminLayout({
       <main className="flex-1 p-4 lg:p-6">
         <TrialBanner
           plan={tenant.plan}
-          trialEndsAt={tenant.trial_ends_at?.toISOString() ?? null}
+          daysLeft={
+            tenant.plan === "trial" && tenant.trial_ends_at
+              ? Math.max(0, Math.ceil((tenant.trial_ends_at.getTime() - Date.now()) / 86400000))
+              : null
+          }
           slug={slug}
           labels={{
             trialActive: t.trialActive,
             trialDaysLeft: (() => {
               if (tenant.plan !== "trial" || !tenant.trial_ends_at) return t.trialActive;
-              const diff = Math.ceil((tenant.trial_ends_at.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              const diff = Math.ceil((tenant.trial_ends_at.getTime() - Date.now()) / 86400000);
               return t.trialDaysLeft(Math.max(0, diff));
             })(),
             trialExpired: t.trialExpired,

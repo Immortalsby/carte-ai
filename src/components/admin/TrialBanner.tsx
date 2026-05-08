@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
 import { Clock, Warning } from "@phosphor-icons/react";
 
 interface TrialBannerProps {
   plan: string;
-  trialEndsAt: string | null;
+  daysLeft: number | null;
   slug: string;
   labels: {
     trialActive: string;
@@ -15,14 +14,7 @@ interface TrialBannerProps {
   };
 }
 
-export function TrialBanner({ plan, trialEndsAt, slug, labels }: TrialBannerProps) {
-  const daysLeft = useMemo(() => {
-    if (plan !== "trial" || !trialEndsAt) return null;
-    const ends = new Date(trialEndsAt);
-    const diff = Math.ceil((ends.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, diff);
-  }, [plan, trialEndsAt]);
-
+export function TrialBanner({ plan, daysLeft, slug, labels }: TrialBannerProps) {
   if (plan !== "trial") return null;
 
   const expired = daysLeft === 0;
