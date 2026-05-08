@@ -393,7 +393,7 @@
 
 ### TC-9.2 Poster badge
 - **Steps:** View poster page
-- **Expected:** Emerald badge "Budget · Taste · Allergens" and cyan badge "AI Menu · 19 Languages" both visible
+- **Expected:** Emerald badge "Budget · Taste · Allergens" and cyan badge "AI Menu · 20 Languages" both visible
 - **FR:** FR55
 
 ### TC-9.3 Print functionality

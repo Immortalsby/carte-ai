@@ -23,7 +23,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "CarteAI — AI Dining Concierge",
   description:
-    "AI menu concierge for restaurant QR ordering. 19 languages, allergen safety, personalized recommendations in 3 seconds.",
+    "AI menu concierge for restaurant QR ordering. 20 languages, allergen safety, personalized recommendations in 3 seconds.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "32x32" },

@@ -35,7 +35,7 @@ carte-ai/
 │   │   ├── recommender.ts                # 327 行 本地规则推荐：硬过滤 → 打分 → 套餐组装
 │   │   ├── llm.ts                        # 277 行 双 provider LLM 抽象（推荐 + 菜单提取）
 │   │   ├── google-places.ts              # Google Places API v1 封装
-│   │   ├── i18n.ts                       # 439 行 19 语言字典 + getLocalizedText / detectBrowserLanguage
+│   │   ├── i18n.ts                       # 439 行 20 语言字典 + getLocalizedText / detectBrowserLanguage
 │   │   ├── languages.ts                  # supportedLanguages 列表 + 方向（rtl/ltr）
 │   │   └── format.ts                     # 价格 / 过敏原本地化展示
 │   │

@@ -28,7 +28,7 @@ interface RestaurantMenu {
     cuisine: string
     city: string
     currency: "EUR"              // 字面量类型，单货币
-    languages: LanguageCode[]    // 19 种支持的语言子集
+    languages: LanguageCode[]    // 20 种支持的语言子集
     welcome: LocalizedText       // zh / fr / en 必填，其余可选
   }
   dishes: Dish[]                 // 至少 1 条

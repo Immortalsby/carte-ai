@@ -126,6 +126,6 @@ QR 内容固定指向 `https://carte-ai.link/r/${slug}` —— **该路由暂未
 | 没有 Loading skeleton | 推荐 / 上传过程仅用 `Loader2` 旋转 |
 | 没有 Error boundary | `app/error.tsx` 不存在 |
 | 没有 Toast | message / error 直接渲染在卡片下方文字 |
-| 没有 a11y 测试 | 键盘 Tab 流程未验证；RTL 已支持但未在 19 种语言下回归 |
+| 没有 a11y 测试 | 键盘 Tab 流程未验证；RTL 已支持但未在 20 种语言下回归 |
 | 老板端 textarea 编辑菜单 JSON | UX 差。下一阶段改为表格化菜品编辑器 |
 | 海报字体过大且不可定制 | 当前固定 6xl 标题，多语言溢出风险 |

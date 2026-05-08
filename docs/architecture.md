@@ -6,7 +6,7 @@
 
 - **形态**：Monolith Next.js 16 全栈应用，部署 Vercel
 - **核心价值**：QR 扫码 → AI 推荐菜品（多语言）—— 老板上传菜单 → AI 提取 → 老板审稿 → 发布到本地
-- **关键护栏**：LLM 不发明菜品 / 失败必降级 / 19 种语言强类型
+- **关键护栏**：LLM 不发明菜品 / 失败必降级 / 20 种语言强类型
 - **MVP 边界**：单餐馆 / 无 DB / 无账号 / 无计费 / 无 `/r/[slug]` 路由
 
 ## 2. 技术栈
@@ -15,7 +15,7 @@
 |------|------|------|---------|
 | Framework | Next.js | 16.2.4 | App Router + Route Handlers 一站搞定全栈，Vercel 部署最顺 |
 | View | React | 19.2.4 | Server Components 默认，Client 仅 2 个大组件 |
-| Language | TypeScript | 5.x | 19 语言枚举 + 14 过敏原 + 14 饮食标签 强类型上锁 |
+| Language | TypeScript | 5.x | 20 语言枚举 + 14 过敏原 + 14 饮食标签 强类型上锁 |
 | Styling | Tailwind CSS | 4.x | 视觉是 inline utility class，无设计系统抽象 |
 | Validation | Zod | 4.4.3 | 跨边界数据双层约束（类型 + 运行时） |
 | Icons | lucide-react | 1.14 | 唯一 UI 库 |
@@ -51,7 +51,7 @@
 │   - recommender.ts  ── 纯函数：硬过滤+打分 │
 │   - llm.ts          ── 双 provider 抽象    │
 │   - google-places.ts── 外部 API 封装       │
-│   - i18n.ts         ── 19 语言字典         │
+│   - i18n.ts         ── 20 语言字典         │
 │   - validation.ts   ── Zod schemas         │
 └──────────────┬─────────────────────────────┘
                │
