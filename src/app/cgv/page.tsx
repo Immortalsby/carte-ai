@@ -41,10 +41,10 @@ export default function CGVPage() {
             <h2 className="text-lg font-semibold text-white">3. Offres et tarification</h2>
             <p className="mt-3">Le service est propos&eacute; sous forme d&rsquo;abonnement mensuel :</p>
             <ul className="mt-3 list-disc pl-5 space-y-1.5">
-              <li><strong className="text-white">Essai gratuit :</strong> 14 jours, acc&egrave;s complet aux fonctionnalit&eacute;s Starter, sans engagement ni carte bancaire</li>
-              <li><strong className="text-white">Starter :</strong> 19&nbsp;&euro; HT / mois — 1 restaurant, 5&nbsp;000 scans IA / mois</li>
-              <li><strong className="text-white">Pro :</strong> 39&nbsp;&euro; HT / mois — jusqu&rsquo;&agrave; 5 restaurants, scans illimit&eacute;s, rapports avanc&eacute;s</li>
-              <li><strong className="text-white">Enterprise :</strong> tarification sur mesure</li>
+              <li><strong className="text-white">Essai gratuit :</strong> 14 jours, acc&egrave;s complet aux fonctionnalit&eacute;s &Agrave; La Carte, sans engagement ni carte bancaire</li>
+              <li><strong className="text-white">&Agrave; La Carte :</strong> 19&nbsp;&euro; HT / mois — 1 restaurant, 5&nbsp;000 scans IA / mois</li>
+              <li><strong className="text-white">Prix Fixe :</strong> 39&nbsp;&euro; HT / mois — jusqu&rsquo;&agrave; 5 restaurants, scans illimit&eacute;s, rapports avanc&eacute;s</li>
+              <li><strong className="text-white">Sur Mesure :</strong> tarification personnalis&eacute;e</li>
             </ul>
             <p className="mt-2">
               Les prix s&rsquo;entendent hors taxes. En qualit&eacute; de micro-entrepreneur exon&eacute;r&eacute; de TVA (article 293 B du CGI), la TVA n&rsquo;est pas applicable.
