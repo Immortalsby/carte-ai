@@ -590,7 +590,7 @@ function PillButton({
 
 /* ─── Confidence bar (FR14) ─── */
 function ConfidenceBar({ value, lang }: { value: number; lang: LanguageCode }) {
-  const pct = Math.round(value * 100);
+  const pct = Number.isFinite(value) ? Math.round(value * 100) : 55;
   const label =
     prefLabels.confidence[lang as "en" | "fr" | "zh"] ||
     prefLabels.confidence.en;

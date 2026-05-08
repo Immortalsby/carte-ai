@@ -43,17 +43,19 @@ function scoreDish(dish: Dish, request: RecommendationRequest) {
   if (dish.marginPriority === 3) score += 3;
   if (dish.portionScore === 3) score += 5;
 
+  const price = dish.priceCents ?? 0;
+
   if (request.budgetCents) {
-    if (dish.priceCents <= request.budgetCents) {
+    if (price <= request.budgetCents) {
       score += 12;
     } else {
-      score -= Math.min(18, Math.ceil((dish.priceCents - request.budgetCents) / 100));
+      score -= Math.min(18, Math.ceil((price - request.budgetCents) / 100));
     }
   }
 
   switch (request.mode) {
     case "cheap":
-      if (dish.priceCents <= 1000) score += 15;
+      if (price <= 1000) score += 15;
       if (dish.dietaryTags.includes("good_value")) score += 10;
       if ((dish.portionScore ?? 1) >= 2) score += 5;
       break;
@@ -119,7 +121,7 @@ function localizedReason(dish: Dish, request: RecommendationRequest) {
 
   // Only mention budget when the user actually set one
   if (request.budgetCents !== undefined) {
-    const withinBudget = dish.priceCents <= request.budgetCents;
+    const withinBudget = (dish.priceCents ?? 0) <= request.budgetCents;
     parts.push(
       withinBudget
         ? phrase(language, {
@@ -164,7 +166,7 @@ function localizedReason(dish: Dish, request: RecommendationRequest) {
 function notesFor(dish: Dish, request: RecommendationRequest) {
   const language = request.language;
   const budgetNote = request.budgetCents
-    ? dish.priceCents <= request.budgetCents
+    ? (dish.priceCents ?? 0) <= request.budgetCents
       ? phrase(language, {
           zh: `符合 ${formatPrice(request.budgetCents)} 以内预算。`,
           "zh-Hant": `符合 ${formatPrice(request.budgetCents)} 以內預算。`,
@@ -173,11 +175,11 @@ function notesFor(dish: Dish, request: RecommendationRequest) {
           en: `Within your ${formatPrice(request.budgetCents)} budget.`,
         })
       : phrase(language, {
-          zh: `价格 ${formatPrice(dish.priceCents)}，略高于预算。`,
-          "zh-Hant": `價格 ${formatPrice(dish.priceCents)}，略高於預算。`,
-          fr: `${formatPrice(dish.priceCents)}, légèrement au-dessus du budget.`,
-          es: `${formatPrice(dish.priceCents)}, ligeramente por encima del presupuesto.`,
-          en: `${formatPrice(dish.priceCents)}, slightly above budget.`,
+          zh: `价格 ${formatPrice(dish.priceCents ?? 0)}，略高于预算。`,
+          "zh-Hant": `價格 ${formatPrice(dish.priceCents ?? 0)}，略高於預算。`,
+          fr: `${formatPrice(dish.priceCents ?? 0)}, légèrement au-dessus du budget.`,
+          es: `${formatPrice(dish.priceCents ?? 0)}, ligeramente por encima del presupuesto.`,
+          en: `${formatPrice(dish.priceCents ?? 0)}, slightly above budget.`,
         })
     : undefined;
 
@@ -218,7 +220,7 @@ function toItem(
     title: getLocalizedText(dish.name, request.language),
     totalPriceCents: dish.priceCents || 0,
     reason: localizedReason(dish, request),
-    confidence: Math.max(0.55, Math.min(0.96, score / 70)),
+    confidence: Number.isFinite(score) ? Math.max(0.55, Math.min(0.96, score / 70)) : 0.55,
     ...notesFor(dish, request),
   };
 }
@@ -424,7 +426,7 @@ export function recommendFromMenu(menu: RestaurantMenu, request: RecommendationR
 
   const scored = source
     .map((dish) => ({ dish, score: scoreDish(dish, request) }))
-    .sort((a, b) => b.score - a.score || a.dish.priceCents - b.dish.priceCents);
+    .sort((a, b) => b.score - a.score || (a.dish.priceCents ?? 0) - (b.dish.priceCents ?? 0));
 
   // Build the set first so we know which dishes it uses
   const set = buildSet(menu, request, scored);
