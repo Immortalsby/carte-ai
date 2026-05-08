@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CookieConsent } from "@/components/CookieConsent";
+import { CookieConsent, CookieSettingsLink } from "@/components/CookieConsent";
 import {
   ArrowRight,
   Building,
@@ -651,6 +651,7 @@ function FooterSection({ t }: { t: Record<string, string> }) {
               <li><Link href="/cgv" className="text-sm text-white/45 hover:text-white transition">{t.footer_cgv}</Link></li>
               <li><Link href="/mentions-legales" className="text-sm text-white/45 hover:text-white transition">{t.footer_mentions}</Link></li>
               <li><Link href="/cookies" className="text-sm text-white/45 hover:text-white transition">{t.footer_cookies}</Link></li>
+              <li><CookieSettingsLink /></li>
             </ul>
           </div>
           <div>

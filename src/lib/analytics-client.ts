@@ -1,4 +1,57 @@
-type EventType = "scan" | "recommend_view" | "adoption" | "dwell" | "mode_switch" | "share" | "culture_match" | "review_click" | "wishlist_heart";
+/**
+ * Analytics consent key — stored in localStorage.
+ * Values: "accepted" | "rejected" | absent (not yet chosen).
+ *
+ * GDPR / CNIL: behavioural analytics events (scan, dwell, recommend_view …)
+ * are ONLY sent when the user has explicitly opted in.
+ */
+export const ANALYTICS_CONSENT_KEY = "carte-analytics-consent";
+
+export function hasAnalyticsConsent(): boolean {
+  try {
+    return localStorage.getItem(ANALYTICS_CONSENT_KEY) === "accepted";
+  } catch {
+    return false;
+  }
+}
+
+export function setAnalyticsConsent(accepted: boolean) {
+  try {
+    localStorage.setItem(ANALYTICS_CONSENT_KEY, accepted ? "accepted" : "rejected");
+  } catch {
+    // Private browsing or storage full — fail silently
+  }
+}
+
+export function resetAnalyticsConsent() {
+  try {
+    localStorage.removeItem(ANALYTICS_CONSENT_KEY);
+  } catch {}
+}
+
+export function analyticsConsentState(): "accepted" | "rejected" | "pending" {
+  try {
+    const v = localStorage.getItem(ANALYTICS_CONSENT_KEY);
+    if (v === "accepted") return "accepted";
+    if (v === "rejected") return "rejected";
+    return "pending";
+  } catch {
+    return "pending";
+  }
+}
+
+// ─── Event tracking (gated by consent) ───
+
+type EventType =
+  | "scan"
+  | "recommend_view"
+  | "adoption"
+  | "dwell"
+  | "mode_switch"
+  | "share"
+  | "culture_match"
+  | "review_click"
+  | "wishlist_heart";
 
 let sessionId: string | null = null;
 
@@ -15,6 +68,9 @@ export function trackEvent(
   payload?: Record<string, unknown>,
   language?: string,
 ) {
+  // GDPR gate: do NOT send analytics unless user has opted in
+  if (!hasAnalyticsConsent()) return;
+
   // Fire and forget — don't block UI
   fetch("/api/analytics/events", {
     method: "POST",

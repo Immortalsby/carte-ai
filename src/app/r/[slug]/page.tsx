@@ -5,6 +5,7 @@ import { getPublishedMenu } from "@/lib/db/queries/menus";
 import type { RestaurantMenu } from "@/types/menu";
 import { getPlanStatus } from "@/lib/trial";
 import { CustomerExperience } from "@/components/customer/CustomerExperience";
+import { CookieSettingsButton } from "@/components/customer/ClocheCookieConsent";
 
 export async function generateMetadata({
   params,
@@ -87,7 +88,7 @@ export default async function CustomerPage({
         your server before ordering.
       </footer>
 
-      {/* Contact email (FR57) */}
+      {/* Contact email (FR57) + cookie settings */}
       <p className="mt-4 text-center text-[10px] text-carte-text-dim">
         Powered by CarteAI &middot;{" "}
         <a
@@ -96,6 +97,8 @@ export default async function CustomerPage({
         >
           contact@carte-ai.link
         </a>
+        {" "}&middot;{" "}
+        <CookieSettingsButton lang="fr" />
       </p>
     </main>
   );
