@@ -99,18 +99,19 @@ export function SettingsForm({
   const [llmModel, setLlmModel] = useState(initialLlmConfig?.model ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [touched, setTouched] = useState(false);
   const [visionModel, setVisionModel] = useState(initialVisionConfig?.model ?? "");
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; model?: string; response?: string; error?: string; latencyMs?: number } | null>(null);
   const [visionTesting, setVisionTesting] = useState(false);
   const [visionTestResult, setVisionTestResult] = useState<{ success: boolean; model?: string; response?: string; error?: string; latencyMs?: number } | null>(null);
   const { toast } = useToast();
-  const dirty = !saved && !saving;
+  const dirty = touched && !saved && !saving;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setSaved(false);
+    setSaved(false); setTouched(true);
 
     try {
       const res = await fetch(`/api/tenants/${slug}`, {
@@ -137,6 +138,7 @@ export function SettingsForm({
       });
       if (res.ok) {
         setSaved(true);
+        setTouched(false);
         toast(t.settingsSaved, "success");
       } else {
         const data = await res.json();
@@ -158,7 +160,7 @@ export function SettingsForm({
         <input
           type="text"
           value={name}
-          onChange={(e) => { setName(e.target.value); setSaved(false); }}
+          onChange={(e) => { setName(e.target.value); setSaved(false); setTouched(true); }}
           required
           className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
         />
@@ -170,7 +172,7 @@ export function SettingsForm({
         </label>
         <select
           value={cuisineType}
-          onChange={(e) => { setCuisineType(e.target.value); setSaved(false); }}
+          onChange={(e) => { setCuisineType(e.target.value); setSaved(false); setTouched(true); }}
           className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
         >
           <option value="">{t.select}</option>
@@ -187,7 +189,7 @@ export function SettingsForm({
         <input
           type="text"
           value={address}
-          onChange={(e) => { setAddress(e.target.value); setSaved(false); }}
+          onChange={(e) => { setAddress(e.target.value); setSaved(false); setTouched(true); }}
           className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
         />
       </div>
@@ -197,7 +199,7 @@ export function SettingsForm({
           <input
             type="checkbox"
             checked={allowDrinksOnly}
-            onChange={(e) => { setAllowDrinksOnly(e.target.checked); setSaved(false); }}
+            onChange={(e) => { setAllowDrinksOnly(e.target.checked); setSaved(false); setTouched(true); }}
             className="peer sr-only"
           />
           <div className="h-5 w-9 rounded-full bg-muted-foreground/30 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-background after:transition-all peer-checked:bg-emerald-500 peer-checked:after:translate-x-full" />
@@ -215,7 +217,7 @@ export function SettingsForm({
         <input
           type="url"
           value={googleMapsLink}
-          onChange={(e) => { setGoogleMapsLink(e.target.value); setSaved(false); }}
+          onChange={(e) => { setGoogleMapsLink(e.target.value); setSaved(false); setTouched(true); }}
           placeholder={t.googleMapsLinkPlaceholder}
           className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
         />
@@ -227,7 +229,7 @@ export function SettingsForm({
           <input
             type="checkbox"
             checked={enableReviewNudge}
-            onChange={(e) => { setEnableReviewNudge(e.target.checked); setSaved(false); }}
+            onChange={(e) => { setEnableReviewNudge(e.target.checked); setSaved(false); setTouched(true); }}
             className="peer sr-only"
           />
           <div className="h-5 w-9 rounded-full bg-muted-foreground/30 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-background after:transition-all peer-checked:bg-emerald-500 peer-checked:after:translate-x-full" />
@@ -260,7 +262,7 @@ export function SettingsForm({
                 <div className="flex gap-2">
                   <select
                     value={llmProvider}
-                    onChange={(e) => { setLlmProvider(e.target.value); setSaved(false); setTestResult(null); }}
+                    onChange={(e) => { setLlmProvider(e.target.value); setSaved(false); setTouched(true); setTestResult(null); }}
                     className="flex-1 rounded border px-2 py-1 text-xs"
                   >
                     <option value="auto">{t.llmProviderAuto}</option>
@@ -270,14 +272,14 @@ export function SettingsForm({
                   <input
                     type="text"
                     value={llmModel}
-                    onChange={(e) => { setLlmModel(e.target.value); setSaved(false); setTestResult(null); }}
+                    onChange={(e) => { setLlmModel(e.target.value); setSaved(false); setTouched(true); setTestResult(null); }}
                     placeholder={t.llmModelPlaceholder}
                     className="flex-1 rounded border px-2 py-1 text-xs"
                   />
                   {llmModel && (
                     <button
                       type="button"
-                      onClick={() => { setLlmModel(""); setSaved(false); setTestResult(null); }}
+                      onClick={() => { setLlmModel(""); setSaved(false); setTouched(true); setTestResult(null); }}
                       className="shrink-0 rounded border px-2 py-1 text-[10px] text-muted-foreground hover:bg-muted"
                     >
                       {t.llmUseDefault}
@@ -332,7 +334,7 @@ export function SettingsForm({
                     <input
                       type="number"
                       value={llmQuotaCalls}
-                      onChange={(e) => { setLlmQuotaCalls(parseInt(e.target.value) || 5000); setSaved(false); }}
+                      onChange={(e) => { setLlmQuotaCalls(parseInt(e.target.value) || 5000); setSaved(false); setTouched(true); }}
                       min={100}
                       max={100000}
                       step={100}
@@ -365,14 +367,14 @@ export function SettingsForm({
                   <input
                     type="text"
                     value={visionModel}
-                    onChange={(e) => { setVisionModel(e.target.value); setSaved(false); setVisionTestResult(null); }}
+                    onChange={(e) => { setVisionModel(e.target.value); setSaved(false); setTouched(true); setVisionTestResult(null); }}
                     placeholder={t.aiVisionModelPlaceholder}
                     className="flex-1 rounded border px-2 py-1 text-xs"
                   />
                   {visionModel && (
                     <button
                       type="button"
-                      onClick={() => { setVisionModel(""); setSaved(false); setVisionTestResult(null); }}
+                      onClick={() => { setVisionModel(""); setSaved(false); setTouched(true); setVisionTestResult(null); }}
                       className="shrink-0 rounded border px-2 py-1 text-[10px] text-muted-foreground hover:bg-muted"
                     >
                       {t.aiVisionUseDefault}

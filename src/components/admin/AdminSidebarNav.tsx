@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartBar, ListBullets, ChartLineUp, Image, Gear } from "@phosphor-icons/react";
+import { ChartBar, ListBullets, ChartLineUp, Image, Gear, CreditCard } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
 const navIcons: Record<string, ReactNode> = {
@@ -10,6 +10,7 @@ const navIcons: Record<string, ReactNode> = {
   "📋": <ListBullets weight="duotone" className="h-[18px] w-[18px]" />,
   "📈": <ChartLineUp weight="duotone" className="h-[18px] w-[18px]" />,
   "🖼️": <Image weight="duotone" className="h-[18px] w-[18px]" />,
+  "💳": <CreditCard weight="duotone" className="h-[18px] w-[18px]" />,
   "⚙️": <Gear weight="duotone" className="h-[18px] w-[18px]" />,
 };
 
