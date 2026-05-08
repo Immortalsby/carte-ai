@@ -26,6 +26,8 @@ export const tenants = pgTable(
     owner_id: text("owner_id").notNull(),
     plan: text("plan").notNull().default("trial"),
     trial_ends_at: timestamp("trial_ends_at", { withTimezone: true }),
+    stripe_customer_id: text("stripe_customer_id"),
+    stripe_subscription_id: text("stripe_subscription_id"),
     settings: jsonb("settings").default({}),
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

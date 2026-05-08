@@ -1,6 +1,12 @@
-/** Trial plan helpers */
+/** Plan & trial helpers */
 
-export type PlanStatus = "trial" | "trial_expired" | "starter" | "pro" | "enterprise" | "free";
+export type PlanStatus =
+  | "trial"
+  | "trial_expired"
+  | "alacarte"
+  | "prixfixe"
+  | "surmesure"
+  | "free";
 
 interface Tenant {
   plan: string;
@@ -29,5 +35,17 @@ export function trialDaysLeft(tenant: Tenant): number {
 /** Whether the tenant has an active paid or trial plan */
 export function hasActiveAccess(tenant: Tenant): boolean {
   const status = getPlanStatus(tenant);
-  return status === "trial" || status === "starter" || status === "pro" || status === "enterprise";
+  return status === "trial" || status === "alacarte" || status === "prixfixe" || status === "surmesure";
+}
+
+/** Display name for a plan */
+export function planDisplayName(plan: string): string {
+  const names: Record<string, string> = {
+    trial: "Trial",
+    alacarte: "À La Carte",
+    prixfixe: "Prix Fixe",
+    surmesure: "Sur Mesure",
+    free: "Free",
+  };
+  return names[plan] ?? plan;
 }

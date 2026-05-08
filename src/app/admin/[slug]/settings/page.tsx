@@ -5,6 +5,7 @@ import { isFounder } from "@/lib/roles";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { hasCloudLlm, hasGeminiVision } from "@/lib/llm";
 import { SettingsForm } from "@/components/admin/SettingsForm";
+import { BillingSection } from "@/components/admin/BillingSection";
 import { DeleteRestaurant } from "@/components/admin/DeleteRestaurant";
 import { AdminLocaleSelector } from "@/components/admin/AdminLocaleSelector";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
@@ -108,6 +109,19 @@ export default async function SettingsPage({
               : undefined
           }
           locale={locale}
+        />
+
+        <BillingSection
+          slug={slug}
+          currentPlan={tenant.plan}
+          hasStripeSubscription={!!tenant.stripe_subscription_id}
+          labels={{
+            billingTitle: t.billingTitle,
+            currentPlan: t.currentPlan,
+            subscribeTo: t.subscribeTo,
+            manageBilling: t.manageBilling,
+            billingFree: t.billingFree,
+          }}
         />
 
         <DeleteRestaurant

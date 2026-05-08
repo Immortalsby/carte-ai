@@ -6,6 +6,7 @@ import { Clock, Warning } from "@phosphor-icons/react";
 interface TrialBannerProps {
   plan: string;
   trialEndsAt: string | null;
+  slug: string;
   /** i18n labels */
   labels: {
     trialActive: string;
@@ -15,7 +16,7 @@ interface TrialBannerProps {
   };
 }
 
-export function TrialBanner({ plan, trialEndsAt, labels }: TrialBannerProps) {
+export function TrialBanner({ plan, trialEndsAt, slug, labels }: TrialBannerProps) {
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export function TrialBanner({ plan, trialEndsAt, labels }: TrialBannerProps) {
             : labels.trialActive}
       </span>
       <a
-        href="mailto:contact@carte-ai.link?subject=Upgrade%20to%20A%20La%20Carte"
+        href={`/admin/${slug}/settings#billing`}
         className={`shrink-0 rounded-md px-3 py-1 text-xs font-semibold ${
           expired
             ? "bg-red-600 text-white hover:bg-red-700"

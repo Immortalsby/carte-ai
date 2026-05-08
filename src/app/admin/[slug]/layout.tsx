@@ -122,6 +122,7 @@ export default async function AdminLayout({
         <TrialBanner
           plan={tenant.plan}
           trialEndsAt={tenant.trial_ends_at?.toISOString() ?? null}
+          slug={slug}
           labels={{
             trialActive: t.trialActive,
             trialDaysLeft: t.trialDaysLeft,

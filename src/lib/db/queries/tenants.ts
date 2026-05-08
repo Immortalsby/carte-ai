@@ -50,6 +50,15 @@ export async function updateTenantOwner(id: string, ownerId: string) {
   return result[0];
 }
 
+export async function getTenantByStripeCustomerId(stripeCustomerId: string) {
+  const result = await db
+    .select()
+    .from(tenants)
+    .where(eq(tenants.stripe_customer_id, stripeCustomerId))
+    .limit(1);
+  return result[0] ?? null;
+}
+
 export async function updateTenant(
   id: string,
   data: Partial<{
@@ -59,6 +68,8 @@ export async function updateTenant(
     rating: string;
     address: string;
     plan: string;
+    stripe_customer_id: string;
+    stripe_subscription_id: string;
     settings: Record<string, unknown>;
   }>,
 ) {

@@ -21,6 +21,15 @@ const dict = {
     trialExpired: "Your free trial has expired",
     upgradeNow: "Upgrade",
 
+    // Billing
+    billingTitle: "Billing",
+    currentPlan: "Current plan",
+    subscribeTo: "Subscribe",
+    manageBilling: "Manage billing",
+    billingFree: "No active subscription",
+    billingSuccess: "Subscription activated!",
+    billingCancelled: "Checkout cancelled.",
+
     // Settings page
     settingsTitle: "Settings",
     restaurantName: "Restaurant Name",
@@ -434,6 +443,14 @@ const dict = {
     trialExpired: "Votre essai gratuit a expiré",
     upgradeNow: "Mettre à niveau",
 
+    billingTitle: "Facturation",
+    currentPlan: "Plan actuel",
+    subscribeTo: "S'abonner",
+    manageBilling: "Gérer la facturation",
+    billingFree: "Aucun abonnement actif",
+    billingSuccess: "Abonnement activé !",
+    billingCancelled: "Paiement annulé.",
+
     settingsTitle: "Paramètres",
     restaurantName: "Nom du restaurant",
     cuisineType: "Type de cuisine",
@@ -832,6 +849,14 @@ const dict = {
     trialDaysLeft: (days: number) => `免费试用还剩 ${days} 天`,
     trialExpired: "免费试用已过期",
     upgradeNow: "升级",
+
+    billingTitle: "账单",
+    currentPlan: "当前套餐",
+    subscribeTo: "订阅",
+    manageBilling: "管理账单",
+    billingFree: "暂无有效订阅",
+    billingSuccess: "订阅已激活！",
+    billingCancelled: "支付已取消。",
 
     settingsTitle: "设置",
     restaurantName: "餐馆名称",
