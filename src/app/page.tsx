@@ -180,7 +180,7 @@ function Hero({ t }: { t: Record<string, string> }) {
         <div className="mt-10 flex gap-8">
           <div><p className="text-2xl font-bold text-white">19</p><p className="text-xs text-white/45">{t.hero_stat_langs}</p></div>
           <div><p className="text-2xl font-bold text-white">3s</p><p className="text-xs text-white/45">{t.hero_stat_speed}</p></div>
-          <div><p className="text-2xl font-bold text-white">+2-5&euro;</p><p className="text-xs text-white/45">{t.hero_stat_revenue}</p></div>
+          <div><p className="text-2xl font-bold text-white">95%</p><p className="text-xs text-white/45">{t.hero_stat_revenue}</p></div>
           <div><p className="text-2xl font-bold text-white">0&euro;</p><p className="text-xs text-white/45">{t.hero_stat_free}</p></div>
         </div>
       </div>

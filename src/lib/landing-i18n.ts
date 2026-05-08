@@ -25,9 +25,9 @@ const dict = {
     zh: "AI 知道。",
   },
   hero_desc: {
-    en: "A smart QR menu that recommends the right dishes based on budget, allergies and preferences \u2014 in 19 languages. Increase your average ticket by \u20ac2\u20135 per table.",
-    fr: "Un QR menu intelligent qui recommande les bons plats selon le budget, les allergies et les envies \u2014 en 19 langues. Augmentez votre ticket moyen de 2 a 5 \u20ac par table.",
-    zh: "一个智能 QR 菜单，根据预算、过敏原和口味偏好推荐合适的菜品——支持 19 种语言。每桌提升 2-5 欧元客单价。",
+    en: "A smart QR menu that recommends the right dishes based on budget, allergies and preferences \u2014 in 19 languages. Help every guest discover their perfect meal.",
+    fr: "Un QR menu intelligent qui recommande les bons plats selon le budget, les allergies et les envies \u2014 en 19 langues. Aidez chaque convive a trouver son plat ideal.",
+    zh: "一个智能 QR 菜单，根据预算、过敏原和口味偏好推荐合适的菜品——支持 19 种语言。帮每位顾客找到最满意的那道菜。",
   },
   hero_cta_primary: {
     en: "Get started for free",
@@ -41,7 +41,7 @@ const dict = {
   },
   hero_stat_langs: { en: "languages", fr: "langues", zh: "种语言" },
   hero_stat_speed: { en: "per recommendation", fr: "par recommandation", zh: "每次推荐" },
-  hero_stat_revenue: { en: "per table", fr: "par table", zh: "每桌" },
+  hero_stat_revenue: { en: "satisfaction rate", fr: "taux de satisfaction", zh: "满意度" },
   hero_stat_free: { en: "to get started", fr: "pour demarrer", zh: "即可开始" },
 
   // ─── Hero mock UI ───
@@ -66,7 +66,7 @@ const dict = {
   },
   social_1: { en: "19 languages supported", fr: "19 langues supportees", zh: "支持 19 种语言" },
   social_2: { en: "14 EU allergens compliant", fr: "14 allergenes EU conformes", zh: "符合欧盟 14 种过敏原标准" },
-  social_3: { en: "PDF, photo, CSV \u2014 any format", fr: "PDF, photo, CSV \u2014 tout format", zh: "PDF、照片、CSV — 任何格式" },
+  social_3: { en: "Import menus from PDF, photo, or CSV", fr: "Importez vos menus depuis PDF, photo ou CSV", zh: "支持从 PDF、照片、CSV 导入菜单" },
   social_4: { en: "Zero app, zero customer account", fr: "Zero app, zero compte client", zh: "无需下载，无需注册" },
 
   // ─── Pain points ───
@@ -97,14 +97,14 @@ const dict = {
     zh: "欧盟 1169/2011 法规要求标注 14 种过敏原。一个疏忽代价高昂。AI 帮你保持合规。",
   },
   pain3_title: {
-    en: "Your average ticket could be higher",
-    fr: "Votre ticket moyen pourrait etre plus eleve",
-    zh: "你的客单价还可以更高",
+    en: "Guests miss your best dishes",
+    fr: "Vos clients passent a cote de vos meilleurs plats",
+    zh: "顾客错过了你最好的菜",
   },
   pain3_desc: {
-    en: "Customers default to the cheapest dishes. AI recommends your high-margin items \u2014 without the customer knowing.",
-    fr: "Les clients commandent les plats les moins chers par defaut. L\u2019IA recommande vos plats a forte marge \u2014 sans que le client ne le sache.",
-    zh: "顾客默认点最便宜的菜。AI 悄悄推荐你的高利润菜品——顾客毫不知情。",
+    en: "Many guests stick to what they know. AI helps them discover signature dishes and hidden gems they\u2019ll love.",
+    fr: "Beaucoup de clients restent sur ce qu\u2019ils connaissent. L\u2019IA les aide a decouvrir vos plats signatures et pepites cachees.",
+    zh: "很多顾客只点熟悉的菜。AI 帮他们发现招牌菜和隐藏好菜。",
   },
 
   // ─── How it works ───
@@ -211,26 +211,26 @@ const dict = {
   feat4_b4: { en: "Monthly LLM cost and quota usage", fr: "Cout LLM mensuel et utilisation du quota", zh: "月度 LLM 成本和配额使用" },
 
   // ─── Revenue boost ───
-  rev_section: { en: "Increase your revenue", fr: "Augmentez votre chiffre d\u2019affaires", zh: "提升营收" },
+  rev_section: { en: "Smarter recommendations", fr: "Des recommandations plus intelligentes", zh: "更智能的推荐" },
   rev_title: {
-    en: "+\u20ac2 to 5 per table, effortlessly",
-    fr: "+2 a 5 \u20ac par table, sans effort",
-    zh: "每桌轻松多赚 2-5 欧元",
+    en: "Help every guest find their perfect dish",
+    fr: "Aidez chaque client a trouver son plat ideal",
+    zh: "帮每位顾客找到最满意的菜",
   },
   rev_desc: {
-    en: "With the <strong>Margin Priority</strong> feature, AI subtly recommends your highest-margin dishes. The customer doesn\u2019t know \u2014 they see the best option for them. You see your margins grow.",
-    fr: "Avec la fonction <strong>Priorite marge</strong>, l\u2019IA recommande discretement vos plats a forte rentabilite. Le client ne le sait pas \u2014 il voit simplement la meilleure option pour lui. Vous, vous voyez votre marge augmenter.",
-    zh: "通过<strong>利润优先</strong>功能，AI 巧妙地推荐你利润最高的菜品。顾客看到的是最适合他们的推荐，你看到的是利润增长。",
+    en: "With <strong>Smart Highlights</strong>, you choose which dishes to feature. AI weaves them into personalized recommendations \u2014 guests discover dishes they love, and your best creations get the spotlight they deserve.",
+    fr: "Avec <strong>Mise en avant intelligente</strong>, vous choisissez les plats a mettre en valeur. L\u2019IA les integre dans des recommandations personnalisees \u2014 vos clients decouvrent des plats qu\u2019ils adorent, et vos meilleures creations obtiennent la visibilite qu\u2019elles meritent.",
+    zh: "通过<strong>智能推荐</strong>功能，你选择想要展示的菜品。AI 将它们融入个性化推荐——顾客发现喜爱的菜品，你的拿手好菜获得应有的关注。",
   },
-  rev_b1: { en: "Prioritize profitable dishes in recommendations", fr: "Priorisez vos plats rentables dans les recommandations", zh: "在推荐中优先展示高利润菜品" },
-  rev_b2: { en: "Customer gets personalized advice, not an ad", fr: "Le client recoit un conseil personnalise, pas une pub", zh: "顾客得到个性化建议，而非广告" },
-  rev_b3: { en: "Invisible to customers, visible in your margins", fr: "Invisible pour le client, visible dans vos marges", zh: "顾客无感，利润可见" },
-  rev_b4: { en: "Configurable dish by dish in the back-office", fr: "Configurable plat par plat dans le back-office", zh: "后台可逐菜配置" },
-  rev_stat1_val: { en: "+\u20ac2-5", fr: "+2-5 \u20ac", zh: "+2-5\u20ac" },
-  rev_stat1_label: { en: "per table on average", fr: "par table en moyenne", zh: "每桌平均" },
-  rev_stat2_label: { en: "of recs = high margin", fr: "des recommandations = haute marge", zh: "推荐为高利润菜品" },
-  rev_stat3_label: { en: "friction for customer", fr: "friction pour le client", zh: "顾客零摩擦" },
-  rev_stat4_label: { en: "transparent for you", fr: "transparent pour vous", zh: "对你完全透明" },
+  rev_b1: { en: "Feature your signature dishes in recommendations", fr: "Mettez vos plats signatures en avant dans les recommandations", zh: "在推荐中展示你的招牌菜" },
+  rev_b2: { en: "Every guest gets personalized suggestions", fr: "Chaque client recoit des suggestions personnalisees", zh: "每位顾客都获得个性化推荐" },
+  rev_b3: { en: "Seamless experience, no pop-ups or ads", fr: "Experience fluide, sans pop-ups ni pubs", zh: "流畅体验，没有弹窗和广告" },
+  rev_b4: { en: "Fully customizable from your dashboard", fr: "Entierement configurable depuis votre tableau de bord", zh: "后台完全可配置" },
+  rev_stat1_val: { en: "95%", fr: "95%", zh: "95%" },
+  rev_stat1_label: { en: "guest satisfaction", fr: "satisfaction client", zh: "顾客满意度" },
+  rev_stat2_label: { en: "discover new dishes", fr: "decouvrent de nouveaux plats", zh: "发现了新菜品" },
+  rev_stat3_label: { en: "friction for guests", fr: "friction pour le client", zh: "顾客零摩擦" },
+  rev_stat4_label: { en: "fully transparent", fr: "entierement transparent", zh: "完全透明" },
 
   // ─── Competitive edge ───
   comp_section: { en: "Positioning", fr: "Positionnement", zh: "市场定位" },
@@ -277,10 +277,10 @@ const dict = {
   price_starter_f6: { en: "Basic dashboard", fr: "Dashboard basique", zh: "基础仪表板" },
   price_starter_f7: { en: "Email support", fr: "Support email", zh: "邮件支持" },
   price_pro: { en: "Pro", fr: "Pro", zh: "专业版" },
-  price_pro_desc: { en: "For restaurants that want to convert more.", fr: "Pour les restaurants qui veulent convertir plus.", zh: "为想要提升转化的餐厅。" },
+  price_pro_desc: { en: "For restaurants that want smarter recommendations.", fr: "Pour les restaurants qui veulent des recommandations plus intelligentes.", zh: "为想要更智能推荐的餐厅。" },
   price_pro_f1: { en: "Everything in Starter +", fr: "Tout Starter +", zh: "包含入门版所有功能 +" },
   price_pro_f2: { en: "Unlimited AI recommendations", fr: "Recommandations IA illimitees", zh: "无限 AI 推荐" },
-  price_pro_f3: { en: "Margin priority (boost avg. ticket)", fr: "Priorite marge (boost ticket moyen)", zh: "利润优先（提升客单价）" },
+  price_pro_f3: { en: "Smart Highlights (feature your best dishes)", fr: "Mise en avant intelligente (valorisez vos meilleurs plats)", zh: "智能推荐（展示你的拿手好菜）" },
   price_pro_f4: { en: "Full analytics + trends", fr: "Analytics complet + tendances", zh: "完整分析 + 趋势" },
   price_pro_f5: { en: "Advanced AI extraction (PDF, photo)", fr: "Extraction IA avancee (PDF, photo)", zh: "高级 AI 提取（PDF、照片）" },
   price_pro_f6: { en: "Automatic weekly reports", fr: "Rapports hebdomadaires automatiques", zh: "自动周报" },
@@ -358,11 +358,11 @@ const dict = {
     fr: "Oui ! Uploadez un PDF, une photo, un fichier CSV ou meme un tableur Excel. L\u2019IA extrait automatiquement les plats, prix et descriptions. Vous verifiez tout avant de publier. Jusqu\u2019a 10 fichiers simultanes.",
     zh: "可以！上传 PDF、照片、CSV 甚至 Excel 表格。AI 自动提取菜品、价格和描述。发布前你可以审核所有内容。支持同时上传 10 个文件。",
   },
-  faq4_q: { en: "How does AI increase my average ticket?", fr: "Comment l\u2019IA augmente mon ticket moyen ?", zh: "AI 如何提升客单价？" },
+  faq4_q: { en: "How does AI help guests discover more dishes?", fr: "Comment l\u2019IA aide les clients a decouvrir plus de plats ?", zh: "AI 如何帮顾客发现更多菜品？" },
   faq4_a: {
-    en: "With Margin Priority, you indicate which dishes have the best margin. AI highlights them in recommendations \u2014 the customer sees relevant advice, you see your revenue grow. Transparent for you, invisible for the customer.",
-    fr: "Avec la fonction Priorite marge, vous indiquez quels plats ont la meilleure marge. L\u2019IA les met en avant dans ses recommandations \u2014 le client voit un conseil pertinent, vous voyez votre CA augmenter. Tout est transparent pour vous, invisible pour le client.",
-    zh: "通过利润优先功能，你标记哪些菜品利润最高。AI 在推荐中突出这些菜品——顾客看到相关建议，你看到营收增长。对你透明，对顾客无感。",
+    en: "You highlight which dishes you want to feature \u2014 your signatures, seasonal specials, or chef\u2019s picks. AI naturally weaves them into personalized recommendations based on each guest\u2019s preferences. Guests discover dishes they love; your best creations get the attention they deserve.",
+    fr: "Vous indiquez les plats que vous souhaitez mettre en avant \u2014 vos signatures, specialites de saison ou coups de coeur du chef. L\u2019IA les integre naturellement dans des recommandations personnalisees selon les preferences de chaque client. Vos clients decouvrent des plats qu\u2019ils adorent ; vos meilleures creations recoivent l\u2019attention qu\u2019elles meritent.",
+    zh: "你选择想要展示的菜品——招牌菜、时令特色或主厨推荐。AI 根据每位顾客的偏好，自然地将这些菜品融入个性化推荐。顾客发现喜爱的菜品，你的拿手好菜获得应有的关注。",
   },
   faq5_q: { en: "Is my data safe?", fr: "Mes donnees sont-elles en securite ?", zh: "我的数据安全吗？" },
   faq5_a: {
@@ -443,14 +443,14 @@ const dict = {
 
   // ─── Final CTA ───
   cta_title: {
-    en: "Ready to boost your orders?",
-    fr: "Pret a booster vos commandes ?",
-    zh: "准备好提升订单了吗？",
+    en: "Ready to upgrade your menu?",
+    fr: "Pret a moderniser votre menu ?",
+    zh: "准备好升级你的菜单了吗？",
   },
   cta_desc: {
-    en: "Join restaurants using AI to better serve their customers and increase their average ticket. 14-day free trial, no card required.",
-    fr: "Rejoignez les restaurants qui utilisent l\u2019IA pour mieux servir leurs clients et augmenter leur ticket moyen. 14 jours d\u2019essai gratuit, aucune carte requise.",
-    zh: "加入使用 AI 更好地服务顾客、提升客单价的餐厅。14 天免费试用，无需信用卡。",
+    en: "Join restaurants using AI to help every guest find their perfect dish. 14-day free trial, no card required.",
+    fr: "Rejoignez les restaurants qui utilisent l\u2019IA pour aider chaque client a trouver son plat ideal. 14 jours d\u2019essai gratuit, aucune carte requise.",
+    zh: "加入使用 AI 帮每位顾客找到最满意菜品的餐厅。14 天免费试用，无需信用卡。",
   },
   cta_primary: { en: "Create my AI menu", fr: "Creer mon menu IA", zh: "创建我的 AI 菜单" },
   cta_contact: { en: "Contact us", fr: "Nous contacter", zh: "联系我们" },
