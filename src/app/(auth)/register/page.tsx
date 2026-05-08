@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -75,7 +76,10 @@ export default function RegisterPage() {
     }
   }
 
+  const anyLoading = loading || googleLoading;
+
   async function handleGoogleLogin() {
+    setGoogleLoading(true);
     await signIn.social({ provider: "google", callbackURL: "/admin" });
   }
 
@@ -108,10 +112,15 @@ export default function RegisterPage() {
 
       <button
         onClick={handleGoogleLogin}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
+        disabled={anyLoading}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
       >
-        <GoogleIcon />
-        {t.continueWithGoogle}
+        {googleLoading ? (
+          <Spinner />
+        ) : (
+          <GoogleIcon />
+        )}
+        {googleLoading ? t.redirecting : t.continueWithGoogle}
       </button>
 
       <div className="my-4 flex items-center gap-3">
@@ -213,7 +222,7 @@ export default function RegisterPage() {
         {error && <p className="text-xs text-red-500">{error}</p>}
         <button
           type="submit"
-          disabled={loading}
+          disabled={anyLoading}
           className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
           {loading ? t.creatingAccount : t.createAccount}
@@ -227,6 +236,15 @@ export default function RegisterPage() {
         </a>
       </p>
     </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+      <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
+    </svg>
   );
 }
 

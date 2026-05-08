@@ -5,6 +5,7 @@ const dict = {
     // Login
     signInTitle: "Sign in to CarteAI",
     continueWithGoogle: "Continue with Google",
+    redirecting: "Redirecting...",
     or: "or",
     emailPlaceholder: "Email",
     passwordPlaceholder: "Password",
@@ -88,6 +89,7 @@ const dict = {
   fr: {
     signInTitle: "Connexion à CarteAI",
     continueWithGoogle: "Continuer avec Google",
+    redirecting: "Redirection...",
     or: "ou",
     emailPlaceholder: "E-mail",
     passwordPlaceholder: "Mot de passe",
@@ -166,6 +168,7 @@ const dict = {
   zh: {
     signInTitle: "登录 CarteAI",
     continueWithGoogle: "使用 Google 登录",
+    redirecting: "跳转中...",
     or: "或",
     emailPlaceholder: "邮箱",
     passwordPlaceholder: "密码",
