@@ -388,13 +388,19 @@ const dict = {
     billing: "Billing",
     downloadInvoice: "Download Invoice",
     downloadingInvoice: "Downloading...",
+    founderExtendTrial: "Founder: Extend Trial",
+    extendTrialDays: "days",
+    extendTrialButton: "Extend",
+    extendTrialExtending: "Extending...",
+    extendTrialSuccess: (days: number) => `Trial extended by ${days} days`,
+    extendTrialInvalid: "Enter 1–90 days",
 
     // Google Maps & Review
     googleMapsLink: "Google Maps Link",
-    googleMapsLinkHint: "Customers can find directions to your restaurant.",
+    googleMapsLinkHint: "The AI will use this link to direct customers to leave a review.",
     googleMapsLinkPlaceholder: "https://maps.google.com/...",
     enableReviewNudge: "Ask for Google reviews",
-    enableReviewNudgeHint: "Cloche will occasionally suggest customers leave a Google review after their meal.",
+    enableReviewNudgeHint: "The AI will occasionally suggest customers leave a Google review after their meal.",
 
     // Unsaved changes
     unsavedChanges: "You have unsaved changes",
@@ -812,12 +818,18 @@ const dict = {
     billing: "Facturation",
     downloadInvoice: "Télécharger la facture",
     downloadingInvoice: "Téléchargement...",
+    founderExtendTrial: "Fondateur : Prolonger l'essai",
+    extendTrialDays: "jours",
+    extendTrialButton: "Prolonger",
+    extendTrialExtending: "En cours...",
+    extendTrialSuccess: (days: number) => `Essai prolongé de ${days} jours`,
+    extendTrialInvalid: "Entrez 1 à 90 jours",
 
     googleMapsLink: "Lien Google Maps",
-    googleMapsLinkHint: "Les clients peuvent trouver l'itinéraire vers votre restaurant.",
+    googleMapsLinkHint: "L'IA utilisera ce lien pour diriger les clients vers la page d'avis.",
     googleMapsLinkPlaceholder: "https://maps.google.com/...",
     enableReviewNudge: "Demander des avis Google",
-    enableReviewNudgeHint: "Cloche suggérera occasionnellement aux clients de laisser un avis Google après leur repas.",
+    enableReviewNudgeHint: "L'IA suggérera occasionnellement aux clients de laisser un avis Google après leur repas.",
 
     unsavedChanges: "Modifications non enregistrées",
 
@@ -1231,12 +1243,18 @@ const dict = {
     billing: "账单",
     downloadInvoice: "下载发票",
     downloadingInvoice: "下载中...",
+    founderExtendTrial: "创始人：延长试用",
+    extendTrialDays: "天",
+    extendTrialButton: "延长",
+    extendTrialExtending: "处理中...",
+    extendTrialSuccess: (days: number) => `试用期已延长 ${days} 天`,
+    extendTrialInvalid: "请输入 1–90 天",
 
     googleMapsLink: "Google Maps 链接",
-    googleMapsLinkHint: "顾客可以找到前往餐厅的路线。",
+    googleMapsLinkHint: "AI 将使用此链接引导顾客前往评价页面。",
     googleMapsLinkPlaceholder: "https://maps.google.com/...",
     enableReviewNudge: "请求 Google 评价",
-    enableReviewNudgeHint: "Cloche 会在用餐后偶尔建议顾客留下 Google 评价。",
+    enableReviewNudgeHint: "AI 会在用餐后偶尔建议顾客留下 Google 评价。",
 
     unsavedChanges: "有未保存的更改",
 

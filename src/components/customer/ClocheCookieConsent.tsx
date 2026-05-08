@@ -121,9 +121,9 @@ export function ClocheCookieConsent({ lang }: Props) {
           className="fixed bottom-4 left-4 right-4 z-[70] sm:left-4 sm:right-auto sm:max-w-[360px]"
         >
           <div
-            className="rounded-2xl border p-4 shadow-lg"
+            className="rounded-2xl border p-4 shadow-lg backdrop-blur-none"
             style={{
-              backgroundColor: "var(--carte-surface)",
+              backgroundColor: "var(--carte-bg)",
               borderColor: "var(--carte-border)",
             }}
           >

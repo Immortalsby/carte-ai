@@ -96,7 +96,7 @@ export function BillingSection({
   async function handleExtendTrial() {
     const days = parseInt(extensionDays, 10);
     if (isNaN(days) || days < 1 || days > 90) {
-      toast("Enter 1–90 days", "error");
+      toast(t.extendTrialInvalid, "error");
       return;
     }
     setLoading("extend");
@@ -107,14 +107,14 @@ export function BillingSection({
         body: JSON.stringify({ days }),
       });
       if (res.ok) {
-        toast(`Trial extended by ${days} days`, "success");
+        toast(t.extendTrialSuccess(days), "success");
         window.location.reload();
       } else {
         const data = await res.json();
         toast(data.error || "Error", "error");
       }
     } catch {
-      toast("Network error", "error");
+      toast(t.networkError, "error");
     } finally {
       setLoading(null);
     }
@@ -144,9 +144,9 @@ export function BillingSection({
       </div>
 
       {/* Founder: trial extension */}
-      {isFounder && currentPlan === "trial" && (
+      {isFounder && !isPaid && (
         <div className="mt-4 rounded-md border border-purple-500/20 bg-purple-500/5 px-4 py-3">
-          <p className="text-xs font-medium text-purple-600 dark:text-purple-400">Founder: Extend Trial</p>
+          <p className="text-xs font-medium text-purple-600 dark:text-purple-400">{t.founderExtendTrial}</p>
           <div className="mt-2 flex items-center gap-2">
             <input
               type="number"
@@ -156,14 +156,14 @@ export function BillingSection({
               onChange={(e) => setExtensionDays(e.target.value)}
               className="w-20 rounded-md border border-border bg-background px-2 py-1.5 text-sm"
             />
-            <span className="text-xs text-muted-foreground">days</span>
+            <span className="text-xs text-muted-foreground">{t.extendTrialDays}</span>
             <button
               type="button"
               onClick={handleExtendTrial}
               disabled={loading !== null}
               className="rounded-md bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700 disabled:opacity-50"
             >
-              {loading === "extend" ? "..." : "Extend"}
+              {loading === "extend" ? t.extendTrialExtending : t.extendTrialButton}
             </button>
           </div>
         </div>
