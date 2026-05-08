@@ -162,21 +162,21 @@ const dict = {
   feat1_b3: { en: "Confidence score for each extraction", fr: "Score de confiance pour chaque extraction", zh: "每次提取附带置信度评分" },
   feat1_b4: { en: "Auto-translation FR/EN/ZH + 16 languages", fr: "Traduction automatique FR/EN/ZH + 16 langues", zh: "自动翻译法/英/中 + 16 种语言" },
 
-  feat2_tag: { en: "Cultural intelligence", fr: "Intelligence culturelle", zh: "文化感知" },
+  feat2_tag: { en: "Multilingual menu", fr: "Menu multilingue", zh: "多语言菜单" },
   feat2_title: {
-    en: "Two modes. Two experiences. One product.",
-    fr: "Deux modes. Deux experiences. Un seul produit.",
-    zh: "两种模式。两种体验。一个产品。",
+    en: "One menu, 19 languages, instant translation.",
+    fr: "Un menu, 19 langues, traduction instantanee.",
+    zh: "一份菜单，19 种语言，即时翻译。",
   },
   feat2_desc: {
-    en: "When an American tourist scans, they see translations and starter recommendations. When a Chinese person enters a Chinese restaurant, they see a group meal advisor \u2014 because it\u2019s not the same experience.",
-    fr: "Quand un touriste americain scanne, il voit des traductions et des recommandations d\u2019initiation. Quand un Chinois entre dans un restaurant chinois, il voit un conseiller de repas de groupe \u2014 parce que ce n\u2019est pas la meme experience.",
-    zh: "美国游客扫码看到翻译和入门推荐。中国人进中餐馆看到组菜顾问——因为体验完全不同。",
+    en: "Every guest sees the menu in their own language \u2014 with dish names, descriptions, and AI recommendations all translated automatically. No more pointing at pictures or awkward misunderstandings.",
+    fr: "Chaque client voit le menu dans sa propre langue \u2014 noms de plats, descriptions et recommandations IA, le tout traduit automatiquement. Fini les malentendus et les gestes pour commander.",
+    zh: "每位顾客都能用自己的语言看菜单——菜名、描述、AI 推荐全部自动翻译。再也不用指着图片点菜了。",
   },
-  feat2_b1: { en: "Tourist mode: translation + starter recommendations", fr: "Mode touriste : traduction + recommandation d\u2019entree", zh: "游客模式：翻译 + 入门推荐" },
-  feat2_b2: { en: "Group meal mode: composition advice by party size", fr: "Mode repas de groupe : conseil de composition par nombre de convives", zh: "组菜模式：按人数推荐搭配" },
-  feat2_b3: { en: "Auto-detection by browser language + cuisine type", fr: "Detection automatique par langue du navigateur + type de cuisine", zh: "按浏览器语言 + 菜系类型自动检测" },
-  feat2_b4: { en: "Discreet button to switch modes manually", fr: "Bouton discret pour changer de mode manuellement", zh: "低调按钮可手动切换模式" },
+  feat2_b1: { en: "19 languages auto-detected from phone settings", fr: "19 langues detectees automatiquement depuis le telephone", zh: "根据手机语言自动切换 19 种语言" },
+  feat2_b2: { en: "Dish names, descriptions & AI advice all translated", fr: "Noms, descriptions et conseils IA tous traduits", zh: "菜名、描述、AI 建议全部翻译" },
+  feat2_b3: { en: "Guests can switch language manually anytime", fr: "Les clients peuvent changer de langue a tout moment", zh: "顾客随时可以手动切换语言" },
+  feat2_b4: { en: "Smart mode adapts to local vs. tourist diners", fr: "Le mode intelligent s\u2019adapte aux clients locaux ou touristes", zh: "智能模式区分本地食客和游客" },
 
   feat3_tag: { en: "Allergen compliance", fr: "Conformite allergenes", zh: "过敏原合规" },
   feat3_title: {
@@ -376,11 +376,11 @@ const dict = {
     fr: "19 langues dont le francais, l\u2019anglais, le chinois (simplifie), l\u2019arabe, le japonais, le coreen, l\u2019espagnol, le portugais, et bien d\u2019autres. La langue est detectee automatiquement a partir du telephone du client.",
     zh: "支持 19 种语言，包括法语、英语、中文（简体）、阿拉伯语、日语、韩语、西班牙语、葡萄牙语等。语言从顾客手机自动检测。",
   },
-  faq7_q: { en: "What is \u2018cultural detection\u2019?", fr: "C\u2019est quoi la \u00ab detection culturelle \u00bb ?", zh: "什么是「文化感知」？" },
+  faq7_q: { en: "What is \u2018smart mode\u2019?", fr: "C\u2019est quoi le \u00ab mode intelligent \u00bb ?", zh: "什么是「智能模式」？" },
   faq7_a: {
-    en: "When the customer\u2019s phone language matches the restaurant\u2019s cuisine type (e.g. Chinese in a Chinese restaurant), CarteAI automatically switches to \u2018group meal advisor\u2019 mode instead of tourist mode. A CarteAI exclusive.",
-    fr: "Quand la langue du telephone du client correspond au type de cuisine du restaurant (ex: chinois dans un restaurant chinois), CarteAI passe automatiquement en mode \u00ab conseiller repas de groupe \u00bb au lieu du mode touriste. C\u2019est une exclusivite CarteAI.",
-    zh: "当顾客手机语言与餐厅菜系类型匹配时（如中国人在中餐馆），CarteAI 自动切换到「组菜顾问」模式而非游客模式。这是 CarteAI 的独家功能。",
+    en: "CarteAI detects the guest\u2019s language and adapts the experience. A tourist gets translated menus with beginner-friendly suggestions. A local diner gets group meal advice tailored to their party size. It happens automatically \u2014 no setup needed.",
+    fr: "CarteAI detecte la langue du client et adapte l\u2019experience. Un touriste voit le menu traduit avec des suggestions accessibles. Un client local recoit des conseils de repas de groupe adaptes a la taille de sa table. Tout est automatique, sans configuration.",
+    zh: "CarteAI 检测顾客的语言并自动调整体验。游客看到翻译菜单和入门推荐，本地食客获得按人数定制的组菜建议。全自动，无需配置。",
   },
   faq8_q: { en: "Can I cancel anytime?", fr: "Puis-je annuler a tout moment ?", zh: "可以随时取消吗？" },
   faq8_a: {
