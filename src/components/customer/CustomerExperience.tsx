@@ -266,7 +266,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         </button>
         <button
           type="button"
-          onClick={() => setShowShare(true)}
+          onClick={() => { setShowWishlist(false); setShowShare(true); }}
           className="text-xs text-carte-text-dim underline-offset-2 hover:text-carte-text-muted hover:underline"
         >
           {lang === "zh" ? "\u5206\u4eab" : lang === "fr" ? "Partager" : "Share"}
@@ -278,7 +278,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
       {wishlist.count > 0 && !showWishlist && (
         <button
           type="button"
-          onClick={() => setShowWishlist(true)}
+          onClick={() => { setShowShare(false); setShowWishlist(true); }}
           className="fixed z-50 flex items-center gap-1.5 rounded-full border border-carte-border bg-carte-surface/80 backdrop-blur-md px-3 py-2.5 shadow-md transition-all duration-300 hover:border-carte-primary/30 animate-fade-in"
           style={{ insetInlineStart: "1rem", bottom: "calc(clamp(120px,24vw,140px) / 2 - 0.2rem)", transform: "translateY(50%)" }}
         >
@@ -307,6 +307,10 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         onRemove={(id) => handleToggleSave([id])}
         onClear={wishlist.clear}
         onClose={() => setShowWishlist(false)}
+        onDishTap={(dish) => {
+          setShowWishlist(false);
+          setHighlightDishId(dish.id);
+        }}
       />
 
       {/* Share panel */}

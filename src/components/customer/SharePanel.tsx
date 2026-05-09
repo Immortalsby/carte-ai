@@ -129,10 +129,16 @@ export function SharePanel({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(_e, info) => {
+              if (info.offset.y > 100 || info.velocity.y > 300) onClose();
+            }}
             className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg rounded-t-2xl border-t border-carte-border p-5 pb-8"
             style={{ backgroundColor: "var(--carte-bg)" }}
           >
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-carte-border" />
+            <div className="mx-auto mb-4 h-1 w-10 cursor-grab rounded-full bg-carte-border active:cursor-grabbing" />
 
             <h3 className="text-center text-sm font-bold text-carte-text">
               {l("title")}

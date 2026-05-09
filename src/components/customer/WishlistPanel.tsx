@@ -26,6 +26,7 @@ interface WishlistPanelProps {
   onRemove: (dishId: string) => void;
   onClear: () => void;
   onClose: () => void;
+  onDishTap?: (dish: Dish) => void;
 }
 
 export function WishlistPanel({
@@ -37,6 +38,7 @@ export function WishlistPanel({
   onRemove,
   onClear,
   onClose,
+  onDishTap,
 }: WishlistPanelProps) {
   useEffect(() => {
     if (visible) {
@@ -66,11 +68,17 @@ export function WishlistPanel({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(_e, info) => {
+              if (info.offset.y > 100 || info.velocity.y > 300) onClose();
+            }}
             className="relative w-full max-w-lg rounded-t-2xl border-t border-carte-border px-5 pb-8 pt-4"
             style={{ backgroundColor: "var(--carte-bg)", maxHeight: "80vh" }}
           >
             {/* Drag handle */}
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-carte-border" />
+            <div className="mx-auto mb-4 h-1 w-10 cursor-grab rounded-full bg-carte-border active:cursor-grabbing" />
 
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-carte-text">
@@ -107,7 +115,11 @@ export function WishlistPanel({
                   return (
                     <div
                       key={dish.id}
-                      className="flex items-start gap-3 rounded-xl border border-carte-border bg-carte-surface p-3"
+                      className="flex items-start gap-3 rounded-xl border border-carte-border bg-carte-surface p-3 transition-colors hover:bg-carte-surface-hover"
+                      role={onDishTap ? "button" : undefined}
+                      tabIndex={onDishTap ? 0 : undefined}
+                      onClick={() => onDishTap?.(dish)}
+                      onKeyDown={(e) => e.key === "Enter" && onDishTap?.(dish)}
                     >
                       {displayImage ? (
                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg">

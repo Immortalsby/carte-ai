@@ -180,15 +180,21 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
 
       {/* Drawer */}
       <motion.div
-        className="relative w-full max-w-lg rounded-t-2xl border-t border-carte-border px-5 pb-8 pt-4"
-        style={{ backgroundColor: "var(--carte-bg)" }}
+        className="relative w-full max-w-lg overflow-y-auto rounded-t-2xl border-t border-carte-border px-5 pb-8 pt-4"
+        style={{ backgroundColor: "var(--carte-bg)", maxHeight: "85vh" }}
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 300 }}
+        drag="y"
+        dragConstraints={{ top: 0 }}
+        dragElastic={0.2}
+        onDragEnd={(_e, info) => {
+          if (info.offset.y > 100 || info.velocity.y > 300) onClose();
+        }}
       >
         {/* Drag handle */}
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-carte-border" />
+        <div className="mx-auto mb-4 h-1 w-10 cursor-grab rounded-full bg-carte-border active:cursor-grabbing" />
 
         <div className="flex items-start justify-between gap-2">
           <h2 className="min-w-0 flex-1 text-lg font-bold text-carte-text">{name}</h2>
