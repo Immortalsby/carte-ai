@@ -229,7 +229,7 @@ export function BillingSection({
         </button>
       )}
 
-      {/* Plan cards with features */}
+      {/* Plan cards with features + CGV link */}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {AVAILABLE_PLANS.map((p) => {
           const isActive = currentPlan === p.code;
@@ -270,14 +270,22 @@ export function BillingSection({
                   {labels.currentPlan}
                 </div>
               ) : !isPaid && !hasStripeSubscription ? (
-                <button
-                  type="button"
-                  onClick={() => handleCheckout(p.code)}
-                  disabled={loading !== null}
-                  className="mt-3 w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  {loading === p.code ? "..." : `${labels.subscribeTo} ${p.name}`}
-                </button>
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() => handleCheckout(p.code)}
+                    disabled={loading !== null}
+                    className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    {loading === p.code ? "..." : `${labels.subscribeTo} ${p.name}`}
+                  </button>
+                  <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
+                    {locale === "zh" ? "订阅即表示您同意我们的" : locale === "fr" ? "En souscrivant, vous acceptez nos " : "By subscribing, you agree to our "}
+                    <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
+                      {locale === "zh" ? "销售条款" : locale === "fr" ? "CGV" : "Terms of Sale"}
+                    </a>
+                  </p>
+                </div>
               ) : null}
             </div>
           );

@@ -24,21 +24,30 @@ const languageNames: Partial<Record<LanguageCode, string>> = {
   hi: "\u0939\u093f\u0928\u094d\u0926\u0940",
 };
 
-// Primary languages shown as buttons
-const primaryLanguages: LanguageCode[] = ["fr", "en", "zh", "ja", "es"];
-
-// All other languages shown in the modal
-const secondaryLanguages: LanguageCode[] = (
-  Object.keys(languageNames) as LanguageCode[]
-).filter((code) => !primaryLanguages.includes(code));
+// Default primary languages shown as buttons
+const defaultPrimaryLanguages: LanguageCode[] = ["fr", "en", "zh", "ja", "es"];
 
 interface LanguageSwitcherProps {
   current: LanguageCode;
   onChange: (lang: LanguageCode) => void;
+  /** Browser-detected language — always shown first in primary row */
+  detectedLang?: LanguageCode;
 }
 
-export function LanguageSwitcher({ current, onChange }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ current, onChange, detectedLang }: LanguageSwitcherProps) {
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Build primary list: detected language first (if not already in defaults), then defaults
+  const primaryLanguages = (() => {
+    if (!detectedLang || defaultPrimaryLanguages.includes(detectedLang) || !languageNames[detectedLang]) {
+      return defaultPrimaryLanguages;
+    }
+    return [detectedLang, ...defaultPrimaryLanguages.slice(0, 4)];
+  })();
+
+  const secondaryLanguages = (Object.keys(languageNames) as LanguageCode[]).filter(
+    (code) => !primaryLanguages.includes(code),
+  );
 
   // If current language is a secondary one, show it's selected in the "more" button
   const currentIsSecondary = secondaryLanguages.includes(current);

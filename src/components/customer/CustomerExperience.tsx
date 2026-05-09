@@ -62,6 +62,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
   const [showShare, setShowShare] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
   const [highlightDishId, setHighlightDishId] = useState<string | null>(null);
+  const [detectedLang, setDetectedLang] = useState<LanguageCode | undefined>(undefined);
   const wishlist = useWishlist();
   const turnstileTokenRef = useRef<string | null>(null);
   const handleTurnstileSuccess = useCallback((token: string) => {
@@ -78,6 +79,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
   useEffect(() => {
     const detected = detectLanguage({ accept: [...navigator.languages], fallback: "fr" }) as LanguageCode;
     setLang(detected);
+    setDetectedLang(detected);
     trackEvent(tenantId, "scan", { slug: menu.restaurant.slug }, detected);
 
     // Cultural awareness: auto-switch to group meal mode (FR16)
@@ -172,7 +174,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
 
       {/* Language switcher */}
       <div className="mt-4">
-        <LanguageSwitcher current={lang} onChange={setLang} />
+        <LanguageSwitcher current={lang} onChange={setLang} detectedLang={detectedLang} />
       </div>
 
       {/* Mascot Assistant (fixed position, always visible) */}
