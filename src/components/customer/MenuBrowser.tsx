@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { AnimatePresence } from "framer-motion";
 import type { Dish, LanguageCode, MenuCategory } from "@/types/menu";
 import { DishCard } from "./DishCard";
 import { DishDetail } from "./DishDetail";
@@ -123,15 +124,17 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, t
       </div>
 
       {/* Dish detail drawer */}
-      {selectedDish && (
-        <DishDetail
-          dish={selectedDish}
-          lang={lang}
-          cuisine={cuisine}
-          tenantSlug={tenantSlug}
-          onClose={() => setSelectedDish(null)}
-        />
-      )}
+      <AnimatePresence>
+        {selectedDish && (
+          <DishDetail
+            dish={selectedDish}
+            lang={lang}
+            cuisine={cuisine}
+            tenantSlug={tenantSlug}
+            onClose={() => setSelectedDish(null)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

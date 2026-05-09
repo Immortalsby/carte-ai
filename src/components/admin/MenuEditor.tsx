@@ -1017,6 +1017,23 @@ function DishEditor({
         ))}
       </div>
 
+      {/* Calories */}
+      <div className="flex items-center gap-2">
+        <label className="text-xs text-muted-foreground">{t.caloriesKcal}</label>
+        <input
+          type="number"
+          min={0}
+          value={dish.caloriesKcal ?? ""}
+          onChange={(e) =>
+            onUpdate({
+              caloriesKcal: e.target.value ? parseInt(e.target.value, 10) : undefined,
+            })
+          }
+          placeholder={t.caloriesPlaceholder}
+          className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm"
+        />
+      </div>
+
       {/* Margin Priority (FR9) */}
       <div className="flex items-center gap-2">
         <label className="text-xs text-muted-foreground">{t.marginPriority}</label>

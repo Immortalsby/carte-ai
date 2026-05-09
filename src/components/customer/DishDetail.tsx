@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import type { Dish, LanguageCode, Allergen } from "@/types/menu";
 import { CSSMascot } from "./CSSMascot";
-import { ForkKnife } from "@phosphor-icons/react";
+import { ForkKnife, ShieldCheck, Fire } from "@phosphor-icons/react";
 
 const allergenLabels: Record<Allergen, Record<string, string>> = {
   gluten: { fr: "Gluten", en: "Gluten", zh: "麸质" },
@@ -25,8 +26,8 @@ const allergenLabels: Record<Allergen, Record<string, string>> = {
 };
 
 const explainLabels = {
-  button: { en: "Ask Cloche to explain", fr: "Demander à Cloche", zh: "让 Cloche 解释" },
-  loading: { en: "Cloche is thinking...", fr: "Cloche réfléchit...", zh: "Cloche 正在思考..." },
+  button: { en: "Ask Cloché to explain", fr: "Demander à Cloché", zh: "让 Cloché 解释" },
+  loading: { en: "Cloché is thinking...", fr: "Cloché réfléchit...", zh: "Cloché 正在思考..." },
   error: { en: "Couldn't get an explanation right now", fr: "Impossible d'obtenir une explication", zh: "暂时无法获取解释" },
 };
 
@@ -47,6 +48,17 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDet
   const [explainLoading, setExplainLoading] = useState(false);
   const [explainError, setExplainError] = useState(false);
 
+  // Allergen analysis state
+  const [aiAllergens, setAiAllergens] = useState<string[] | null>(null);
+  const [aiAllergensNone, setAiAllergensNone] = useState(false);
+  const [allergenLoading, setAllergenLoading] = useState(false);
+  const [allergenError, setAllergenError] = useState(false);
+
+  // Calorie estimation state
+  const [aiCalories, setAiCalories] = useState<{ kcal: number; range: string } | null>(null);
+  const [calorieLoading, setCalorieLoading] = useState(false);
+  const [calorieError, setCalorieError] = useState(false);
+
   const l = (key: keyof typeof explainLabels) =>
     explainLabels[key][lang as "en" | "fr" | "zh"] || explainLabels[key].en;
 
@@ -58,6 +70,15 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDet
     };
   }, []);
 
+  const dishPayload = {
+    dishName: dish.name,
+    dishDescription: dish.description,
+    ingredients: dish.ingredients,
+    cuisine: cuisine || "",
+    lang,
+    tenantSlug: tenantSlug || "",
+  };
+
   async function handleExplain() {
     if (explainLoading || explanation) return;
     setExplainLoading(true);
@@ -66,14 +87,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDet
       const res = await fetch("/api/dish-explain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          dishName: dish.name,
-          dishDescription: dish.description,
-          ingredients: dish.ingredients,
-          cuisine: cuisine || "",
-          lang,
-          tenantSlug: tenantSlug || "",
-        }),
+        body: JSON.stringify({ ...dishPayload, mode: "explain" }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -89,8 +103,69 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDet
     }
   }
 
+  async function handleAllergenAnalysis() {
+    if (allergenLoading || aiAllergens !== null) return;
+    setAllergenLoading(true);
+    setAllergenError(false);
+    try {
+      const res = await fetch("/api/dish-explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...dishPayload, mode: "allergens" }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (data.allergens !== undefined) {
+        setAiAllergens(data.allergens);
+        setAiAllergensNone(!!data.none);
+      } else {
+        setAllergenError(true);
+      }
+    } catch {
+      setAllergenError(true);
+    } finally {
+      setAllergenLoading(false);
+    }
+  }
+
+  async function handleCalorieEstimate() {
+    if (calorieLoading || aiCalories !== null) return;
+    setCalorieLoading(true);
+    setCalorieError(false);
+    try {
+      const res = await fetch("/api/dish-explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...dishPayload, mode: "calories" }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (data.kcal !== undefined) {
+        setAiCalories({ kcal: data.kcal, range: data.range });
+      } else {
+        setCalorieError(true);
+      }
+    } catch {
+      setCalorieError(true);
+    } finally {
+      setCalorieLoading(false);
+    }
+  }
+
+  const aiDisclaimer = lang === "zh"
+    ? "AI 预估，仅供参考，不代表实际数据"
+    : lang === "fr"
+      ? "Estimation IA, à titre indicatif uniquement"
+      : "AI estimate, for reference only";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <motion.div
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60"
@@ -102,7 +177,14 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDet
       />
 
       {/* Drawer */}
-      <div className="relative w-full max-w-lg animate-slide-up rounded-t-2xl border-t border-carte-border px-5 pb-8 pt-4" style={{ backgroundColor: "var(--carte-bg)" }}>
+      <motion.div
+        className="relative w-full max-w-lg rounded-t-2xl border-t border-carte-border px-5 pb-8 pt-4"
+        style={{ backgroundColor: "var(--carte-bg)" }}
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 300 }}
+      >
         {/* Drag handle */}
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-carte-border" />
 
@@ -127,7 +209,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDet
           </div>
         )}
 
-        {/* Allergens — show concrete allergens, or a gentle "ask staff" hint for unknown */}
+        {/* Allergens */}
         {dish.allergens.filter((a) => a !== "unknown").length > 0 ? (
           <div className="mt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
@@ -150,35 +232,103 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDet
                 ))}
             </div>
           </div>
-        ) : dish.allergens.includes("unknown") ? (
+        ) : (
           <div className="mt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
               {lang === "zh" ? "过敏原" : lang === "fr" ? "Allergènes" : "Allergens"}
             </h3>
-            <p className="mt-1 text-xs text-carte-text-dim">
-              {lang === "zh"
-                ? "过敏原信息暂未标注，请咨询店员"
-                : lang === "fr"
-                  ? "Informations sur les allergènes non disponibles — veuillez demander au personnel"
-                  : "Allergen info not available — please ask staff"}
-            </p>
+            {/* AI allergen analysis result */}
+            {aiAllergens !== null ? (
+              <div className="mt-1">
+                {aiAllergensNone || aiAllergens.length === 0 ? (
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck weight="duotone" className="h-3.5 w-3.5 text-emerald-500" />
+                    <span className="text-xs text-carte-text-muted">
+                      {lang === "zh"
+                        ? "经 Cloché 分析，可能不含常见过敏原"
+                        : lang === "fr"
+                          ? "Selon Cloché, probablement sans allergènes courants"
+                          : "According to Cloché, likely free of common allergens"}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {aiAllergens.map((a) => (
+                      <span
+                        key={a}
+                        className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+                        style={{
+                          backgroundColor: "color-mix(in srgb, var(--carte-warning) 15%, transparent)",
+                          color: "var(--carte-warning)",
+                        }}
+                      >
+                        {allergenLabels[a as Allergen]?.[lang] || allergenLabels[a as Allergen]?.en || a}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="mt-1 text-[10px] text-carte-text-dim">{aiDisclaimer}</p>
+              </div>
+            ) : allergenLoading ? (
+              <div className="mt-1 flex items-center gap-2">
+                <CSSMascot state="thinking" className="h-6 w-6 shrink-0" />
+                <span className="text-xs text-carte-text-dim">
+                  {lang === "zh" ? "Cloché 正在分析..." : lang === "fr" ? "Cloché analyse..." : "Cloché is analyzing..."}
+                </span>
+              </div>
+            ) : allergenError ? (
+              <p className="mt-1 text-xs text-carte-text-dim">
+                {lang === "zh" ? "分析暂时不可用" : lang === "fr" ? "Analyse indisponible" : "Analysis unavailable"}
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAllergenAnalysis}
+                className="mt-1 flex items-center gap-1.5 text-xs text-carte-text-dim transition-colors hover:text-carte-text-muted"
+              >
+                <ShieldCheck weight="duotone" className="h-3.5 w-3.5 text-carte-primary" />
+                {lang === "zh" ? "让 Cloché 分析过敏原" : lang === "fr" ? "Cloché analyse les allergènes" : "Ask Cloché to analyze allergens"}
+              </button>
+            )}
           </div>
-        ) : null}
+        )}
 
         {/* Calories */}
         <div className="mt-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
             {lang === "zh" ? "卡路里" : lang === "fr" ? "Calories" : "Calories"}
           </h3>
-          <p className="mt-1 text-sm text-carte-text-muted">
-            {dish.caloriesKcal
-              ? `${dish.caloriesKcal} kcal`
-              : lang === "zh"
-                ? "未提供"
-                : lang === "fr"
-                  ? "Non fourni"
-                  : "Not provided"}
-          </p>
+          {dish.caloriesKcal ? (
+            <p className="mt-1 text-sm text-carte-text-muted">{dish.caloriesKcal} kcal</p>
+          ) : aiCalories ? (
+            <div className="mt-1">
+              <p className="text-sm text-carte-text-muted">
+                ~{aiCalories.kcal} kcal
+                {aiCalories.range && <span className="text-xs text-carte-text-dim"> ({aiCalories.range})</span>}
+              </p>
+              <p className="mt-0.5 text-[10px] text-carte-text-dim">{aiDisclaimer}</p>
+            </div>
+          ) : calorieLoading ? (
+            <div className="mt-1 flex items-center gap-2">
+              <CSSMascot state="thinking" className="h-6 w-6 shrink-0" />
+              <span className="text-xs text-carte-text-dim">
+                {lang === "zh" ? "Cloché 正在估算..." : lang === "fr" ? "Cloché estime..." : "Cloché is estimating..."}
+              </span>
+            </div>
+          ) : calorieError ? (
+            <p className="mt-1 text-xs text-carte-text-dim">
+              {lang === "zh" ? "估算暂时不可用" : lang === "fr" ? "Estimation indisponible" : "Estimation unavailable"}
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={handleCalorieEstimate}
+              className="mt-1 flex items-center gap-1.5 text-xs text-carte-text-dim transition-colors hover:text-carte-text-muted"
+            >
+              <Fire weight="duotone" className="h-3.5 w-3.5 text-carte-primary" />
+              {lang === "zh" ? "让 Cloché 估算卡路里" : lang === "fr" ? "Cloché estime les calories" : "Ask Cloché to estimate calories"}
+            </button>
+          )}
         </div>
 
         {/* Spice level */}
@@ -242,7 +392,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDet
         >
           {lang === "zh" ? "关闭" : lang === "fr" ? "Fermer" : "Close"}
         </button>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

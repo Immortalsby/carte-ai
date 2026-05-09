@@ -430,7 +430,7 @@ const explainSystemPrompt = `You are a friendly food concierge. A diner points a
 Rules:
 - Sentence 1: What the dish is and how it's prepared (main ingredients, cooking method).
 - Sentence 2: Flavor profile — taste, texture, aroma.
-- Sentence 3 (only if the dish is foreign to the diner's culture): Compare it to a well-known dish from the diner's own food culture. E.g. for a Chinese speaker: "口感类似红烧牛肉，但用的是羊肉，配上北非香料". Skip this sentence if the dish already belongs to the diner's cuisine.
+- Optional sentence 3: ONLY if the dish is clearly foreign to the diner's culture AND you can think of a genuinely similar dish from the diner's food culture, briefly compare. E.g. for a Chinese speaker eating Moroccan tagine: "有点类似红烧，但用北非香料慢炖". Do NOT force a comparison — if the dish belongs to the diner's own cuisine, or if there is no natural analogy, simply omit this sentence.
 - Tone: warm, casual, like a knowledgeable friend — not a textbook.
 - Do NOT use markdown, bullet points, or labels. Just natural sentences.
 - Do NOT mention allergens or prices — the UI already shows those.
@@ -510,6 +510,152 @@ export async function explainDishWithLlm(
   if (openai) return { provider: "openai", text: openai };
 
   return null;
+}
+
+// ── Allergen analysis ──
+
+const allergenAnalysisPrompt = `You are a food safety assistant. Given a dish name, description, and ingredients, analyze which of the 14 EU allergens the dish LIKELY contains.
+
+The 14 allergens: gluten, crustaceans, eggs, fish, peanuts, soy, milk, nuts, celery, mustard, sesame, sulphites, lupin, molluscs.
+
+Rules:
+- Return a JSON object: { "allergens": ["gluten", "milk", ...], "none": false }
+- If the dish likely contains NO common allergens, return: { "allergens": [], "none": true }
+- Be conservative — if an ingredient commonly contains an allergen, include it.
+- Only include allergens you have reasonable confidence about based on the ingredients and dish type.
+- Return ONLY the JSON, no explanation.`;
+
+export async function analyzeAllergens(
+  input: DishExplainInput,
+  options?: { provider?: string },
+): Promise<{ provider: string; allergens: string[]; none: boolean } | null> {
+  const userContent = `Cuisine: ${input.cuisine}\nDish: ${input.dishName}\nDescription: ${input.dishDescription}\nIngredients: ${input.ingredients.join(", ") || "not listed"}`;
+
+  const pref = options?.provider ?? "auto";
+  let text: string | null = null;
+  let provider = "anthropic";
+
+  if (pref === "openai") {
+    text = await callOpenAISimple(allergenAnalysisPrompt, userContent);
+    provider = "openai";
+  } else if (pref === "anthropic") {
+    text = await callAnthropicSimple(allergenAnalysisPrompt, userContent);
+  } else {
+    text = await callAnthropicSimple(allergenAnalysisPrompt, userContent);
+    if (!text) {
+      text = await callOpenAISimple(allergenAnalysisPrompt, userContent);
+      provider = "openai";
+    }
+  }
+
+  if (!text) return null;
+
+  try {
+    const cleaned = text.replace(/```json\n?|\n?```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    return {
+      provider,
+      allergens: Array.isArray(parsed.allergens) ? parsed.allergens : [],
+      none: !!parsed.none,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ── Calorie estimation ──
+
+const calorieEstimatePrompt = `You are a nutrition estimation assistant. Given a dish name, description, and ingredients, estimate the approximate calorie count (kcal) for a standard serving.
+
+Rules:
+- Return a JSON object: { "kcal": 450, "range": "400-500" }
+- "kcal" is your best single estimate, "range" is a reasonable range.
+- Base your estimate on typical restaurant portions.
+- Return ONLY the JSON, no explanation.`;
+
+export async function estimateCalories(
+  input: DishExplainInput,
+  options?: { provider?: string },
+): Promise<{ provider: string; kcal: number; range: string } | null> {
+  const userContent = `Cuisine: ${input.cuisine}\nDish: ${input.dishName}\nDescription: ${input.dishDescription}\nIngredients: ${input.ingredients.join(", ") || "not listed"}`;
+
+  const pref = options?.provider ?? "auto";
+  let text: string | null = null;
+  let provider = "anthropic";
+
+  if (pref === "openai") {
+    text = await callOpenAISimple(calorieEstimatePrompt, userContent);
+    provider = "openai";
+  } else if (pref === "anthropic") {
+    text = await callAnthropicSimple(calorieEstimatePrompt, userContent);
+  } else {
+    text = await callAnthropicSimple(calorieEstimatePrompt, userContent);
+    if (!text) {
+      text = await callOpenAISimple(calorieEstimatePrompt, userContent);
+      provider = "openai";
+    }
+  }
+
+  if (!text) return null;
+
+  try {
+    const cleaned = text.replace(/```json\n?|\n?```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    return {
+      provider,
+      kcal: typeof parsed.kcal === "number" ? parsed.kcal : 0,
+      range: parsed.range || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ── Shared helpers for simple system+user prompts ──
+
+async function callAnthropicSimple(system: string, user: string): Promise<string | null> {
+  const apiKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
+  const url = getAnthropicUrl();
+  const model = getAnthropicModel();
+  if (!apiKey || !url || !model) return null;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 200,
+      temperature: 0.2,
+      system,
+      messages: [{ role: "user", content: user }],
+    }),
+  });
+
+  if (!response.ok) return null;
+  const payload = await response.json();
+  return payload?.content
+    ?.map((part: { type?: string; text?: string }) => part.type === "text" ? part.text : "")
+    .join("") ?? null;
+}
+
+async function callOpenAISimple(system: string, user: string): Promise<string | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  const client = new OpenAI({ apiKey });
+  const response = await client.responses.create({
+    model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+    input: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
+  });
+  return response.output_text?.trim() || null;
 }
 
 export async function extractMenuDraftWithLlm(input: {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CreditCard, ArrowSquareOut, Warning, DownloadSimple } from "@phosphor-icons/react";
+import { CreditCard, ArrowSquareOut, Warning, DownloadSimple, Check } from "@phosphor-icons/react";
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
@@ -30,9 +30,43 @@ const PLAN_DISPLAY: Record<string, string> = {
   surmesure: "Sur Mesure",
 };
 
+type FeatureKey =
+  | "planF_1restaurant"
+  | "planF_5000scans"
+  | "planF_qrPoster"
+  | "planF_nLanguages"
+  | "planF_14allergens"
+  | "planF_basicDashboard"
+  | "planF_emailSupport"
+  | "planF_unlimitedReco"
+  | "planF_smartHighlights"
+  | "planF_fullAnalytics"
+  | "planF_advancedExtract"
+  | "planF_weeklyReports"
+  | "planF_prioritySupport";
+
+const ALACARTE_FEATURES: FeatureKey[] = [
+  "planF_1restaurant",
+  "planF_5000scans",
+  "planF_qrPoster",
+  "planF_nLanguages",
+  "planF_14allergens",
+  "planF_basicDashboard",
+  "planF_emailSupport",
+];
+
+const PRIXFIXE_FEATURES: FeatureKey[] = [
+  "planF_unlimitedReco",
+  "planF_smartHighlights",
+  "planF_fullAnalytics",
+  "planF_advancedExtract",
+  "planF_weeklyReports",
+  "planF_prioritySupport",
+];
+
 const AVAILABLE_PLANS = [
-  { code: "alacarte", name: "À La Carte", price: "19€/mois" },
-  { code: "prixfixe", name: "Prix Fixe", price: "39€/mois" },
+  { code: "alacarte", name: "À La Carte", price: "19€/mois", features: ALACARTE_FEATURES, includesFrom: null },
+  { code: "prixfixe", name: "Prix Fixe", price: "39€/mois", features: PRIXFIXE_FEATURES, includesFrom: "À La Carte" },
 ];
 
 export function BillingSection({
@@ -195,22 +229,60 @@ export function BillingSection({
         </button>
       )}
 
-      {/* Subscribe buttons — only for users without an active subscription */}
-      {!isPaid && !hasStripeSubscription && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {AVAILABLE_PLANS.map((p) => (
-            <button
+      {/* Plan cards with features */}
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        {AVAILABLE_PLANS.map((p) => {
+          const isActive = currentPlan === p.code;
+          return (
+            <div
               key={p.code}
-              type="button"
-              onClick={() => handleCheckout(p.code)}
-              disabled={loading !== null}
-              className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+              className={`rounded-lg border p-4 ${
+                isActive
+                  ? "border-emerald-500/40 bg-emerald-500/5"
+                  : "border-border bg-muted/30"
+              }`}
             >
-              {loading === p.code ? "..." : `${labels.subscribeTo} ${p.name} — ${p.price}`}
-            </button>
-          ))}
-        </div>
-      )}
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-foreground">{p.name}</h3>
+                <span className="text-sm font-bold text-foreground">{p.price}</span>
+              </div>
+
+              {/* Feature list */}
+              <div className="mt-3">
+                {p.includesFrom && (
+                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                    {t.planEverythingIn(p.includesFrom)}
+                  </p>
+                )}
+                <ul className="space-y-1">
+                  {p.features.map((fKey) => (
+                    <li key={fKey} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                      <Check weight="bold" className="mt-0.5 h-3 w-3 shrink-0 text-emerald-500" />
+                      <span>{t[fKey] as string}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Subscribe / Active badge */}
+              {isActive ? (
+                <div className="mt-3 rounded-md bg-emerald-500/10 px-3 py-1.5 text-center text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  {labels.currentPlan}
+                </div>
+              ) : !isPaid && !hasStripeSubscription ? (
+                <button
+                  type="button"
+                  onClick={() => handleCheckout(p.code)}
+                  disabled={loading !== null}
+                  className="mt-3 w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {loading === p.code ? "..." : `${labels.subscribeTo} ${p.name}`}
+                </button>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

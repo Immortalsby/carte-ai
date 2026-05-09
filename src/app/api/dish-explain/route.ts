@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { explainDishWithLlm } from "@/lib/llm";
+import { explainDishWithLlm, analyzeAllergens, estimateCalories } from "@/lib/llm";
 import { explainRateLimit, explainRateLimitStrict } from "@/lib/rate-limit";
 import { getLlmUsage, incrementLlmUsage } from "@/lib/db/queries/llm-usage";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
@@ -53,13 +53,14 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { dishName, dishDescription, ingredients, cuisine, lang, tenantSlug } = body as {
+    const { dishName, dishDescription, ingredients, cuisine, lang, tenantSlug, mode } = body as {
       dishName: Record<string, string>;
       dishDescription: Record<string, string>;
       ingredients: string[];
       cuisine: string;
       lang: string;
       tenantSlug: string;
+      mode?: "explain" | "allergens" | "calories";
     };
 
     if (!dishName || !lang) {
@@ -87,13 +88,35 @@ export async function POST(request: Request) {
       // Quota check fail — allow
     }
 
-    const result = await explainDishWithLlm({
+    const llmInput = {
       dishName: getLocalizedText(dishName as LocalizedText, lang as LanguageCode),
       dishDescription: getLocalizedText(dishDescription as LocalizedText, lang as LanguageCode),
       ingredients: ingredients ?? [],
       cuisine: cuisine || "unknown",
       lang,
-    }, { provider: (tenantSettings.llm_provider as string) || undefined });
+    };
+    const providerPref = { provider: (tenantSettings.llm_provider as string) || undefined };
+
+    if (mode === "allergens") {
+      const result = await analyzeAllergens(llmInput, providerPref);
+      if (!result) {
+        return NextResponse.json({ error: "LLM unavailable" }, { status: 503 });
+      }
+      incrementLlmUsage(tenantId, 50, 1).catch(() => {});
+      return NextResponse.json({ allergens: result.allergens, none: result.none, provider: result.provider });
+    }
+
+    if (mode === "calories") {
+      const result = await estimateCalories(llmInput, providerPref);
+      if (!result) {
+        return NextResponse.json({ error: "LLM unavailable" }, { status: 503 });
+      }
+      incrementLlmUsage(tenantId, 50, 1).catch(() => {});
+      return NextResponse.json({ kcal: result.kcal, range: result.range, provider: result.provider });
+    }
+
+    // Default: explain
+    const result = await explainDishWithLlm(llmInput, providerPref);
 
     if (!result) {
       return NextResponse.json({ error: "LLM unavailable" }, { status: 503 });

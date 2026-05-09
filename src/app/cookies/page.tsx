@@ -55,7 +55,7 @@ export default function CookiesPage() {
                   </tr>
                   <tr>
                     <td className="py-2 pr-4 font-mono text-xs text-emerald-400">carte_intro_seen</td>
-                    <td className="py-2 pr-4">&Eacute;vite de r&eacute;afficher l&rsquo;introduction du mascotte Cloche</td>
+                    <td className="py-2 pr-4">&Eacute;vite de r&eacute;afficher l&rsquo;introduction du mascotte Cloch&eacute;</td>
                     <td className="py-2">1 an</td>
                   </tr>
                   <tr>
