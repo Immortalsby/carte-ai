@@ -35,11 +35,10 @@ interface DishDetailProps {
   lang: LanguageCode;
   cuisine?: string;
   tenantSlug?: string;
-  getTurnstileToken?: () => string | null;
   onClose: () => void;
 }
 
-export function DishDetail({ dish, lang, cuisine, tenantSlug, getTurnstileToken, onClose }: DishDetailProps) {
+export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDetailProps) {
   const name = dish.name[lang] || dish.name.en || dish.name.fr;
   const desc = dish.description[lang] || dish.description.en || dish.description.fr;
   const price = (dish.priceCents / 100).toFixed(2);
@@ -64,13 +63,9 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, getTurnstileToken,
     setExplainLoading(true);
     setExplainError(false);
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      const token = getTurnstileToken?.();
-      if (token) headers["x-turnstile-token"] = token;
-
       const res = await fetch("/api/dish-explain", {
         method: "POST",
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           dishName: dish.name,
           dishDescription: dish.description,

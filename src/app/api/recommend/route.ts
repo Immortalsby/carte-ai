@@ -10,7 +10,7 @@ import { getLlmUsage, incrementLlmUsage } from "@/lib/db/queries/llm-usage";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { recommendRateLimit, recommendRateLimitStrict } from "@/lib/rate-limit";
 import { hasActiveAccess } from "@/lib/trial";
-import { verifyTurnstile } from "@/lib/turnstile";
+import { isSessionVerified } from "@/lib/turnstile";
 
 /** Estimate token count from a string (rough: 1 token ≈ 4 chars) */
 function estimateTokens(text: string): number {
@@ -46,14 +46,11 @@ export async function POST(request: Request) {
     // If Redis is down, fail open — per-tenant quota is the backstop
   }
 
-  // Turnstile bot protection (best-effort — token is single-use, stale tokens degrade to strict rate-limit)
-  const turnstileToken = request.headers.get("x-turnstile-token");
-  let turnstileVerified = false;
-  if (turnstileToken) {
-    turnstileVerified = await verifyTurnstile(turnstileToken);
-  }
-  if (!turnstileVerified) {
-    // No valid token (WebView / stale token / old browser): apply stricter rate-limit (10/min vs 60/min)
+  // Session verification: check cookie set by /api/verify-session (Turnstile verified once on page load)
+  const cookies = request.headers.get("cookie") ?? "";
+  const verifiedCookie = cookies.split("; ").find((c) => c.startsWith("carte_verified="))?.split("=")[1];
+  if (!isSessionVerified(verifiedCookie)) {
+    // Unverified session: apply stricter rate-limit (10/min vs 60/min)
     try {
       const { success } = await recommendRateLimitStrict.limit(ip);
       if (!success) {

@@ -4,7 +4,7 @@ import { explainRateLimit, explainRateLimitStrict } from "@/lib/rate-limit";
 import { getLlmUsage, incrementLlmUsage } from "@/lib/db/queries/llm-usage";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { hasActiveAccess } from "@/lib/trial";
-import { verifyTurnstile } from "@/lib/turnstile";
+import { isSessionVerified } from "@/lib/turnstile";
 import { getLocalizedText } from "@/lib/i18n";
 import type { LanguageCode, LocalizedText } from "@/types/menu";
 
@@ -34,13 +34,10 @@ export async function POST(request: Request) {
     // Redis down — fail open
   }
 
-  // Turnstile (best-effort — token is single-use, stale tokens degrade to strict rate-limit)
-  const turnstileToken = request.headers.get("x-turnstile-token");
-  let turnstileVerified = false;
-  if (turnstileToken) {
-    turnstileVerified = await verifyTurnstile(turnstileToken);
-  }
-  if (!turnstileVerified) {
+  // Session verification: check cookie set by /api/verify-session (Turnstile verified once on page load)
+  const cookies = request.headers.get("cookie") ?? "";
+  const verifiedCookie = cookies.split("; ").find((c) => c.startsWith("carte_verified="))?.split("=")[1];
+  if (!isSessionVerified(verifiedCookie)) {
     try {
       const { success } = await explainRateLimitStrict.limit(ip);
       if (!success) {

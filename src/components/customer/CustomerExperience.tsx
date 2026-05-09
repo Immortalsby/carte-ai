@@ -45,6 +45,12 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
   const turnstileTokenRef = useRef<string | null>(null);
   const handleTurnstileSuccess = useCallback((token: string) => {
     turnstileTokenRef.current = token;
+    // Verify once with server → sets httpOnly session cookie for subsequent API calls
+    fetch("/api/verify-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    }).catch(() => {});
   }, []);
 
   // Auto-detect browser language on mount + track scan + culture match (FR16)
@@ -159,7 +165,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         planStatus={planStatus}
         allowDrinksOnly={allowDrinksOnly}
         googleMapsUrl={enableReviewNudge ? googleMapsUrl : undefined}
-        getTurnstileToken={() => turnstileTokenRef.current}
+
         shareMessage={
           showShareBubble && !showShare
             ? lang === "zh" ? "用得不错？分享给朋友吧~" : lang === "fr" ? "Vous aimez ? Partagez !" : "Enjoying it? Share with friends!"
@@ -218,7 +224,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         cuisine={cuisineType ?? undefined}
         tenantId={tenantId}
         tenantSlug={menu.restaurant.slug}
-        getTurnstileToken={() => turnstileTokenRef.current}
+
       />
 
       {/* Mode switch + share buttons — subtle, at bottom (FR18) */}

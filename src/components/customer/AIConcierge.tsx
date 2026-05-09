@@ -114,7 +114,6 @@ export interface ConciergePanelProps {
   onStepChange?: (step: ConciergeStep, hasAllergenWarning?: boolean, fallbackUsed?: boolean) => void;
   savedDishIds?: string[];
   onToggleSave?: (dishIds: string[]) => void;
-  getTurnstileToken?: () => string | null;
 }
 
 export function ConciergePanel({
@@ -129,7 +128,6 @@ export function ConciergePanel({
   onStepChange,
   savedDishIds = [],
   onToggleSave,
-  getTurnstileToken,
 }: ConciergePanelProps) {
   const [step, setStep] = useState<ConciergeStep>("occasion");
   const [occasion, setOccasion] = useState<DiningOccasion | null>(null);
@@ -160,13 +158,9 @@ export function ConciergePanel({
     setExplainLoading(dishId);
     setExplainError(null);
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      const token = getTurnstileToken?.();
-      if (token) headers["x-turnstile-token"] = token;
-
       const res = await fetch("/api/dish-explain", {
         method: "POST",
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           dishName: dish.name,
           dishDescription: dish.description,
@@ -266,13 +260,9 @@ export function ConciergePanel({
     try {
       const partySize =
         selectedMode.partySize ?? (selectedMode.mode === "sharing" ? 2 : 1);
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      const turnstileToken = getTurnstileToken?.();
-      if (turnstileToken) headers["x-turnstile-token"] = turnstileToken;
-
       const res = await fetch("/api/recommend", {
         method: "POST",
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: lang,
           mode: selectedMode.mode,

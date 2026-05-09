@@ -88,7 +88,6 @@ interface MascotAssistantProps {
   onResults?: () => void;
   savedDishIds?: string[];
   onToggleSave?: (dishIds: string[]) => void;
-  getTurnstileToken?: () => string | null;
   googleMapsUrl?: string;
   /** Delay (ms) before Cloche asks "did you order?" after results. Default 90s */
   postMealDelayMs?: number;
@@ -109,7 +108,6 @@ export function MascotAssistant({
   onResults,
   savedDishIds,
   onToggleSave,
-  getTurnstileToken,
   googleMapsUrl,
   postMealDelayMs = 90_000,
   onPostMealDone,
@@ -563,7 +561,6 @@ export function MascotAssistant({
                   onStepChange={handleStepChange}
                   savedDishIds={savedDishIds}
                   onToggleSave={onToggleSave}
-                  getTurnstileToken={getTurnstileToken}
                 />
               </motion.div>
             </div>
