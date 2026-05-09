@@ -14,10 +14,11 @@ import { MenuBrowser } from "./MenuBrowser";
 import { RestaurantHeader } from "./RestaurantHeader";
 
 // Lazy-loaded components — not needed for first paint
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const MascotAssistant = dynamic(
   () => import("./MascotAssistant").then((m) => m.MascotAssistant),
   { ssr: false },
-);
+) as any;
 const AllergenFilter = dynamic(
   () => import("./AllergenFilter").then((m) => m.AllergenFilter),
 );
@@ -200,7 +201,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         onPostMealDone={() => setTimeout(() => setShowShareBubble(true), 3000)}
         savedDishIds={wishlist.savedIds}
         onToggleSave={handleToggleSave}
-        onPopularDishClick={(id) => setHighlightDishId(id)}
+        onPopularDishClick={(id: string) => setHighlightDishId(id)}
       />
 
       {/* Filter toggle */}
