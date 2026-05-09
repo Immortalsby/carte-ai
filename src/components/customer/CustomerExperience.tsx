@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
 import type { LanguageCode, Allergen, RestaurantMenu } from "@/types/menu";
 import type { PlanStatus } from "@/lib/trial";
 import { detectLanguage } from "@/lib/languages";
@@ -10,14 +10,34 @@ import { isCultureMatch } from "@/lib/culture-match";
 import { languageDirection } from "@/lib/languages";
 import { useWishlist } from "@/hooks/useWishlist";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { AllergenFilter } from "./AllergenFilter";
-import { MascotAssistant } from "./MascotAssistant";
 import { MenuBrowser } from "./MenuBrowser";
 import { RestaurantHeader } from "./RestaurantHeader";
-import { SharePanel } from "./SharePanel";
-import { WishlistPanel } from "./WishlistPanel";
-import { ClocheCookieConsent, CookieSettingsButton } from "./ClocheCookieConsent";
-import { Turnstile } from "@marsidev/react-turnstile";
+
+// Lazy-loaded components — not needed for first paint
+const MascotAssistant = dynamic(
+  () => import("./MascotAssistant").then((m) => m.MascotAssistant),
+  { ssr: false },
+);
+const AllergenFilter = dynamic(
+  () => import("./AllergenFilter").then((m) => m.AllergenFilter),
+);
+const SharePanel = dynamic(
+  () => import("./SharePanel").then((m) => m.SharePanel),
+);
+const WishlistPanel = dynamic(
+  () => import("./WishlistPanel").then((m) => m.WishlistPanel),
+);
+const ClocheCookieConsent = dynamic(
+  () => import("./ClocheCookieConsent").then((m) => m.ClocheCookieConsent),
+  { ssr: false },
+);
+const CookieSettingsButton = dynamic(
+  () => import("./ClocheCookieConsent").then((m) => m.CookieSettingsButton),
+);
+const Turnstile = dynamic(
+  () => import("@marsidev/react-turnstile").then((m) => m.Turnstile),
+  { ssr: false },
+);
 
 export type ExperienceMode = "tourist" | "group_meal";
 
@@ -247,31 +267,25 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
 
 
       {/* Wishlist floating button (bottom-left, same height as mascot) */}
-      <AnimatePresence>
-        {wishlist.count > 0 && !showWishlist && (
-          <motion.button
-            type="button"
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            onClick={() => setShowWishlist(true)}
-            className="fixed z-50 flex items-center gap-1.5 rounded-full border border-carte-border bg-carte-surface/80 backdrop-blur-md px-3 py-2.5 shadow-md transition-colors hover:border-carte-primary/30"
-            style={{ insetInlineStart: "1rem", bottom: "calc(clamp(120px,24vw,140px) / 2 - 0.2rem)", transform: "translateY(50%)" }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path
-                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                fill="var(--carte-danger)"
-                stroke="var(--carte-danger)"
-              />
-            </svg>
-            <span className="text-xs font-medium tabular-nums text-carte-text">
-              {wishlist.count}
-            </span>
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {wishlist.count > 0 && !showWishlist && (
+        <button
+          type="button"
+          onClick={() => setShowWishlist(true)}
+          className="fixed z-50 flex items-center gap-1.5 rounded-full border border-carte-border bg-carte-surface/80 backdrop-blur-md px-3 py-2.5 shadow-md transition-all duration-300 hover:border-carte-primary/30 animate-fade-in"
+          style={{ insetInlineStart: "1rem", bottom: "calc(clamp(120px,24vw,140px) / 2 - 0.2rem)", transform: "translateY(50%)" }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+              fill="var(--carte-danger)"
+              stroke="var(--carte-danger)"
+            />
+          </svg>
+          <span className="text-xs font-medium tabular-nums text-carte-text">
+            {wishlist.count}
+          </span>
+        </button>
+      )}
 
       {/* Wishlist panel */}
       <WishlistPanel
