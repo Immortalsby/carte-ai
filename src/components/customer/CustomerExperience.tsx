@@ -16,7 +16,7 @@ import { MenuBrowser } from "./MenuBrowser";
 import { RestaurantHeader } from "./RestaurantHeader";
 import { SharePanel } from "./SharePanel";
 import { WishlistPanel } from "./WishlistPanel";
-import { ClocheCookieConsent } from "./ClocheCookieConsent";
+import { ClocheCookieConsent, CookieSettingsButton } from "./ClocheCookieConsent";
 import { Turnstile } from "@marsidev/react-turnstile";
 
 export type ExperienceMode = "tourist" | "group_meal";
@@ -288,6 +288,31 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         tenantId={tenantId}
         onClose={() => setShowShare(false)}
       />
+
+      {/* Allergen disclaimer — always visible per FR29, WCAG role="alert" */}
+      <footer
+        role="alert"
+        className="mt-8 rounded-lg border border-carte-border bg-carte-surface p-3 text-center text-xs text-carte-warning"
+      >
+        {lang === "zh"
+          ? "过敏原信息仅供参考。下单前请与服务员确认。"
+          : lang === "fr"
+            ? "Les informations sur les allergènes sont fournies à titre indicatif. Veuillez confirmer auprès de votre serveur avant de commander."
+            : "Allergen information is provided for reference only. Please confirm with your server before ordering."}
+      </footer>
+
+      {/* Contact email (FR57) + cookie settings */}
+      <p className="mt-4 text-center text-[10px] text-carte-text-dim">
+        Powered by CarteAI &middot;{" "}
+        <a
+          href="mailto:contact@carte-ai.link"
+          className="underline underline-offset-2 hover:text-carte-text-muted"
+        >
+          contact@carte-ai.link
+        </a>
+        {" "}&middot;{" "}
+        <CookieSettingsButton lang={lang} />
+      </p>
     </div>
   );
 }

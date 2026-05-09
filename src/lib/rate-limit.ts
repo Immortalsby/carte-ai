@@ -30,8 +30,9 @@ function createLimiter(prefix: string, requests: number, window: string) {
   };
 }
 
-// 推荐 API：60 次/分钟/IP
+// 推荐 API：验证用户 60 次/分钟/IP，未验证 10 次/分钟/IP
 export const recommendRateLimit = createLimiter("ratelimit:recommend", 60, "1 m");
+export const recommendRateLimitStrict = createLimiter("ratelimit:recommend-strict", 10, "1 m");
 
 // 上传 API：10 次/分钟/tenant
 export const ingestRateLimit = createLimiter("ratelimit:ingest", 10, "1 m");

@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { recommendations_log } from "@/lib/db/schema";
 import { getLlmUsage, incrementLlmUsage } from "@/lib/db/queries/llm-usage";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
-import { recommendRateLimit } from "@/lib/rate-limit";
+import { recommendRateLimit, recommendRateLimitStrict } from "@/lib/rate-limit";
 import { hasActiveAccess } from "@/lib/trial";
 import { verifyTurnstile } from "@/lib/turnstile";
 
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     // If Redis is down, fail open — per-tenant quota is the backstop
   }
 
-  // Turnstile bot protection
+  // Turnstile bot protection (best-effort: some browsers/WebViews don't load the widget)
   const turnstileToken = request.headers.get("x-turnstile-token");
   if (turnstileToken) {
     const valid = await verifyTurnstile(turnstileToken);
@@ -56,12 +56,19 @@ export async function POST(request: Request) {
         { status: 403 },
       );
     }
-  } else if (process.env.TURNSTILE_SECRET_KEY) {
-    // Token required in production when Turnstile is configured
-    return NextResponse.json(
-      { error: "Missing verification token." },
-      { status: 403 },
-    );
+  } else {
+    // No token (WebView / old browser): apply stricter rate-limit (10/min vs 60/min)
+    try {
+      const { success } = await recommendRateLimitStrict.limit(ip);
+      if (!success) {
+        return NextResponse.json(
+          { error: "Too many requests. Please try again later." },
+          { status: 429 },
+        );
+      }
+    } catch {
+      // Redis down — fail open
+    }
   }
 
   const startTime = Date.now();

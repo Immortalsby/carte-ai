@@ -5,7 +5,7 @@ import { getPublishedMenu } from "@/lib/db/queries/menus";
 import type { RestaurantMenu } from "@/types/menu";
 import { getPlanStatus } from "@/lib/trial";
 import { CustomerExperience } from "@/components/customer/CustomerExperience";
-import { CookieSettingsButton } from "@/components/customer/ClocheCookieConsent";
+
 
 export async function generateMetadata({
   params,
@@ -78,27 +78,7 @@ export default async function CustomerPage({
         </>
       )}
 
-      {/* Allergen disclaimer — always visible per FR29, WCAG role="alert" */}
-      <footer
-        role="alert"
-        className="mt-8 rounded-lg border border-carte-border bg-carte-surface p-3 text-center text-xs text-carte-warning"
-      >
-        Allergen information is provided for reference only. Please confirm with
-        your server before ordering.
-      </footer>
-
-      {/* Contact email (FR57) + cookie settings */}
-      <p className="mt-4 text-center text-[10px] text-carte-text-dim">
-        Powered by CarteAI &middot;{" "}
-        <a
-          href="mailto:contact@carte-ai.link"
-          className="underline underline-offset-2 hover:text-carte-text-muted"
-        >
-          contact@carte-ai.link
-        </a>
-        {" "}&middot;{" "}
-        <CookieSettingsButton lang="fr" />
-      </p>
+      {/* Allergen disclaimer + contact footer moved into CustomerExperience for i18n */}
     </main>
   );
 }
