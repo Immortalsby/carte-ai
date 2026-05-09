@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Dish, LanguageCode, Allergen } from "@/types/menu";
 import { CSSMascot } from "./CSSMascot";
+import { ForkKnife } from "@phosphor-icons/react";
 
 const allergenLabels: Record<Allergen, Record<string, string>> = {
   gluten: { fr: "Gluten", en: "Gluten", zh: "麸质" },
@@ -81,7 +82,11 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, getTurnstileToken,
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
-      setExplanation(data.explanation);
+      if (data.explanation) {
+        setExplanation(data.explanation);
+      } else {
+        setExplainError(true);
+      }
     } catch {
       setExplainError(true);
     } finally {
@@ -196,7 +201,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, getTurnstileToken,
               onClick={handleExplain}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-carte-border py-2.5 text-xs font-medium text-carte-text-muted transition-colors hover:bg-carte-surface hover:border-carte-primary/30"
             >
-              <span className="text-base">🍽️</span>
+              <ForkKnife weight="duotone" className="h-4 w-4 text-carte-primary" />
               {l("button")}
             </button>
           )}
@@ -225,7 +230,12 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, getTurnstileToken,
             </div>
           )}
           {explainError && (
-            <p className="mt-1 text-center text-[10px] text-carte-text-dim">{l("error")}</p>
+            <div className="flex items-center gap-3">
+              <div className="shrink-0 w-10 h-10">
+                <CSSMascot state="sad" className="w-10 h-10" />
+              </div>
+              <p className="text-xs text-carte-text-dim">{l("error")}</p>
+            </div>
           )}
         </div>
 

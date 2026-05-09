@@ -151,12 +151,14 @@ export function ConciergePanel({
   // Dish explanation state (keyed by dishId)
   const [explanations, setExplanations] = useState<Record<string, string>>({});
   const [explainLoading, setExplainLoading] = useState<string | null>(null);
+  const [explainError, setExplainError] = useState<string | null>(null);
 
   async function handleExplainDish(dishId: string) {
     if (explanations[dishId] || explainLoading) return;
     const dish = menu.dishes.find((d) => d.id === dishId);
     if (!dish) return;
     setExplainLoading(dishId);
+    setExplainError(null);
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       const token = getTurnstileToken?.();
@@ -174,11 +176,18 @@ export function ConciergePanel({
           tenantSlug: menu.restaurant.slug,
         }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        setExplainError(dishId);
+        return;
+      }
       const data = await res.json();
-      setExplanations((prev) => ({ ...prev, [dishId]: data.explanation }));
+      if (data.explanation) {
+        setExplanations((prev) => ({ ...prev, [dishId]: data.explanation }));
+      } else {
+        setExplainError(dishId);
+      }
     } catch {
-      // Silent fail — button stays clickable
+      setExplainError(dishId);
     } finally {
       setExplainLoading(null);
     }
@@ -322,6 +331,7 @@ export function ConciergePanel({
     setLoading(false);
     setExplanations({});
     setExplainLoading(null);
+    setExplainError(null);
   }
 
   return (
@@ -587,6 +597,16 @@ export function ConciergePanel({
                   </div>
                 </div>
               )}
+              {explainError === item.dishIds[0] && (
+                <div className="mt-1.5 flex items-center gap-2 px-1">
+                  <div className="shrink-0 w-8 h-8">
+                    <CSSMascot state="sad" className="w-8 h-8" />
+                  </div>
+                  <p className="text-[11px] text-carte-text-dim">
+                    {recExplainLabels.error[lang as "en" | "fr" | "zh"] || recExplainLabels.error.en}
+                  </p>
+                </div>
+              )}
             </motion.div>
           ))}
 
@@ -661,6 +681,7 @@ function PillButton({
 const recExplainLabels = {
   button: { en: "Explain this dish", fr: "Expliquer ce plat", zh: "解释这道菜" },
   loading: { en: "Thinking...", fr: "Réflexion...", zh: "思考中..." },
+  error: { en: "Couldn't explain right now", fr: "Impossible d'expliquer pour le moment", zh: "暂时无法解释" },
 };
 
 function RecommendationCard({
@@ -742,9 +763,10 @@ function RecommendationCard({
         <button
           type="button"
           onClick={() => onExplain(item.dishIds[0])}
-          className="mt-1.5 text-[11px] font-medium text-carte-primary hover:underline"
+          className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-carte-primary hover:underline"
         >
-          🍽️ {recExplainLabels.button[lang as "en" | "fr" | "zh"] || recExplainLabels.button.en}
+          <ForkKnife weight="duotone" className="h-3.5 w-3.5" />
+          {recExplainLabels.button[lang as "en" | "fr" | "zh"] || recExplainLabels.button.en}
         </button>
       )}
     </article>
