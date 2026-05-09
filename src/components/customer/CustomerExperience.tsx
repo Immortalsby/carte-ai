@@ -61,6 +61,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
   const [showShareBubble, setShowShareBubble] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
+  const [highlightDishId, setHighlightDishId] = useState<string | null>(null);
   const wishlist = useWishlist();
   const turnstileTokenRef = useRef<string | null>(null);
   const handleTurnstileSuccess = useCallback((token: string) => {
@@ -197,6 +198,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         onPostMealDone={() => setTimeout(() => setShowShareBubble(true), 3000)}
         savedDishIds={wishlist.savedIds}
         onToggleSave={handleToggleSave}
+        onPopularDishClick={(id) => setHighlightDishId(id)}
       />
 
       {/* Filter toggle */}
@@ -244,7 +246,10 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         cuisine={cuisineType ?? undefined}
         tenantId={tenantId}
         tenantSlug={menu.restaurant.slug}
-
+        openDishId={highlightDishId}
+        onOpenDishIdHandled={() => setHighlightDishId(null)}
+        isSaved={(id) => wishlist.isSaved(id)}
+        onToggleSave={(id) => handleToggleSave([id])}
       />
 
       {/* Mode switch + share buttons — subtle, at bottom (FR18) */}

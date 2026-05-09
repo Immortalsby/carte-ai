@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { Dish, LanguageCode, MenuCategory } from "@/types/menu";
 import { DishCard } from "./DishCard";
@@ -59,11 +59,16 @@ interface MenuBrowserProps {
   tenantId?: string;
   tenantSlug?: string;
   drinksMode?: boolean;
+  openDishId?: string | null;
+  onOpenDishIdHandled?: () => void;
+  isSaved?: (dishId: string) => boolean;
+  onToggleSave?: (dishId: string) => void;
 }
 
-export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, tenantSlug, drinksMode }: MenuBrowserProps) {
+export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, tenantSlug, drinksMode, openDishId, onOpenDishIdHandled, isSaved, onToggleSave }: MenuBrowserProps) {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const dishCardRefs = useRef<Record<string, HTMLElement | null>>({});
 
   const categoryOrder = drinksMode ? drinksCategoryOrder : defaultCategoryOrder;
 
@@ -78,6 +83,27 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, t
   const scrollTo = (cat: string) => {
     sectionRefs.current[cat]?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  // External trigger: scroll to a dish and open its detail drawer
+  useEffect(() => {
+    if (!openDishId) return;
+    const dish = dishes.find((d) => d.id === openDishId);
+    if (!dish) {
+      onOpenDishIdHandled?.();
+      return;
+    }
+    // Scroll to the dish card
+    const el = dishCardRefs.current[openDishId];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    // Open detail drawer after a short delay for scroll
+    const timer = setTimeout(() => {
+      setSelectedDish(dish);
+      onOpenDishIdHandled?.();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [openDishId, dishes, onOpenDishIdHandled]);
 
   return (
     <>
@@ -109,14 +135,15 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, t
             </h2>
             <div className="space-y-2">
               {items.map((dish) => (
-                <DishCard
-                  key={dish.id}
-                  dish={dish}
-                  lang={lang}
-                  cuisine={cuisine}
-                  tenantId={tenantId}
-                  onTap={setSelectedDish}
-                />
+                <div key={dish.id} ref={(el) => { dishCardRefs.current[dish.id] = el; }}>
+                  <DishCard
+                    dish={dish}
+                    lang={lang}
+                    cuisine={cuisine}
+                    tenantId={tenantId}
+                    onTap={setSelectedDish}
+                  />
+                </div>
               ))}
             </div>
           </section>
@@ -132,6 +159,8 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, t
             cuisine={cuisine}
             tenantSlug={tenantSlug}
             onClose={() => setSelectedDish(null)}
+            isSaved={isSaved?.(selectedDish.id)}
+            onToggleSave={onToggleSave ? () => onToggleSave(selectedDish.id) : undefined}
           />
         )}
       </AnimatePresence>

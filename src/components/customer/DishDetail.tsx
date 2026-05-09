@@ -37,9 +37,11 @@ interface DishDetailProps {
   cuisine?: string;
   tenantSlug?: string;
   onClose: () => void;
+  isSaved?: boolean;
+  onToggleSave?: () => void;
 }
 
-export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDetailProps) {
+export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, onToggleSave }: DishDetailProps) {
   const name = dish.name[lang] || dish.name.en || dish.name.fr;
   const desc = dish.description[lang] || dish.description.en || dish.description.fr;
   const price = (dish.priceCents / 100).toFixed(2);
@@ -188,9 +190,27 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose }: DishDet
         {/* Drag handle */}
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-carte-border" />
 
-        <div className="flex items-start justify-between">
-          <h2 className="text-lg font-bold text-carte-text">{name}</h2>
-          <span className="text-lg font-bold tabular-nums text-carte-primary">&euro;{price}</span>
+        <div className="flex items-start justify-between gap-2">
+          <h2 className="min-w-0 flex-1 text-lg font-bold text-carte-text">{name}</h2>
+          <div className="flex shrink-0 items-center gap-2">
+            {onToggleSave && (
+              <button
+                type="button"
+                onClick={onToggleSave}
+                className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-carte-surface"
+                aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                    fill={isSaved ? "var(--carte-danger)" : "none"}
+                    stroke="var(--carte-danger)"
+                  />
+                </svg>
+              </button>
+            )}
+            <span className="text-lg font-bold tabular-nums text-carte-primary">&euro;{price}</span>
+          </div>
         </div>
 
         {desc && (
