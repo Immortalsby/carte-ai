@@ -300,6 +300,26 @@ function buildSet(
 
   if (dishes.length < 2) return undefined;
 
+  // Portion validation: ensure enough food for the group
+  const defaultPortion = (cat: string) =>
+    ["main", "pasta", "soup", "brunch"].includes(cat) ? 2 : ["sharing", "combo"].includes(cat) ? 3 : 1;
+  let totalPortion = dishes.reduce((sum, d) => sum + (d.portionScore ?? defaultPortion(d.category)), 0);
+  const targetPortion = occasion === "feast" ? ps * 3 : ps * 2;
+
+  // If not enough food, add more dishes from scored list
+  if (totalPortion < targetPortion) {
+    const fillCategories = occasion === "feast" ? ["main", "sharing", "side", "starter"] : ["main", "side", "pasta"];
+    for (const cat of fillCategories) {
+      if (totalPortion >= targetPortion) break;
+      const extras = pickN(cat, 2);
+      for (const extra of extras) {
+        if (totalPortion >= targetPortion) break;
+        dishes.push(extra);
+        totalPortion += extra.portionScore ?? defaultPortion(extra.category);
+      }
+    }
+  }
+
   const total = dishes.reduce((sum, dish) => sum + (dish.priceCents || 0), 0);
   // Budget check: allow 20% overshoot for group meals
   const budgetLimit = request.budgetCents
@@ -371,12 +391,23 @@ function buildSet(
     return parts.join(lang === "zh" || lang === "zh-Hant" ? "、" : ", ");
   }
 
+  const portionShort = totalPortion < targetPortion;
+  const portionNote = portionShort
+    ? phrase(request.language, {
+        zh: " 分量可能偏少，建议再加一个配菜。",
+        "zh-Hant": " 分量可能偏少，建議再加一個配菜。",
+        fr: " Portions un peu justes — pensez à ajouter un accompagnement.",
+        es: " Las porciones pueden ser justas — considere añadir un acompañamiento.",
+        en: " Portions may be light — consider adding a side.",
+      })
+    : "";
+
   const reason = phrase(request.language, {
-    zh: `搭配了${catSummary("zh")}，适合${request.partySize}人一起享用。`,
-    "zh-Hant": `搭配了${catSummary("zh-Hant")}，適合${request.partySize}人一起享用。`,
-    fr: `${catSummary("fr")} pour ${request.partySize} personnes.`,
-    es: `${catSummary("es")} para ${request.partySize} personas.`,
-    en: `${catSummary("en")} for ${request.partySize} people.`,
+    zh: `搭配了${catSummary("zh")}，适合${request.partySize}人一起享用。${portionNote}`,
+    "zh-Hant": `搭配了${catSummary("zh-Hant")}，適合${request.partySize}人一起享用。${portionNote}`,
+    fr: `${catSummary("fr")} pour ${request.partySize} personnes.${portionNote}`,
+    es: `${catSummary("es")} para ${request.partySize} personas.${portionNote}`,
+    en: `${catSummary("en")} for ${request.partySize} people.${portionNote}`,
   });
 
   return {

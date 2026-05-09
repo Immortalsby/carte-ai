@@ -105,6 +105,7 @@ export async function POST(request: Request) {
         dietaryTags: dish.dietaryTags,
         caloriesKcal: dish.caloriesKcal ?? null,
         spiceLevel: dish.spiceLevel,
+        portionScore: dish.portionScore ?? (["main", "pasta", "soup", "brunch"].includes(dish.category) ? 2 : ["sharing", "combo"].includes(dish.category) ? 3 : 1) as 1 | 2 | 3,
       }));
 
     // ── LLM-first: try AI recommendation with full candidate pool ──

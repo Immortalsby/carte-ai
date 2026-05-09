@@ -13,6 +13,7 @@ type CandidateDish = {
   dietaryTags: string[];
   caloriesKcal: number | null;
   spiceLevel: number;
+  portionScore: 1 | 2 | 3;
 };
 
 type LlmRecommendationInput = {
@@ -82,6 +83,13 @@ const systemPrompt = `You are CarteAI — a warm, knowledgeable friend who happe
 - budgetCents = diner's TOTAL meal budget. Your recommendations are separate OPTIONS to pick from, not items to order together.
 - ≥2 options must fit the budget. You may include 1 option up to 300 cents over IF it's a much better fit — explain the trade-off warmly in budgetNote.
 - For set recommendations with partySize ≥ 2, the set total should fit budget × partySize.
+
+## PORTIONS & QUANTITY
+Each candidate dish has a **portionScore**: 1 = small/light (tapas, starter, small side, amuse-bouche, drink, dessert), 2 = standard individual portion (a normal main, a bowl of soup/pasta, a large salad), 3 = large/shareable (family platter, sharing plate, combo, XL portion).
+- **partySize = 1**: A complete meal needs total portionScore ≥ 3 (e.g. 1 starter(1) + 1 main(2), or 1 generous main(3)). Don't recommend only small dishes — the diner should be able to eat a full meal.
+- **partySize ≥ 2 (set)**: Total portionScore of the set should be ≥ partySize × 2. If you picked many small dishes (portionScore 1), add more items so the group won't be hungry. For "feast" occasion, aim for partySize × 3.
+- When portionScore is missing, assume 2 for mains/pasta/soup/brunch, 1 for starters/sides/desserts/drinks, 3 for sharing/combo.
+- If a set is light on food, mention it honestly: "you might want to add a side" — don't pretend it's enough.
 
 ## WHAT TO RETURN
 - **partySize = 1**: Return exactly 3 recommendations, each a different style of dish (e.g. sushi, noodles, rice — not 3 sushi variants).
@@ -693,12 +701,13 @@ Every localized text field must include at least zh, fr and en. Add other suppor
     "spiceLevel": 0,
     "available": true,
     "marginPriority": 1,
-    "portionScore": 1
+    "portionScore": 2
   }]
 }
 Allowed allergens: gluten, crustaceans, eggs, fish, peanuts, soy, milk, nuts, celery, mustard, sesame, sulphites, lupin, molluscs, alcohol, unknown.
 Allowed dietaryTags: vegetarian, vegan, halal_possible, contains_pork, contains_beef, contains_seafood, high_protein, low_calorie, healthy, spicy, signature, popular, good_value, light, comfort_food.
-If the source does not provide allergens, use ["unknown"]. If calories are absent, omit caloriesKcal.`;
+If the source does not provide allergens, use ["unknown"]. If calories are absent, omit caloriesKcal.
+portionScore guidelines: 1 = small/light (tapas, amuse-bouche, small side, single drink, small dessert), 2 = standard individual portion (a normal main, a bowl of soup, a salad, a regular starter), 3 = large/shareable (family-style platter, sharing plate, large combo, XL portion). Default to 2 if unsure.`;
 
   if (input.text) {
     const text = await createAnthropicMessage(
@@ -873,13 +882,14 @@ Return ONLY a valid JSON object with this exact shape:
     "spiceLevel": 0,
     "available": true,
     "marginPriority": 1,
-    "portionScore": 1
+    "portionScore": 2
   }]
 }
 
 Allowed allergens: gluten, crustaceans, eggs, fish, peanuts, soy, milk, nuts, celery, mustard, sesame, sulphites, lupin, molluscs, alcohol, unknown.
 Allowed dietaryTags: vegetarian, vegan, halal_possible, contains_pork, contains_beef, contains_seafood, high_protein, low_calorie, healthy, spicy, signature, popular, good_value, light, comfort_food.
-Prices must be in cents (e.g. 18.50€ = 1850). If no currency symbol, assume EUR.`;
+Prices must be in cents (e.g. 18.50€ = 1850). If no currency symbol, assume EUR.
+portionScore guidelines: 1 = small/light (tapas, amuse-bouche, small side, single drink, small dessert), 2 = standard individual portion (a normal main, a bowl of soup, a salad, a regular starter), 3 = large/shareable (family-style platter, sharing plate, large combo, XL portion). Default to 2 if unsure.`;
 
   // Try OpenAI first (fast for text-only tasks)
   const openaiKey = process.env.OPENAI_API_KEY;
