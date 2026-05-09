@@ -17,7 +17,7 @@ export function SpeechBubble({ message, visible, onClick, tail = "bottom" }: Spe
         <motion.button
           key={message}
           type="button"
-          onClick={onClick}
+          onClick={(e) => { e.stopPropagation(); onClick?.(); }}
           initial={{ opacity: 0, y: 8, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -4, scale: 0.95 }}
