@@ -34,14 +34,13 @@ export async function POST(request: Request) {
     // Redis down — fail open
   }
 
-  // Turnstile (best-effort)
+  // Turnstile (best-effort — token is single-use, stale tokens degrade to strict rate-limit)
   const turnstileToken = request.headers.get("x-turnstile-token");
+  let turnstileVerified = false;
   if (turnstileToken) {
-    const valid = await verifyTurnstile(turnstileToken);
-    if (!valid) {
-      return NextResponse.json({ error: "Bot verification failed." }, { status: 403 });
-    }
-  } else {
+    turnstileVerified = await verifyTurnstile(turnstileToken);
+  }
+  if (!turnstileVerified) {
     try {
       const { success } = await explainRateLimitStrict.limit(ip);
       if (!success) {

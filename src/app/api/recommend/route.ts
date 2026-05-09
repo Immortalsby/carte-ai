@@ -46,18 +46,14 @@ export async function POST(request: Request) {
     // If Redis is down, fail open — per-tenant quota is the backstop
   }
 
-  // Turnstile bot protection (best-effort: some browsers/WebViews don't load the widget)
+  // Turnstile bot protection (best-effort — token is single-use, stale tokens degrade to strict rate-limit)
   const turnstileToken = request.headers.get("x-turnstile-token");
+  let turnstileVerified = false;
   if (turnstileToken) {
-    const valid = await verifyTurnstile(turnstileToken);
-    if (!valid) {
-      return NextResponse.json(
-        { error: "Bot verification failed." },
-        { status: 403 },
-      );
-    }
-  } else {
-    // No token (WebView / old browser): apply stricter rate-limit (10/min vs 60/min)
+    turnstileVerified = await verifyTurnstile(turnstileToken);
+  }
+  if (!turnstileVerified) {
+    // No valid token (WebView / stale token / old browser): apply stricter rate-limit (10/min vs 60/min)
     try {
       const { success } = await recommendRateLimitStrict.limit(ip);
       if (!success) {
