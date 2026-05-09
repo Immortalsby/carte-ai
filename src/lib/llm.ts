@@ -415,6 +415,103 @@ export async function testLlmConnection(
   }
 }
 
+/* ─── Dish Explanation (customer-facing) ─── */
+
+export type DishExplainInput = {
+  dishName: string;
+  dishDescription: string;
+  ingredients: string[];
+  cuisine: string;
+  lang: string;
+};
+
+const explainSystemPrompt = `You are a friendly food concierge. A diner points at a dish and asks "what is this?". Explain the dish in their language in 2-3 short sentences.
+
+Rules:
+- Sentence 1: What the dish is and how it's prepared (main ingredients, cooking method).
+- Sentence 2: Flavor profile — taste, texture, aroma.
+- Sentence 3 (only if the dish is foreign to the diner's culture): Compare it to a well-known dish from the diner's own food culture. E.g. for a Chinese speaker: "口感类似红烧牛肉，但用的是羊肉，配上北非香料". Skip this sentence if the dish already belongs to the diner's cuisine.
+- Tone: warm, casual, like a knowledgeable friend — not a textbook.
+- Do NOT use markdown, bullet points, or labels. Just natural sentences.
+- Do NOT mention allergens or prices — the UI already shows those.
+- Reply in the language specified, nothing else.`;
+
+async function explainWithAnthropic(input: DishExplainInput): Promise<string | null> {
+  const apiKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
+  const url = getAnthropicUrl();
+  const model = getAnthropicModel();
+  if (!apiKey || !url || !model) return null;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 300,
+      temperature: 0.4,
+      system: explainSystemPrompt,
+      messages: [{
+        role: "user",
+        content: `Language: ${input.lang}\nCuisine: ${input.cuisine}\nDish: ${input.dishName}\nDescription: ${input.dishDescription}\nIngredients: ${input.ingredients.join(", ") || "not listed"}`,
+      }],
+    }),
+  });
+
+  if (!response.ok) return null;
+  const payload = await response.json();
+  return payload?.content
+    ?.map((part: { type?: string; text?: string }) => part.type === "text" ? part.text : "")
+    .join("") ?? null;
+}
+
+async function explainWithOpenAI(input: DishExplainInput): Promise<string | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  const client = new OpenAI({ apiKey });
+  const response = await client.responses.create({
+    model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+    input: [
+      { role: "system", content: explainSystemPrompt },
+      {
+        role: "user",
+        content: `Language: ${input.lang}\nCuisine: ${input.cuisine}\nDish: ${input.dishName}\nDescription: ${input.dishDescription}\nIngredients: ${input.ingredients.join(", ") || "not listed"}`,
+      },
+    ],
+  });
+  return response.output_text?.trim() || null;
+}
+
+export async function explainDishWithLlm(
+  input: DishExplainInput,
+  options?: { provider?: string },
+): Promise<{ provider: string; text: string } | null> {
+  const pref = options?.provider ?? "auto";
+
+  if (pref === "openai") {
+    const text = await explainWithOpenAI(input);
+    return text ? { provider: "openai", text } : null;
+  }
+  if (pref === "anthropic") {
+    const text = await explainWithAnthropic(input);
+    return text ? { provider: "anthropic", text } : null;
+  }
+
+  // auto: Anthropic first, then OpenAI
+  const anthropic = await explainWithAnthropic(input);
+  if (anthropic) return { provider: "anthropic", text: anthropic };
+
+  const openai = await explainWithOpenAI(input);
+  if (openai) return { provider: "openai", text: openai };
+
+  return null;
+}
+
 export async function extractMenuDraftWithLlm(input: {
   fileName: string;
   mimeType: string;

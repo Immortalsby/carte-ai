@@ -56,10 +56,12 @@ interface MenuBrowserProps {
   restaurantName: string;
   cuisine?: string;
   tenantId?: string;
+  tenantSlug?: string;
   drinksMode?: boolean;
+  getTurnstileToken?: () => string | null;
 }
 
-export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, drinksMode }: MenuBrowserProps) {
+export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, tenantSlug, drinksMode, getTurnstileToken }: MenuBrowserProps) {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
@@ -126,6 +128,9 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, d
         <DishDetail
           dish={selectedDish}
           lang={lang}
+          cuisine={cuisine}
+          tenantSlug={tenantSlug}
+          getTurnstileToken={getTurnstileToken}
           onClose={() => setSelectedDish(null)}
         />
       )}

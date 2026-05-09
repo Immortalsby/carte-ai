@@ -217,6 +217,8 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         restaurantName={menu.restaurant.name}
         cuisine={cuisineType ?? undefined}
         tenantId={tenantId}
+        tenantSlug={menu.restaurant.slug}
+        getTurnstileToken={() => turnstileTokenRef.current}
       />
 
       {/* Mode switch + share buttons — subtle, at bottom (FR18) */}

@@ -1,37 +1,54 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Dish, LanguageCode, Allergen } from "@/types/menu";
+import { CSSMascot } from "./CSSMascot";
 
 const allergenLabels: Record<Allergen, Record<string, string>> = {
-  gluten: { fr: "Gluten", en: "Gluten", zh: "\u9eb8\u8d28" },
-  crustaceans: { fr: "Crustac\u00e9s", en: "Crustaceans", zh: "\u7532\u58f3\u7c7b" },
-  eggs: { fr: "\u0152ufs", en: "Eggs", zh: "\u9e21\u86cb" },
-  fish: { fr: "Poisson", en: "Fish", zh: "\u9c7c\u7c7b" },
-  peanuts: { fr: "Arachides", en: "Peanuts", zh: "\u82b1\u751f" },
-  soy: { fr: "Soja", en: "Soy", zh: "\u5927\u8c46" },
-  milk: { fr: "Lait", en: "Milk", zh: "\u725b\u5976" },
-  nuts: { fr: "Fruits \u00e0 coque", en: "Tree nuts", zh: "\u575a\u679c" },
-  celery: { fr: "C\u00e9leri", en: "Celery", zh: "\u82b9\u83dc" },
-  mustard: { fr: "Moutarde", en: "Mustard", zh: "\u82a5\u672b" },
-  sesame: { fr: "S\u00e9same", en: "Sesame", zh: "\u829d\u9ebb" },
-  sulphites: { fr: "Sulfites", en: "Sulphites", zh: "\u4e9a\u786b\u9178\u76d0" },
-  lupin: { fr: "Lupin", en: "Lupin", zh: "\u7fbd\u6247\u8c46" },
+  gluten: { fr: "Gluten", en: "Gluten", zh: "麸质" },
+  crustaceans: { fr: "Crustacés", en: "Crustaceans", zh: "甲壳类" },
+  eggs: { fr: "Œufs", en: "Eggs", zh: "鸡蛋" },
+  fish: { fr: "Poisson", en: "Fish", zh: "鱼类" },
+  peanuts: { fr: "Arachides", en: "Peanuts", zh: "花生" },
+  soy: { fr: "Soja", en: "Soy", zh: "大豆" },
+  milk: { fr: "Lait", en: "Milk", zh: "牛奶" },
+  nuts: { fr: "Fruits à coque", en: "Tree nuts", zh: "坚果" },
+  celery: { fr: "Céleri", en: "Celery", zh: "芹菜" },
+  mustard: { fr: "Moutarde", en: "Mustard", zh: "芥末" },
+  sesame: { fr: "Sésame", en: "Sesame", zh: "芝麻" },
+  sulphites: { fr: "Sulfites", en: "Sulphites", zh: "亚硫酸盐" },
+  lupin: { fr: "Lupin", en: "Lupin", zh: "羽扇豆" },
   molluscs: { fr: "Mollusques", en: "Molluscs", zh: "软体动物" },
   alcohol: { fr: "Alcool", en: "Alcohol", zh: "酒精" },
   unknown: { fr: "Inconnu", en: "Unknown", zh: "未知" },
 };
 
+const explainLabels = {
+  button: { en: "Ask Cloche to explain", fr: "Demander à Cloche", zh: "让 Cloche 解释" },
+  loading: { en: "Cloche is thinking...", fr: "Cloche réfléchit...", zh: "Cloche 正在思考..." },
+  error: { en: "Couldn't get an explanation right now", fr: "Impossible d'obtenir une explication", zh: "暂时无法获取解释" },
+};
+
 interface DishDetailProps {
   dish: Dish;
   lang: LanguageCode;
+  cuisine?: string;
+  tenantSlug?: string;
+  getTurnstileToken?: () => string | null;
   onClose: () => void;
 }
 
-export function DishDetail({ dish, lang, onClose }: DishDetailProps) {
+export function DishDetail({ dish, lang, cuisine, tenantSlug, getTurnstileToken, onClose }: DishDetailProps) {
   const name = dish.name[lang] || dish.name.en || dish.name.fr;
   const desc = dish.description[lang] || dish.description.en || dish.description.fr;
   const price = (dish.priceCents / 100).toFixed(2);
+
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [explainError, setExplainError] = useState(false);
+
+  const l = (key: keyof typeof explainLabels) =>
+    explainLabels[key][lang as "en" | "fr" | "zh"] || explainLabels[key].en;
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -40,6 +57,37 @@ export function DishDetail({ dish, lang, onClose }: DishDetailProps) {
       document.body.style.overflow = "";
     };
   }, []);
+
+  async function handleExplain() {
+    if (explainLoading || explanation) return;
+    setExplainLoading(true);
+    setExplainError(false);
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const token = getTurnstileToken?.();
+      if (token) headers["x-turnstile-token"] = token;
+
+      const res = await fetch("/api/dish-explain", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          dishName: dish.name,
+          dishDescription: dish.description,
+          ingredients: dish.ingredients,
+          cuisine: cuisine || "",
+          lang,
+          tenantSlug: tenantSlug || "",
+        }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setExplanation(data.explanation);
+    } catch {
+      setExplainError(true);
+    } finally {
+      setExplainLoading(false);
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
@@ -71,7 +119,7 @@ export function DishDetail({ dish, lang, onClose }: DishDetailProps) {
         {dish.ingredients.length > 0 && (
           <div className="mt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
-              {lang === "zh" ? "\u98df\u6750" : lang === "fr" ? "Ingr\u00e9dients" : "Ingredients"}
+              {lang === "zh" ? "食材" : lang === "fr" ? "Ingrédients" : "Ingredients"}
             </h3>
             <p className="mt-1 text-sm text-carte-text-muted">
               {dish.ingredients.join(", ")}
@@ -83,7 +131,7 @@ export function DishDetail({ dish, lang, onClose }: DishDetailProps) {
         {dish.allergens.filter((a) => a !== "unknown").length > 0 ? (
           <div className="mt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
-              {lang === "zh" ? "\u8fc7\u654f\u539f" : lang === "fr" ? "Allerg\u00e8nes" : "Allergens"}
+              {lang === "zh" ? "过敏原" : lang === "fr" ? "Allergènes" : "Allergens"}
             </h3>
             <div className="mt-1 flex flex-wrap gap-1.5">
               {dish.allergens
@@ -105,7 +153,7 @@ export function DishDetail({ dish, lang, onClose }: DishDetailProps) {
         ) : dish.allergens.includes("unknown") ? (
           <div className="mt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
-              {lang === "zh" ? "\u8fc7\u654f\u539f" : lang === "fr" ? "Allerg\u00e8nes" : "Allergens"}
+              {lang === "zh" ? "过敏原" : lang === "fr" ? "Allergènes" : "Allergens"}
             </h3>
             <p className="mt-1 text-xs text-carte-text-dim">
               {lang === "zh"
@@ -120,13 +168,13 @@ export function DishDetail({ dish, lang, onClose }: DishDetailProps) {
         {/* Calories */}
         <div className="mt-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
-            {lang === "zh" ? "\u5361\u8def\u91cc" : lang === "fr" ? "Calories" : "Calories"}
+            {lang === "zh" ? "卡路里" : lang === "fr" ? "Calories" : "Calories"}
           </h3>
           <p className="mt-1 text-sm text-carte-text-muted">
             {dish.caloriesKcal
               ? `${dish.caloriesKcal} kcal`
               : lang === "zh"
-                ? "\u672a\u63d0\u4f9b"
+                ? "未提供"
                 : lang === "fr"
                   ? "Non fourni"
                   : "Not provided"}
@@ -136,9 +184,50 @@ export function DishDetail({ dish, lang, onClose }: DishDetailProps) {
         {/* Spice level */}
         {dish.spiceLevel > 0 && (
           <div className="mt-3 text-sm text-carte-text-muted">
-            {lang === "zh" ? "\u8fa3\u5ea6" : lang === "fr" ? "Piquant" : "Spice"}: {"\ud83c\udf36\ufe0f".repeat(dish.spiceLevel)}
+            {lang === "zh" ? "辣度" : lang === "fr" ? "Piquant" : "Spice"}: {"\ud83c\udf36\ufe0f".repeat(dish.spiceLevel)}
           </div>
         )}
+
+        {/* Cloche explain button + result */}
+        <div className="mt-4">
+          {!explanation && !explainLoading && (
+            <button
+              type="button"
+              onClick={handleExplain}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-carte-border py-2.5 text-xs font-medium text-carte-text-muted transition-colors hover:bg-carte-surface hover:border-carte-primary/30"
+            >
+              <span className="text-base">🍽️</span>
+              {l("button")}
+            </button>
+          )}
+          {explainLoading && (
+            <div className="flex items-center gap-3 py-2">
+              <div className="shrink-0 w-10 h-10">
+                <CSSMascot state="thinking" className="w-10 h-10" />
+              </div>
+              <div className="rounded-2xl rounded-bl-sm border border-carte-border px-3 py-2 text-xs text-carte-text-dim"
+                style={{ backgroundColor: "var(--carte-surface)" }}>
+                {l("loading")}
+              </div>
+            </div>
+          )}
+          {explanation && (
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 w-10 h-10 mt-1">
+                <CSSMascot state="happy" className="w-10 h-10" />
+              </div>
+              <div
+                className="rounded-2xl rounded-bl-sm px-3 py-2.5 text-sm leading-relaxed text-carte-text"
+                style={{ backgroundColor: "var(--carte-surface)", borderLeft: "2px solid var(--carte-primary)" }}
+              >
+                {explanation}
+              </div>
+            </div>
+          )}
+          {explainError && (
+            <p className="mt-1 text-center text-[10px] text-carte-text-dim">{l("error")}</p>
+          )}
+        </div>
 
         <button
           type="button"
@@ -146,7 +235,7 @@ export function DishDetail({ dish, lang, onClose }: DishDetailProps) {
           className="mt-6 w-full rounded-xl py-3 text-sm font-semibold text-carte-bg active:opacity-80"
           style={{ backgroundColor: "var(--carte-primary)" }}
         >
-          {lang === "zh" ? "\u5173\u95ed" : lang === "fr" ? "Fermer" : "Close"}
+          {lang === "zh" ? "关闭" : lang === "fr" ? "Fermer" : "Close"}
         </button>
       </div>
     </div>

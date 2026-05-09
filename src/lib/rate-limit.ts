@@ -34,6 +34,10 @@ function createLimiter(prefix: string, requests: number, window: string) {
 export const recommendRateLimit = createLimiter("ratelimit:recommend", 60, "1 m");
 export const recommendRateLimitStrict = createLimiter("ratelimit:recommend-strict", 10, "1 m");
 
+// 菜品解释 API：20 次/分钟/IP（验证），6 次/分钟/IP（未验证）
+export const explainRateLimit = createLimiter("ratelimit:explain", 20, "1 m");
+export const explainRateLimitStrict = createLimiter("ratelimit:explain-strict", 6, "1 m");
+
 // 上传 API：10 次/分钟/tenant
 export const ingestRateLimit = createLimiter("ratelimit:ingest", 10, "1 m");
 

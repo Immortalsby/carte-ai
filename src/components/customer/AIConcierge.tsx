@@ -14,6 +14,7 @@ import { getDictionary } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics-client";
 import { useToast } from "@/components/ui/Toast";
 import { CuisineLoader } from "./CuisineLoader";
+import { CSSMascot } from "./CSSMascot";
 import {
   BeerStein, ForkKnife, BowlFood, Sparkle, CurrencyEur, Star,
   Leaf, Question, Users, UsersThree, UsersFour, Fire, Snowflake, Pepper,
@@ -146,6 +147,42 @@ export function ConciergePanel({
   const { toast } = useToast();
   const isGroupMeal = experienceMode === "group_meal";
   const modes = isGroupMeal ? groupMealModes : touristModes;
+
+  // Dish explanation state (keyed by dishId)
+  const [explanations, setExplanations] = useState<Record<string, string>>({});
+  const [explainLoading, setExplainLoading] = useState<string | null>(null);
+
+  async function handleExplainDish(dishId: string) {
+    if (explanations[dishId] || explainLoading) return;
+    const dish = menu.dishes.find((d) => d.id === dishId);
+    if (!dish) return;
+    setExplainLoading(dishId);
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const token = getTurnstileToken?.();
+      if (token) headers["x-turnstile-token"] = token;
+
+      const res = await fetch("/api/dish-explain", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          dishName: dish.name,
+          dishDescription: dish.description,
+          ingredients: dish.ingredients,
+          cuisine: menu.restaurant.cuisine || "",
+          lang,
+          tenantSlug: menu.restaurant.slug,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setExplanations((prev) => ({ ...prev, [dishId]: data.explanation }));
+    } catch {
+      // Silent fail — button stays clickable
+    } finally {
+      setExplainLoading(null);
+    }
+  }
 
   const pl = (key: keyof typeof prefLabels) =>
     prefLabels[key][lang as "en" | "fr" | "zh"] || prefLabels[key].en;
@@ -283,6 +320,8 @@ export function ConciergePanel({
     setMaxSpice(undefined);
     setUserText("");
     setLoading(false);
+    setExplanations({});
+    setExplainLoading(null);
   }
 
   return (
@@ -519,10 +558,35 @@ export function ConciergePanel({
                 item={item}
                 isBest={i === 0}
                 lang={lang}
-
                 isSaved={item.dishIds.every((id) => savedDishIds.includes(id))}
                 onToggleSave={() => onToggleSave?.(item.dishIds)}
+                onExplain={handleExplainDish}
               />
+              {/* Cloche speech bubble explanation */}
+              {explainLoading === item.dishIds[0] && (
+                <div className="mt-1.5 flex items-center gap-2 px-1">
+                  <div className="shrink-0 w-8 h-8">
+                    <CSSMascot state="thinking" className="w-8 h-8" />
+                  </div>
+                  <div className="rounded-2xl rounded-bl-sm border border-carte-border px-2.5 py-1.5 text-[11px] text-carte-text-dim"
+                    style={{ backgroundColor: "var(--carte-surface)" }}>
+                    {recExplainLabels.loading[lang as "en" | "fr" | "zh"] || recExplainLabels.loading.en}
+                  </div>
+                </div>
+              )}
+              {explanations[item.dishIds[0]] && (
+                <div className="mt-1.5 flex items-start gap-2 px-1">
+                  <div className="shrink-0 w-8 h-8 mt-0.5">
+                    <CSSMascot state="happy" className="w-8 h-8" />
+                  </div>
+                  <div
+                    className="rounded-2xl rounded-bl-sm px-2.5 py-2 text-xs leading-relaxed text-carte-text"
+                    style={{ backgroundColor: "var(--carte-surface)", borderLeft: "2px solid var(--carte-primary)" }}
+                  >
+                    {explanations[item.dishIds[0]]}
+                  </div>
+                </div>
+              )}
             </motion.div>
           ))}
 
@@ -593,18 +657,26 @@ function PillButton({
 }
 
 /* ─── Recommendation Card ─── */
+
+const recExplainLabels = {
+  button: { en: "Explain this dish", fr: "Expliquer ce plat", zh: "解释这道菜" },
+  loading: { en: "Thinking...", fr: "Réflexion...", zh: "思考中..." },
+};
+
 function RecommendationCard({
   item,
   isBest,
   lang,
   isSaved,
   onToggleSave,
+  onExplain,
 }: {
   item: RecommendationItem;
   isBest: boolean;
   lang: LanguageCode;
   isSaved?: boolean;
   onToggleSave?: () => void;
+  onExplain?: (dishId: string) => void;
 }) {
   const dict = getDictionary(lang);
   const price = (item.totalPriceCents / 100).toFixed(2);
@@ -665,6 +737,15 @@ function RecommendationCard({
         <p className="mt-1 text-[10px] text-carte-warning">
           {item.allergenWarning}
         </p>
+      )}
+      {onExplain && item.dishIds.length > 0 && (
+        <button
+          type="button"
+          onClick={() => onExplain(item.dishIds[0])}
+          className="mt-1.5 text-[11px] font-medium text-carte-primary hover:underline"
+        >
+          🍽️ {recExplainLabels.button[lang as "en" | "fr" | "zh"] || recExplainLabels.button.en}
+        </button>
       )}
     </article>
   );
