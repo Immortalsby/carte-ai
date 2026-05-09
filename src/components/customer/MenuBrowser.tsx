@@ -103,7 +103,8 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, t
       onOpenDishIdHandled?.();
     }, 300);
     return () => clearTimeout(timer);
-  }, [openDishId, dishes, onOpenDishIdHandled]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- onOpenDishIdHandled is a callback, not reactive data
+  }, [openDishId, dishes]);
 
   return (
     <>

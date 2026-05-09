@@ -250,7 +250,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         tenantId={tenantId}
         tenantSlug={menu.restaurant.slug}
         openDishId={highlightDishId}
-        onOpenDishIdHandled={() => setHighlightDishId(null)}
+        onOpenDishIdHandled={useCallback(() => setHighlightDishId(null), [])}
         isSaved={(id) => wishlist.isSaved(id)}
         onToggleSave={(id) => handleToggleSave([id])}
       />
