@@ -62,11 +62,11 @@ type ModeEntry = {
 
 /* ─── Mode lists per occasion ─── */
 
-// "Just drinks" → drinks-focused options
+// "Just drinks" → drinks-focused options (partySize 2 = at least 2 drinks + snacks)
 const drinksModes: ModeEntry[] = [
-  { mode: "first_time", dictKey: "drinksPopular", icon: <Star weight="duotone" /> },
-  { mode: "cheap", dictKey: "drinksBudget", icon: <CurrencyEur weight="duotone" />, defaults: { budgetCents: 1000 } },
-  { mode: "not_sure", dictKey: "drinksAsk", icon: <Question weight="duotone" /> },
+  { mode: "signature", dictKey: "drinksPopular", icon: <Star weight="duotone" />, partySize: 2 },
+  { mode: "cheap", dictKey: "drinksBudget", icon: <CurrencyEur weight="duotone" />, partySize: 2, defaults: { budgetCents: 1000 } },
+  { mode: "not_sure", dictKey: "drinksAsk", icon: <Question weight="duotone" />, partySize: 2 },
 ];
 
 // "A proper meal" — tourist perspective
@@ -75,6 +75,7 @@ const mealTouristModes: ModeEntry[] = [
   { mode: "cheap", dictKey: "cheap", icon: <CurrencyEur weight="duotone" />, defaults: { budgetCents: 1000 } },
   { mode: "signature", dictKey: "signature", icon: <Star weight="duotone" /> },
   { mode: "healthy", dictKey: "healthy", icon: <Leaf weight="duotone" /> },
+  { mode: "sharing", dictKey: "sharing", icon: <Users weight="duotone" />, partySize: 2 },
   { mode: "not_sure", dictKey: "prompt", icon: <Question weight="duotone" /> },
 ];
 
@@ -83,6 +84,7 @@ const mealGroupModes: ModeEntry[] = [
   { mode: "sharing", dictKey: "twoPersons", icon: <Users weight="duotone" />, partySize: 2 },
   { mode: "sharing", dictKey: "threePersons", icon: <UsersThree weight="duotone" />, partySize: 3 },
   { mode: "sharing", dictKey: "fourPersons", icon: <UsersFour weight="duotone" />, partySize: 4 },
+  { mode: "signature", dictKey: "hotAndCold", icon: <><Fire weight="duotone" /><Snowflake weight="duotone" /></> },
   { mode: "healthy", dictKey: "lightMeal", icon: <Leaf weight="duotone" /> },
   { mode: "not_sure", dictKey: "prompt", icon: <Question weight="duotone" /> },
 ];
