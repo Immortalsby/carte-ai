@@ -2,14 +2,15 @@
 
 import { useState, useCallback, useEffect } from "react";
 
-const COOKIE_NAME = "carte_wishlist";
+const COOKIE_PREFIX = "carte_wishlist_";
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-function readCookie(): string[] {
+function readCookie(slug: string): string[] {
   if (typeof document === "undefined") return [];
+  const name = COOKIE_PREFIX + slug;
   const match = document.cookie
     .split("; ")
-    .find((c) => c.startsWith(COOKIE_NAME + "="));
+    .find((c) => c.startsWith(name + "="));
   if (!match) return [];
   try {
     return JSON.parse(decodeURIComponent(match.split("=")[1]));
@@ -18,16 +19,17 @@ function readCookie(): string[] {
   }
 }
 
-function writeCookie(ids: string[]) {
-  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(JSON.stringify(ids))}; path=/; max-age=${MAX_AGE}; SameSite=Lax`;
+function writeCookie(slug: string, ids: string[]) {
+  const name = COOKIE_PREFIX + slug;
+  document.cookie = `${name}=${encodeURIComponent(JSON.stringify(ids))}; path=/; max-age=${MAX_AGE}; SameSite=Lax`;
 }
 
-export function useWishlist() {
+export function useWishlist(slug: string) {
   const [savedIds, setSavedIds] = useState<string[]>([]);
 
   useEffect(() => {
-    setSavedIds(readCookie());
-  }, []);
+    setSavedIds(readCookie(slug));
+  }, [slug]);
 
   const isSaved = useCallback(
     (dishId: string) => savedIds.includes(dishId),
@@ -45,7 +47,7 @@ export function useWishlist() {
           const toAdd = dishIds.filter((id) => !prev.includes(id));
           next = [...prev, ...toAdd];
         }
-        writeCookie(next);
+        writeCookie(slug, next);
         return next;
       });
     },
@@ -54,7 +56,7 @@ export function useWishlist() {
 
   const clear = useCallback(() => {
     setSavedIds([]);
-    writeCookie([]);
+    writeCookie(slug, []);
   }, []);
 
   return { savedIds, isSaved, toggle, clear, count: savedIds.length };

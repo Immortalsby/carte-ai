@@ -212,10 +212,33 @@ export function ConciergePanel({
   }
 
   // ─── Voice input (FR19) ───
-  const startListening = useCallback(() => {
+  const startListening = useCallback(async () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       toast(dict.voiceUnavailable, "info");
+      return;
+    }
+
+    // Pre-check microphone permission — show guidance immediately if denied
+    if (navigator.permissions?.query) {
+      try {
+        const status = await navigator.permissions.query({ name: "microphone" as PermissionName });
+        if (status.state === "denied") {
+          toast(dict.voicePermissionDenied, "info");
+          return;
+        }
+      } catch {
+        // permissions.query not supported for microphone — fall through
+      }
+    }
+
+    // Request microphone access to trigger the browser permission dialog
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Release the stream immediately — we only needed the permission grant
+      stream.getTracks().forEach((t) => t.stop());
+    } catch {
+      toast(dict.voicePermissionDenied, "info");
       return;
     }
 
@@ -389,7 +412,7 @@ export function ConciergePanel({
                 onClick={() => { setOccasion(null); changeStep("occasion"); }}
                 className="ml-auto text-[10px] text-carte-text-dim hover:text-carte-text-muted"
               >
-                {lang === "zh" ? "换" : lang === "fr" ? "Changer" : "Change"}
+                {dict.change}
               </button>
             </div>
           )}
