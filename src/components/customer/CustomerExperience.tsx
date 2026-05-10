@@ -50,6 +50,7 @@ const Turnstile = dynamic(
 interface CustomerExperienceProps {
   menu: RestaurantMenu;
   tenantId: string;
+  tenantName: string;
   cuisineType?: string | null;
   rating?: string | null;
   address?: string | null;
@@ -60,7 +61,7 @@ interface CustomerExperienceProps {
   addressCountry?: string;
 }
 
-export function CustomerExperience({ menu, tenantId, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false, addressCountry }: CustomerExperienceProps) {
+export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false, addressCountry }: CustomerExperienceProps) {
   const [lang, setLang] = useState<LanguageCode>("fr");
   const [excludedAllergens, setExcludedAllergens] = useState<Allergen[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -146,7 +147,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
       )}
       {/* Restaurant header with cuisine theming + language switcher */}
       <RestaurantHeader
-        name={menu.restaurant.name}
+        name={tenantName}
         cuisineType={cuisineType}
         rating={rating}
         address={address}
@@ -231,7 +232,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
       <MenuBrowser
         dishes={filteredDishes}
         lang={lang}
-        restaurantName={menu.restaurant.name}
+        restaurantName={tenantName}
         cuisine={cuisineType ?? undefined}
         tenantId={tenantId}
         tenantSlug={menu.restaurant.slug}
@@ -316,7 +317,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
       <SharePanel
         visible={showShare}
         lang={lang}
-        restaurantName={menu.restaurant.name}
+        restaurantName={tenantName}
         slug={menu.restaurant.slug}
         tenantId={tenantId}
         onClose={() => setShowShare(false)}

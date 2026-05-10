@@ -48,6 +48,7 @@ export default async function CustomerPage({
         <CustomerExperience
           menu={menuData}
           tenantId={tenant.id}
+          tenantName={tenant.name}
           cuisineType={tenant.cuisine_type}
           rating={tenant.rating}
           address={tenant.address}
