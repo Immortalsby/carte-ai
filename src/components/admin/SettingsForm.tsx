@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
@@ -154,6 +154,27 @@ export function SettingsForm({
   const [visionTestResult, setVisionTestResult] = useState<{ success: boolean; model?: string; response?: string; error?: string; latencyMs?: number } | null>(null);
   const { toast } = useToast();
   const dirty = touched && !saved && !saving;
+
+  // Auto-fill city from postal code via zippopotam.us
+  const postalDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => {
+    if (postalDebounceRef.current) clearTimeout(postalDebounceRef.current);
+    if (!addressPostal || addressPostal.length < 3 || addressCountry === "OTHER") return;
+    postalDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://api.zippopotam.us/${addressCountry}/${addressPostal}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const place = data?.places?.[0]?.["place name"];
+        if (place) {
+          setAddressCity(place);
+          setSaved(false);
+          setTouched(true);
+        }
+      } catch {}
+    }, 500);
+    return () => { if (postalDebounceRef.current) clearTimeout(postalDebounceRef.current); };
+  }, [addressPostal, addressCountry]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
