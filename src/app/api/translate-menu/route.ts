@@ -58,16 +58,6 @@ export async function POST(request: Request) {
 
     const langLabel = supportedLanguages.find((l) => l.code === targetLang)?.label ?? targetLang;
 
-    const prompt = `Translate these restaurant menu items into ${langLabel} (${targetLang}).
-For each dish, translate the name and description naturally for a restaurant menu — keep it appetizing, not literal.
-If a dish name is a proper noun or widely known term (e.g. "Tiramisu", "Pad Thai"), keep it as-is or transliterate appropriately.
-
-Input dishes (JSON array):
-${JSON.stringify(toTranslate)}
-
-Return a JSON array with exactly this structure — same order, same IDs:
-[{ "id": "...", "name": "translated name", "description": "translated description" }]`;
-
     // Use Gemini Flash for translation (fast + cheap)
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -77,34 +67,59 @@ Return a JSON array with exactly this structure — same order, same IDs:
     const model = process.env.GEMINI_VISION_MODEL || "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: "You are a professional restaurant menu translator. Translate naturally and appetizingly." }],
-        },
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 16000,
-          responseMimeType: "application/json",
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("[translate-menu] Gemini failed:", response.status);
-      return NextResponse.json({ error: "Translation failed" }, { status: 502 });
+    // Split into chunks of CHUNK_SIZE and translate in parallel
+    const CHUNK_SIZE = 20;
+    const chunks: typeof toTranslate[] = [];
+    for (let i = 0; i < toTranslate.length; i += CHUNK_SIZE) {
+      chunks.push(toTranslate.slice(i, i + CHUNK_SIZE));
     }
 
-    const geminiData = await response.json();
-    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      return NextResponse.json({ error: "Empty translation response" }, { status: 502 });
-    }
+    const translateChunk = async (chunk: typeof toTranslate) => {
+      const prompt = `Translate these restaurant menu items into ${langLabel} (${targetLang}).
+For each dish, translate the name and description naturally for a restaurant menu — keep it appetizing, not literal.
+If a dish name is a proper noun or widely known term (e.g. "Tiramisu", "Pad Thai"), keep it as-is or transliterate appropriately.
 
-    const translations: Array<{ id: string; name: string; description: string }> = JSON.parse(text);
+Input dishes (JSON array):
+${JSON.stringify(chunk)}
+
+Return a JSON array with exactly this structure — same order, same IDs:
+[{ "id": "...", "name": "translated name", "description": "translated description" }]`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: "You are a professional restaurant menu translator. Translate naturally and appetizingly." }],
+          },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 16000,
+            responseMimeType: "application/json",
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("[translate-menu] Gemini failed for chunk:", response.status);
+        return [];
+      }
+
+      const geminiData = await response.json();
+      const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) return [];
+
+      try {
+        return JSON.parse(text) as Array<{ id: string; name: string; description: string }>;
+      } catch {
+        console.error("[translate-menu] Failed to parse chunk response");
+        return [];
+      }
+    };
+
+    const results = await Promise.all(chunks.map(translateChunk));
+    const translations = results.flat();
 
     // Apply translations to menu data
     const translationMap = new Map(translations.map((t) => [t.id, t]));
