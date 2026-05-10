@@ -159,15 +159,15 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
         return;
       }
 
-      // Step 2: Structure with LLM — split large OCR into chunks to stay under 60s per request
+      // Step 2: Structure with LLM — split large OCR into chunks, run in parallel
       const ocrDrafts: RestaurantMenu[] = [];
       if (allOcrTexts.length > 0) {
         setState("step2");
 
         const combinedOcr = allOcrTexts.join("\n\n---\n\n");
 
-        // Split by natural separators (--- or double newlines between sections), then enforce max char limit
-        const rawSections = combinedOcr.split(/\n{2,}---\n{2,}|\n{3,}/);
+        // Split by blank lines (double newline), then re-combine up to max chars per chunk
+        const rawSections = combinedOcr.split(/\n{2,}/);
         const chunks: string[] = [];
         let current = "";
         for (const section of rawSections) {
@@ -183,28 +183,38 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
         // If still just one chunk that's small enough, keep it as-is
         if (chunks.length === 0) chunks.push(combinedOcr);
 
+        console.log(`[MenuImporter] Structuring ${chunks.length} chunks in parallel (${combinedOcr.length} chars total)`);
         setProgress({ current: 0, total: chunks.length });
 
-        for (let i = 0; i < chunks.length; i++) {
-          setProgress({ current: i + 1, total: chunks.length });
-          try {
-            const res = await fetchWithTimeout("/api/ingest/structure", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ocrText: chunks[i] }),
-            });
-            if (res.ok) {
-              const data = await res.json();
-              if (data.draftMenu) ocrDrafts.push(data.draftMenu);
-            } else {
-              const data = await res.json().catch(() => ({}));
-              lastError = data.error || `Structure ${res.status}`;
-              console.error(`[MenuImporter] Structure chunk ${i + 1}/${chunks.length} failed:`, data);
+        // Run all chunks in parallel for speed
+        const results = await Promise.allSettled(
+          chunks.map(async (chunk, i) => {
+            try {
+              const res = await fetchWithTimeout("/api/ingest/structure", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ocrText: chunk }),
+              });
+              setProgress((prev) => prev ? { ...prev, current: prev.current + 1 } : null);
+              if (res.ok) {
+                const data = await res.json();
+                return data.draftMenu as RestaurantMenu | null;
+              } else {
+                const data = await res.json().catch(() => ({}));
+                lastError = data.error || `Structure ${res.status}`;
+                console.error(`[MenuImporter] Structure chunk ${i + 1}/${chunks.length} failed:`, data);
+                return null;
+              }
+            } catch (err) {
+              lastError = err instanceof Error ? err.message : "Structure network error";
+              console.error(`[MenuImporter] Structure chunk ${i + 1}/${chunks.length} exception:`, err);
+              return null;
             }
-          } catch (err) {
-            lastError = err instanceof Error ? err.message : "Structure network error";
-            console.error(`[MenuImporter] Structure chunk ${i + 1}/${chunks.length} exception:`, err);
-          }
+          }),
+        );
+
+        for (const r of results) {
+          if (r.status === "fulfilled" && r.value) ocrDrafts.push(r.value);
         }
         setProgress(null);
       }
