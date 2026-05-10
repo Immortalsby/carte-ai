@@ -34,6 +34,7 @@ export default async function MenuManagementPage({
       slug={slug}
       version={menu?.version ?? 1}
       cuisine={tenant.cuisine_type ?? undefined}
+      restaurantName={tenant.name}
       locale={locale}
     />
   );

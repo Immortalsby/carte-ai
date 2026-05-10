@@ -13,10 +13,11 @@ interface MenuPageProps {
   slug: string;
   version: number;
   cuisine?: string;
+  restaurantName?: string;
   locale?: AdminLocale;
 }
 
-export function MenuPage({ menu: initialMenu, slug, version, cuisine, locale = "en" }: MenuPageProps) {
+export function MenuPage({ menu: initialMenu, slug, version, cuisine, restaurantName, locale = "en" }: MenuPageProps) {
   const t = getAdminDict(locale);
   const [menu, setMenu] = useState<RestaurantMenu | null>(initialMenu);
   const [showImporter, setShowImporter] = useState(!initialMenu);
@@ -46,7 +47,7 @@ export function MenuPage({ menu: initialMenu, slug, version, cuisine, locale = "
           )}
         </div>
         <div className="mt-8">
-          <MenuImporter slug={slug} locale={locale} onImported={handleImported} />
+          <MenuImporter slug={slug} restaurantName={restaurantName} locale={locale} onImported={handleImported} />
         </div>
       </div>
     );

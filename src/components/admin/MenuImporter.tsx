@@ -25,6 +25,7 @@ const ACCEPTED_TYPES = [
 
 interface MenuImporterProps {
   slug: string;
+  restaurantName?: string;
   locale?: AdminLocale;
   onImported: (menu: RestaurantMenu) => void;
 }
@@ -35,7 +36,7 @@ function isVisionFile(file: File) {
   return file.type.startsWith("image/") || file.type === "application/pdf";
 }
 
-export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterProps) {
+export function MenuImporter({ slug, restaurantName, locale = "en", onImported }: MenuImporterProps) {
   const t = getAdminDict(locale);
   const tAny = t as unknown as Record<string, string>;
   const { toast } = useToast();
@@ -244,7 +245,11 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
 
       const draft: RestaurantMenu = {
         ...merged,
-        restaurant: { ...merged.restaurant, slug },
+        restaurant: {
+          ...merged.restaurant,
+          slug,
+          ...(restaurantName ? { name: restaurantName } : {}),
+        },
       };
 
       setResult({
