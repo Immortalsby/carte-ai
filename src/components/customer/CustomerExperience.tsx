@@ -32,6 +32,9 @@ const WaiterSummary = dynamic(
   () => import("./WaiterSummary").then((m) => m.WaiterSummary),
   { ssr: false },
 );
+const ClocheGuide = dynamic(
+  () => import("./ClocheGuide").then((m) => m.ClocheGuide),
+);
 const ClocheCookieConsent = dynamic(
   () => import("./ClocheCookieConsent").then((m) => m.ClocheCookieConsent),
   { ssr: false },
@@ -70,6 +73,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
   const [highlightDishId, setHighlightDishId] = useState<string | null>(null);
   const [detectedLang, setDetectedLang] = useState<LanguageCode | undefined>(undefined);
   const [showWaiterSummary, setShowWaiterSummary] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const wishlist = useWishlist();
   const turnstileTokenRef = useRef<string | null>(null);
   const handleTurnstileSuccess = useCallback((token: string) => {
@@ -210,26 +214,36 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         onPopularDishClick={(id: string) => setHighlightDishId(id)}
       />
 
-      {/* Filter toggle */}
+      {/* Filter toggle + guide button */}
       <div className="mt-4 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => setShowFilters(!showFilters)}
-          className="min-h-[44px] rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
-          style={
-            excludedAllergens.length > 0
-              ? {
-                  backgroundColor: "color-mix(in srgb, var(--carte-danger) 20%, transparent)",
-                  color: "var(--carte-danger)",
-                }
-              : {
-                  backgroundColor: "var(--carte-surface)",
-                  color: "var(--carte-text-muted)",
-                }
-          }
-        >
-          {filterLabel}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowFilters(!showFilters)}
+            className="min-h-[44px] rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+            style={
+              excludedAllergens.length > 0
+                ? {
+                    backgroundColor: "color-mix(in srgb, var(--carte-danger) 20%, transparent)",
+                    color: "var(--carte-danger)",
+                  }
+                : {
+                    backgroundColor: "var(--carte-surface)",
+                    color: "var(--carte-text-muted)",
+                  }
+            }
+          >
+            {filterLabel}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowGuide(true)}
+            className="min-h-[44px] rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+            style={{ backgroundColor: "var(--carte-surface)", color: "var(--carte-text-muted)" }}
+          >
+            {lang === "zh" ? "Cloché 能做什么？" : lang === "fr" ? "Cloché peut..." : "Cloché can..."}
+          </button>
+        </div>
         {excludedAllergens.length > 0 && (
           <span className="text-xs text-carte-text-dim">
             {filteredDishes.length}/{menu.dishes.filter((d) => d.available).length}
@@ -335,6 +349,9 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         tenantSlug={menu.restaurant.slug}
         onClose={() => setShowWaiterSummary(false)}
       />
+
+      {/* Cloché guide */}
+      <ClocheGuide visible={showGuide} lang={lang} onClose={() => setShowGuide(false)} />
 
       {/* Share panel */}
       <SharePanel
