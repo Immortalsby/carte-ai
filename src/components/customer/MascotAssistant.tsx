@@ -17,6 +17,7 @@ import {
   pickSadMessage,
   getFlowMessage,
   getIntroMessages,
+  type ContextualMessageResult,
 } from "@/lib/mascot-messages";
 
 /* ─── Idle message rotation ─── */
@@ -157,7 +158,7 @@ export function MascotAssistant({
       setBubbleVisible(true);
       return;
     }
-    const contextual =
+    const contextual: ContextualMessageResult | null =
       Math.random() < 0.3
         ? pickContextualMessage(lang, menu, cuisineType)
         : null;

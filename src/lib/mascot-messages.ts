@@ -226,24 +226,29 @@ export function pickIdleMessage(
   return { message: pool[idx], index: idx };
 }
 
+export type ContextualMessageResult = {
+  message: string;
+  dishId?: string;
+};
+
 /** Pick a contextual message (time / cuisine / popular dish) or null */
 export function pickContextualMessage(
   lang: LanguageCode,
   menu: RestaurantMenu,
   cuisineType?: string | null,
-): string | null {
+): ContextualMessageResult | null {
   const roll = Math.random();
 
   // 40% time-based
   if (roll < 0.4) {
     const msg = timeOfDayMessage(new Date().getHours(), lang);
-    if (msg) return msg;
+    if (msg) return { message: msg };
   }
 
   // 30% cuisine-based
   if (roll < 0.7 && cuisineType) {
     const msg = cuisineHintMessage(cuisineType, lang);
-    if (msg) return msg;
+    if (msg) return { message: msg };
   }
 
   // 30% popular dish
@@ -257,7 +262,7 @@ export function pickContextualMessage(
       dish.name.fr ||
       dish.name.en ||
       Object.values(dish.name)[0];
-    if (name) return popularDishMessage(name, lang);
+    if (name) return { message: popularDishMessage(name, lang), dishId: dish.id };
   }
 
   return null;

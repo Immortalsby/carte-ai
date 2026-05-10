@@ -41,6 +41,7 @@ function scoreDish(dish: Dish, request: RecommendationRequest) {
   if (dish.dietaryTags.includes("signature")) score += 8;
   if (dish.dietaryTags.includes("good_value")) score += 7;
   if (dish.marginPriority === 3) score += 3;
+  if (dish.marginPriority === 2) score += 1;
   if (dish.portionScore === 3) score += 5;
 
   const price = dish.priceCents ?? 0;
