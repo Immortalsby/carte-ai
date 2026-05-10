@@ -843,53 +843,23 @@ Rules:
  * Translates to 3 languages, categorizes, infers allergens, generates descriptions.
  */
 export async function structureMenuWithLlm(ocrText: string): Promise<RestaurantMenu | null> {
-  const structurePrompt = `You are CarteAI's menu structuring engine. Convert raw OCR text from a restaurant menu into a structured JSON object.
+  const structurePrompt = `You are CarteAI's menu structuring engine. Convert raw OCR text into structured JSON. Be fast and concise.
 
-Input: Raw text extracted from a menu image (may be in any language).
+Input: Raw OCR text from a restaurant menu (any language).
 
-Your tasks:
-1. Parse each dish: name, price, description (if present), section/category
-2. Translate names and descriptions into zh, fr, and en (keep the original language accurate, translate the others)
-3. Categorize: starter, main, side, dessert, drink, combo, sharing (tapas/shared plates), soup, pasta, wine, cocktail, or brunch
-4. Infer likely allergens from dish names and ingredients — use ["unknown"] if unsure
-5. Infer dietary tags where obvious (vegetarian, vegan, contains_pork, contains_beef, etc.)
-6. Generate a short appetizing description in each language if not provided
-7. Generate a kebab-case ID for each dish from its English name
+Tasks:
+1. Extract each dish: name, price, description, category
+2. Translate names into zh, fr, en (keep original accurate)
+3. Categorize: starter|main|side|dessert|drink|combo|sharing|soup|pasta|wine|cocktail|brunch
+4. Infer allergens from name/ingredients — use ["unknown"] if unsure
+5. Generate kebab-case ID from English name
 
-Return ONLY a valid JSON object with this exact shape:
-{
-  "restaurant": {
-    "id": "imported",
-    "slug": "imported",
-    "name": "Imported Menu",
-    "cuisine": "",
-    "city": "",
-    "currency": "EUR",
-    "languages": ${JSON.stringify(supportedLanguageCodes)},
-    "welcome": { "zh": "欢迎", "fr": "Bienvenue", "en": "Welcome" }
-  },
-  "updatedAt": "${new Date().toISOString()}",
-  "dishes": [{
-    "id": "kebab-case-id",
-    "category": "starter|main|side|dessert|drink|combo|sharing|soup|pasta|wine|cocktail|brunch",
-    "name": { "zh": "中文名", "fr": "Nom français", "en": "English name" },
-    "description": { "zh": "描述", "fr": "Description", "en": "Description" },
-    "priceCents": 1850,
-    "currency": "EUR",
-    "ingredients": [],
-    "allergens": ["unknown"],
-    "dietaryTags": [],
-    "spiceLevel": 0,
-    "available": true,
-    "marginPriority": 1,
-    "portionScore": 2
-  }]
-}
+Return ONLY valid JSON:
+{"restaurant":{"id":"imported","slug":"imported","name":"Imported Menu","cuisine":"","city":"","currency":"EUR","languages":${JSON.stringify(supportedLanguageCodes)},"welcome":{"zh":"欢迎","fr":"Bienvenue","en":"Welcome"}},"updatedAt":"${new Date().toISOString()}","dishes":[{"id":"kebab-id","category":"main","name":{"zh":"名","fr":"Nom","en":"Name"},"description":{"zh":"","fr":"","en":""},"priceCents":1850,"currency":"EUR","ingredients":[],"allergens":["unknown"],"dietaryTags":[],"spiceLevel":0,"available":true,"marginPriority":1,"portionScore":2}]}
 
-Allowed allergens: gluten, crustaceans, eggs, fish, peanuts, soy, milk, nuts, celery, mustard, sesame, sulphites, lupin, molluscs, alcohol, unknown.
-Allowed dietaryTags: vegetarian, vegan, halal_possible, contains_pork, contains_beef, contains_seafood, high_protein, low_calorie, healthy, spicy, signature, popular, good_value, light, comfort_food.
-Prices must be in cents (e.g. 18.50€ = 1850). If no currency symbol, assume EUR.
-portionScore guidelines: 1 = small/light (tapas, amuse-bouche, small side, single drink, small dessert), 2 = standard individual portion (a normal main, a bowl of soup, a salad, a regular starter), 3 = large/shareable (family-style platter, sharing plate, large combo, XL portion). Default to 2 if unsure.`;
+Allergens: gluten,crustaceans,eggs,fish,peanuts,soy,milk,nuts,celery,mustard,sesame,sulphites,lupin,molluscs,alcohol,unknown.
+DietaryTags: vegetarian,vegan,halal_possible,contains_pork,contains_beef,contains_seafood,spicy,signature,popular.
+Prices in cents (18.50€=1850), default EUR. portionScore: 1=small 2=normal 3=large/sharing. Description: leave empty string if not obvious, do NOT generate creative descriptions.`;
 
   // Try OpenAI first (fast for text-only tasks)
   const openaiKey = process.env.OPENAI_API_KEY;
@@ -897,10 +867,10 @@ portionScore guidelines: 1 = small/light (tapas, amuse-bouche, small side, singl
     try {
       const client = new OpenAI({ apiKey: openaiKey });
       const response = await client.responses.create({
-        model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+        model: process.env.OPENAI_STRUCTURE_MODEL || "gpt-4.1-nano",
         input: [
           { role: "system", content: structurePrompt },
-          { role: "user", content: `Here is the raw OCR text from the menu:\n\n${ocrText}` },
+          { role: "user", content: `Menu OCR:\n${ocrText}` },
         ],
       });
       const text = response.output_text;
