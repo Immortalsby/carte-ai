@@ -1,13 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode } from "@/types/menu";
 import { CSSMascot } from "./CSSMascot";
+import {
+  ListMagnifyingGlassIcon,
+  MagnifyingGlassIcon,
+  HeartIcon,
+  TranslateIcon,
+  FunnelIcon,
+} from "@phosphor-icons/react";
 
-const steps = [
+interface Step {
+  icon: ReactNode;
+  title: Record<string, string>;
+  desc: Record<string, string>;
+}
+
+const steps: Step[] = [
   {
-    icon: "📋",
+    icon: <ListMagnifyingGlassIcon weight="duotone" className="h-5 w-5 text-carte-primary" />,
     title: { en: "Browse the menu", fr: "Parcourir le menu", zh: "浏览菜单" },
     desc: {
       en: "Scroll through dishes by category, or tap Cloché for personalized recommendations.",
@@ -16,7 +29,7 @@ const steps = [
     },
   },
   {
-    icon: "🔍",
+    icon: <MagnifyingGlassIcon weight="duotone" className="h-5 w-5 text-carte-primary" />,
     title: { en: "Discover each dish", fr: "Découvrir chaque plat", zh: "了解每道菜" },
     desc: {
       en: "Tap any dish to see details. Ask Cloché to explain unfamiliar dishes, analyze allergens, or estimate calories.",
@@ -25,7 +38,7 @@ const steps = [
     },
   },
   {
-    icon: "❤️",
+    icon: <HeartIcon weight="duotone" className="h-5 w-5 text-carte-danger" />,
     title: { en: "Save your favorites", fr: "Sauvegardez vos favoris", zh: "收藏喜欢的菜" },
     desc: {
       en: "Tap the heart to add dishes to your wishlist. Review everything before ordering.",
@@ -34,7 +47,7 @@ const steps = [
     },
   },
   {
-    icon: "🍽️",
+    icon: <TranslateIcon weight="duotone" className="h-5 w-5 text-carte-primary" />,
     title: { en: "Show to waiter", fr: "Montrer au serveur", zh: "给服务员看" },
     desc: {
       en: "Language barrier? No worries! Cloché translates your order into the local language for the waiter.",
@@ -43,7 +56,7 @@ const steps = [
     },
   },
   {
-    icon: "⚠️",
+    icon: <FunnelIcon weight="duotone" className="h-5 w-5 text-carte-warning" />,
     title: { en: "Filter allergens", fr: "Filtrer les allergènes", zh: "过滤过敏原" },
     desc: {
       en: "Use the filter button to hide dishes containing allergens you want to avoid.",
@@ -100,10 +113,10 @@ export function ClocheGuide({ visible, lang, onClose }: ClocheGuideProps) {
               <h2 className="text-base font-bold text-carte-text">{l(title, lang)}</h2>
             </div>
 
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 space-y-3">
               {steps.map((step, i) => (
                 <div key={i} className="flex gap-3 rounded-xl border border-carte-border bg-carte-surface p-3">
-                  <span className="mt-0.5 text-lg leading-none">{step.icon}</span>
+                  <div className="mt-0.5 shrink-0">{step.icon}</div>
                   <div className="min-w-0">
                     <h3 className="text-sm font-semibold text-carte-text">{l(step.title, lang)}</h3>
                     <p className="mt-0.5 text-xs leading-relaxed text-carte-text-muted">{l(step.desc, lang)}</p>

@@ -9,6 +9,7 @@ import { trackEvent } from "@/lib/analytics-client";
 import { isCultureMatch } from "@/lib/culture-match";
 import { languageDirection } from "@/lib/languages";
 import { useWishlist } from "@/hooks/useWishlist";
+import { FunnelIcon, QuestionIcon } from "@phosphor-icons/react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { MenuBrowser } from "./MenuBrowser";
 import { RestaurantHeader } from "./RestaurantHeader";
@@ -214,41 +215,41 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         onPopularDishClick={(id: string) => setHighlightDishId(id)}
       />
 
-      {/* Filter toggle + guide button */}
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowFilters(!showFilters)}
-            className="min-h-[44px] rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
-            style={
-              excludedAllergens.length > 0
-                ? {
-                    backgroundColor: "color-mix(in srgb, var(--carte-danger) 20%, transparent)",
-                    color: "var(--carte-danger)",
-                  }
-                : {
-                    backgroundColor: "var(--carte-surface)",
-                    color: "var(--carte-text-muted)",
-                  }
-            }
-          >
-            {filterLabel}
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowGuide(true)}
-            className="min-h-[44px] rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
-            style={{ backgroundColor: "var(--carte-surface)", color: "var(--carte-text-muted)" }}
-          >
-            {lang === "zh" ? "Cloché 能做什么？" : lang === "fr" ? "Cloché peut..." : "Cloché can..."}
-          </button>
-        </div>
+      {/* Toolbar: filter + guide */}
+      <div className="mt-4 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex min-h-[36px] items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+          style={
+            excludedAllergens.length > 0
+              ? {
+                  backgroundColor: "color-mix(in srgb, var(--carte-danger) 20%, transparent)",
+                  color: "var(--carte-danger)",
+                }
+              : {
+                  backgroundColor: "var(--carte-surface)",
+                  color: "var(--carte-text-muted)",
+                }
+          }
+        >
+          <FunnelIcon weight="duotone" className="h-3.5 w-3.5" />
+          {filterLabel}
+        </button>
         {excludedAllergens.length > 0 && (
-          <span className="text-xs text-carte-text-dim">
+          <span className="text-xs tabular-nums text-carte-text-dim">
             {filteredDishes.length}/{menu.dishes.filter((d) => d.available).length}
           </span>
         )}
+        <div className="flex-1" />
+        <button
+          type="button"
+          onClick={() => setShowGuide(true)}
+          className="flex min-h-[36px] items-center gap-1.5 rounded-full border border-carte-primary/30 px-3 py-1.5 text-xs font-medium text-carte-primary transition-colors hover:bg-carte-primary/10"
+        >
+          <QuestionIcon weight="bold" className="h-3.5 w-3.5" />
+          {lang === "zh" ? "使用指南" : lang === "fr" ? "Guide" : "Guide"}
+        </button>
       </div>
 
       {showFilters && (

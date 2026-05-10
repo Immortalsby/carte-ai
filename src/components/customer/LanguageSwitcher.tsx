@@ -59,16 +59,16 @@ export function LanguageSwitcher({ current, onChange, detectedLang }: LanguageSw
 
   return (
     <>
-      <div className="flex flex-wrap justify-center gap-1.5">
+      <div className="flex flex-wrap justify-center gap-1">
         {primaryLanguages.map((lang) => (
           <button
             key={lang}
             type="button"
             onClick={() => onChange(lang)}
-            className={`min-h-[44px] rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+            className={`min-h-[36px] rounded-full px-3 py-1 text-xs font-medium transition-all ${
               current === lang
-                ? "bg-carte-primary text-carte-bg"
-                : "bg-carte-surface text-carte-text-muted hover:bg-carte-surface-hover"
+                ? "bg-carte-primary text-carte-bg shadow-sm"
+                : "border border-carte-border text-carte-text-dim hover:border-carte-text-muted hover:text-carte-text-muted"
             }`}
           >
             {languageNames[lang]}
@@ -77,14 +77,14 @@ export function LanguageSwitcher({ current, onChange, detectedLang }: LanguageSw
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className={`min-h-[44px] rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+          className={`min-h-[36px] rounded-full px-3 py-1 text-xs font-medium transition-all ${
             currentIsSecondary
-              ? "bg-carte-primary text-carte-bg"
-              : "bg-carte-surface text-carte-text-muted hover:bg-carte-surface-hover"
+              ? "bg-carte-primary text-carte-bg shadow-sm"
+              : "border border-carte-border text-carte-text-dim hover:border-carte-text-muted hover:text-carte-text-muted"
           }`}
           aria-label="More languages"
         >
-          {currentIsSecondary ? languageNames[current] : "..."}
+          {currentIsSecondary ? languageNames[current] : "···"}
         </button>
       </div>
 
