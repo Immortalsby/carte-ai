@@ -8,7 +8,8 @@ import { getAdminDict } from "@/lib/admin-i18n";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB per file
 const MAX_FILES = 10;
-const FETCH_TIMEOUT = 55_000; // 55s — just under Vercel 60s limit
+const FETCH_TIMEOUT = 55_000; // 55s — just under Vercel Hobby 60s limit
+const OCR_CHUNK_MAX_CHARS = 3000; // Split OCR text into chunks to keep each structure call fast
 
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -158,32 +159,54 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
         return;
       }
 
-      // Step 2: Structure with OpenAI (text-only, fast)
-      let ocrDrafts: RestaurantMenu[] = [];
+      // Step 2: Structure with LLM — split large OCR into chunks to stay under 60s per request
+      const ocrDrafts: RestaurantMenu[] = [];
       if (allOcrTexts.length > 0) {
         setState("step2");
-        setProgress(null);
 
         const combinedOcr = allOcrTexts.join("\n\n---\n\n");
 
-        try {
-          const res = await fetchWithTimeout("/api/ingest/structure", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ocrText: combinedOcr }),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.draftMenu) ocrDrafts = [data.draftMenu];
+        // Split by natural separators (--- or double newlines between sections), then enforce max char limit
+        const rawSections = combinedOcr.split(/\n{2,}---\n{2,}|\n{3,}/);
+        const chunks: string[] = [];
+        let current = "";
+        for (const section of rawSections) {
+          if (current.length + section.length > OCR_CHUNK_MAX_CHARS && current.length > 0) {
+            chunks.push(current.trim());
+            current = section;
           } else {
-            const data = await res.json().catch(() => ({}));
-            lastError = data.error || `Structure ${res.status}`;
-            console.error("[MenuImporter] Structure failed:", data);
+            current += (current ? "\n\n" : "") + section;
           }
-        } catch (err) {
-          lastError = err instanceof Error ? err.message : "Structure network error";
-          console.error("[MenuImporter] Structure exception:", err);
         }
+        if (current.trim()) chunks.push(current.trim());
+
+        // If still just one chunk that's small enough, keep it as-is
+        if (chunks.length === 0) chunks.push(combinedOcr);
+
+        setProgress({ current: 0, total: chunks.length });
+
+        for (let i = 0; i < chunks.length; i++) {
+          setProgress({ current: i + 1, total: chunks.length });
+          try {
+            const res = await fetchWithTimeout("/api/ingest/structure", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ocrText: chunks[i] }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.draftMenu) ocrDrafts.push(data.draftMenu);
+            } else {
+              const data = await res.json().catch(() => ({}));
+              lastError = data.error || `Structure ${res.status}`;
+              console.error(`[MenuImporter] Structure chunk ${i + 1}/${chunks.length} failed:`, data);
+            }
+          } catch (err) {
+            lastError = err instanceof Error ? err.message : "Structure network error";
+            console.error(`[MenuImporter] Structure chunk ${i + 1}/${chunks.length} exception:`, err);
+          }
+        }
+        setProgress(null);
       }
 
       const allDrafts = [...ocrDrafts, ...textDrafts];
