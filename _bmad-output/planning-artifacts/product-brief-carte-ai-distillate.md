@@ -12,7 +12,7 @@ purpose: "Token-efficient context for downstream PRD creation"
 
 ### Confirmed IN
 - `/r/[slug]` 餐馆专属推荐页 — 核心产品入口
-- 菜单 OCR 提取（拍照/PDF→结构化）— 已有 Anthropic multimodal 实现
+- 菜单 OCR 提取（拍照/PDF→结构化）— 已有 Gemini Vision + OpenAI 实现
 - 本地规则引擎 + LLM 增强双层推荐 — 已实现，GPT-4.1-nano
 - 19 语言 i18n + RTL — 已实现，zh/fr/en 为必填
 - 14 种 EU 过敏原标注 — 已内置类型系统
@@ -56,7 +56,7 @@ purpose: "Token-efficient context for downstream PRD creation"
 ## Technical Context (Existing Codebase)
 
 - **框架**: Next.js 16.2.4 + React 19 + TypeScript 5 + Tailwind 4
-- **LLM 提供商**: Anthropic Foundry (主) + OpenAI SDK (兜底) + 本地规则（终极降级）
+- **LLM 提供商**: OpenAI（文本推荐/结构化） + Gemini（Vision OCR） + 本地规则（降级）
 - **数据存储**: 当前 `data/menu.json` (静态) + `localStorage` (运行时) — 无数据库，需升级到持久化
 - **部署**: Vercel
 - **现有 API**: 5 个 endpoint（recommend, ingest, poster, menu, google-places-search）

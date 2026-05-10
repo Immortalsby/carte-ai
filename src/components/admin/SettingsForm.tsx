@@ -392,7 +392,6 @@ export function SettingsForm({
                     className="flex-1 rounded border px-2 py-1 text-xs"
                   >
                     <option value="auto">{t.llmProviderAuto}</option>
-                    <option value="anthropic">{t.llmProviderAnthropic}</option>
                     <option value="openai">{t.llmProviderOpenAI}</option>
                   </select>
                   <input
@@ -420,7 +419,7 @@ export function SettingsForm({
                       setTesting(true);
                       setTestResult(null);
                       try {
-                        const testProvider = llmProvider === "auto" ? "anthropic" : llmProvider;
+                        const testProvider = llmProvider === "auto" ? "openai" : llmProvider;
                         const res = await fetch("/api/ai/test-llm", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },

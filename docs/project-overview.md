@@ -37,8 +37,8 @@ CarteAI 是一款面向欧洲（首发法国 / EUR）餐馆的 **AI 菜单点餐
 | 校验 | Zod | 4.4.3 | 菜单 / 推荐请求双层校验 |
 | 图标 | lucide-react | 1.14 | UI 图标库 |
 | QR | qrcode | 1.5.4 | 海报页生成二维码 dataURL |
-| LLM | openai | 6.35 | OpenAI 兜底 provider |
-| LLM 主路 | fetch (Anthropic Foundry HTTP) | — | 不走官方 SDK，直接 POST `/v1/messages` |
+| LLM | openai | 6.35 | OpenAI 文本推荐/结构化 |
+| Vision | Gemini API | — | Google Gemini 2.5 Flash（菜单 OCR） |
 | 地点 | Google Places API v1 | — | Text Search + Place Details |
 | E2E | playwright | 1.59 | 已安装，未见测试用例 |
 | 部署 | vercel | 53.1 | CLI 已加 devDep |

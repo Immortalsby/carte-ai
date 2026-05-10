@@ -6,7 +6,7 @@ import { isFounder } from "@/lib/roles";
 import { testLlmConnection } from "@/lib/llm";
 
 const testSchema = z.object({
-  provider: z.enum(["anthropic", "openai", "gemini"]),
+  provider: z.enum(["openai", "gemini"]),
   model: z.string().optional(),
 });
 

@@ -47,50 +47,6 @@ async function callLlm(
   userPrompt: string,
   config?: { provider?: string; model?: string },
 ) {
-  const preferOpenai = config?.provider === "openai";
-  const preferAnthropic = !config?.provider || config?.provider === "anthropic";
-
-  // Try Anthropic first (unless OpenAI is explicitly preferred)
-  if (preferAnthropic) {
-    const anthropicKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
-    const baseUrl = process.env.ANTHROPIC_FOUNDRY_BASE_URL?.replace(/\/$/, "");
-    const anthropicModel =
-      config?.model ||
-      (process.env.ANTHROPIC_MODEL === "OPUS"
-        ? process.env.ANTHROPIC_DEFAULT_OPUS_MODEL || "claude-opus-4-6"
-        : process.env.ANTHROPIC_MODEL || process.env.ANTHROPIC_DEFAULT_OPUS_MODEL);
-
-    if (anthropicKey && baseUrl && anthropicModel) {
-      const res = await fetch(`${baseUrl}/v1/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": anthropicKey,
-          "api-key": anthropicKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: anthropicModel,
-          max_tokens: 800,
-          temperature: 0.3,
-          system: systemPrompt,
-          messages: [{ role: "user", content: userPrompt }],
-        }),
-      });
-      if (res.ok) {
-        const payload = await res.json();
-        const text =
-          payload?.content
-            ?.map((p: { type?: string; text?: string }) =>
-              p.type === "text" ? p.text : "",
-            )
-            .join("") ?? "";
-        return text;
-      }
-    }
-  }
-
-  // OpenAI fallback (or primary if preferred)
   const openaiKey = process.env.OPENAI_API_KEY;
   if (openaiKey) {
     const openaiModel = config?.model || process.env.OPENAI_MODEL || "gpt-4.1-mini";

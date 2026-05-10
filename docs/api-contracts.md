@@ -51,8 +51,7 @@
 | 形态 | `fallbackUsed` | `provider` | 触发条件 |
 |------|---------------|------------|---------|
 | 本地规则推荐 | `true` | — | 没配 LLM key 或所有 LLM 调用都失败 |
-| AI 增强推荐 | `false` | `"anthropic-foundry"` | Anthropic Foundry 配置完整且调用成功 |
-| AI 增强推荐 | `false` | `"openai"` | Anthropic 未配 / 失败，OpenAI key 存在且成功 |
+| AI 增强推荐 | `false` | `"openai"` | OpenAI key 存在且调用成功 |
 
 ```ts
 {
@@ -70,7 +69,7 @@
   }>
   fallbackUsed: boolean
   safetyNotice: string           // 强制提醒"过敏请向员工二次确认"
-  provider?: "anthropic-foundry" | "openai"   // 仅 LLM 路径返回
+  provider?: "openai"                          // 仅 LLM 路径返回
   noExactMatch?: boolean         // 仅本地路径：硬过滤后无结果时为 true
 }
 ```
@@ -92,9 +91,9 @@
 | 类型 | 处理路径 |
 |------|---------|
 | `.json` / `application/json` | 直接 `JSON.parse` + Zod 校验 |
-| `text/*` / `csv` / `tsv` / `txt` | LLM 文本提取（Anthropic Foundry） |
-| `image/*` | LLM 多模态（base64 image block） |
-| `application/pdf` | LLM 多模态（base64 document block） |
+| `text/*` / `csv` / `tsv` / `txt` | LLM 文本提取（OpenAI） |
+| `image/*` | Gemini Vision OCR + OpenAI 结构化 |
+| `application/pdf` | Gemini Vision OCR + OpenAI 结构化 |
 | 其他 | 返回 `draft_needs_review` 占位 |
 
 **响应 200 — 三种状态**：

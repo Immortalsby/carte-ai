@@ -169,8 +169,7 @@ export default async function AdminDashboard({
               const degraded = new Set(["fallback", "local", "guardrail_fallback", "quota_exceeded"]);
               const labels: Record<string, string> = {
                 openai: "OpenAI",
-                "anthropic-foundry": "Anthropic Foundry",
-                anthropic: "Anthropic",
+                gemini: "Gemini",
               };
               const names = llmProviderStats.providerDistribution
                 .filter((p) => !degraded.has(p.name))

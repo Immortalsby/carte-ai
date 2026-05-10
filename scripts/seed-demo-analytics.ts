@@ -27,7 +27,7 @@ const languages = ["zh", "fr", "en", "es", "ar", "zh-Hant"];
 const langWeights = [0.30, 0.25, 0.20, 0.10, 0.08, 0.07]; // 权重
 const modes = ["first_time", "cheap", "healthy", "signature", "sharing", "not_sure"];
 const modeWeights = [0.20, 0.15, 0.15, 0.15, 0.10, 0.25];
-const providers = ["openai", "anthropic"];
+const providers = ["openai"];
 
 function weightedRandom<T>(items: T[], weights: number[]): T {
   const r = Math.random();

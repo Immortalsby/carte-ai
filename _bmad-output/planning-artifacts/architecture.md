@@ -86,7 +86,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | **Next.js 16 + React 19** | 已锁定框架 | App Router 全栈，Server Components + Route Handlers |
 | **Vercel 部署** | 已锁定平台 | Serverless 函数限制（10s 默认/60s Pro），无持久进程 |
 | **1 周交付** | 创始人 + AI 开发 | 架构决策必须务实，选"最少决策点"的方案 |
-| **LLM 双 provider** | Anthropic Foundry (主) + OpenAI (兜底) | 抽象层已有，需扩展到图片生成 |
+| **LLM 双 provider** | OpenAI (文本) + Gemini (Vision) | 抽象层已有，需扩展到图片生成 |
 | **€19/月定价** | 低客单价 SaaS | 基础设施成本必须极低 |
 
 ### Cross-Cutting Concerns
@@ -126,7 +126,7 @@ Full-stack Web Application — Brownfield Next.js 16 monolith，已部署 Vercel
 | Tailwind CSS | 4.x | ✅ 已锁定，PostCSS 集成 |
 | Zod | 4.4.3 | ✅ 已锁定，跨边界双层校验 |
 | Vercel 部署 | — | ✅ 已锁定，push main 自动部署 |
-| Anthropic Foundry + OpenAI | — | ✅ 已锁定，双 LLM provider |
+| OpenAI + Gemini | — | ✅ 已锁定，双 LLM provider |
 | Playwright | 1.59 | ✅ 已安装，零测试 |
 
 ### Phase 1 New Dependencies
@@ -239,7 +239,7 @@ recommendations_log (
   tenant_id uuid FK → tenants,
   request jsonb NOT NULL,
   response jsonb NOT NULL,
-  provider text,               -- 'anthropic-foundry' | 'openai' | 'local-rules'
+  provider text,               -- 'openai' | 'gemini' | 'local-rules'
   latency_ms int,
   allergens_filtered text[],
   created_at timestamptz
@@ -995,8 +995,8 @@ Vercel Postgres      src/lib/db/index.ts     主数据库
 Better Auth          src/lib/auth.ts         认证 + Google SSO
 Google OAuth         Better Auth 自动处理      SSO Provider
 Upstash Redis        src/lib/rate-limit.ts   速率限制
-Anthropic API        src/lib/llm.ts          推荐增强 + 菜单提取
-OpenAI API           src/lib/llm.ts          LLM 兜底
+OpenAI API           src/lib/llm.ts          文本推荐 + 结构化
+Gemini API           src/lib/llm.ts          Vision OCR
 Google Places API    src/lib/google-places.ts 餐厅信息
 Pixabay API          src/lib/image-search.ts  菜品图片（主）
 Pexels API           src/lib/image-search.ts  菜品图片（补充）

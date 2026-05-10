@@ -38,8 +38,8 @@ export default async function SettingsPage({
   const aiModels = {
     text: hasCloudLlm()
       ? {
-          provider: textProvider === "auto" ? "Anthropic → OpenAI" : textProvider === "anthropic" ? "Anthropic" : "OpenAI",
-          model: textModel || (textProvider === "openai" ? (process.env.OPENAI_MODEL || "gpt-4.1-mini") : (process.env.ANTHROPIC_MODEL === "OPUS" ? (process.env.ANTHROPIC_DEFAULT_OPUS_MODEL || "claude-opus-4-6") : (process.env.ANTHROPIC_MODEL || "claude-opus-4-6"))),
+          provider: "OpenAI",
+          model: textModel || process.env.OPENAI_MODEL || "gpt-4.1-mini",
         }
       : null,
     vision: hasGeminiVision()

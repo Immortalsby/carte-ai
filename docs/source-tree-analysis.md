@@ -33,7 +33,7 @@ carte-ai/
 │   │   ├── menu.ts                       # 默认菜单加载 + parse + findDishes 工具
 │   │   ├── validation.ts                 # Zod schemas（dish / menu / recommendationRequest）
 │   │   ├── recommender.ts                # 327 行 本地规则推荐：硬过滤 → 打分 → 套餐组装
-│   │   ├── llm.ts                        # 277 行 双 provider LLM 抽象（推荐 + 菜单提取）
+│   │   ├── llm.ts                        # OpenAI + Gemini LLM 抽象（推荐 + 菜单提取）
 │   │   ├── google-places.ts              # Google Places API v1 封装
 │   │   ├── i18n.ts                       # 439 行 20 语言字典 + getLocalizedText / detectBrowserLanguage
 │   │   ├── languages.ts                  # supportedLanguages 列表 + 方向（rtl/ltr）
@@ -98,11 +98,10 @@ carte-ai/
         ├── POST /api/recommend
         │     ├── recommendFromMenu()  ←  本地规则（必跑）
         │     └── recommendWithLlm()   ←  LLM 增强（可降级）
-        │             ├── Anthropic Foundry  (主路 / fetch)
-        │             └── OpenAI            (兜底 / SDK)
+        │             └── OpenAI            (SDK)
         │
         ├── POST /api/ingest
-        │     └── extractMenuDraftWithLlm()  ←  Anthropic 多模态（PDF/图片/文本）
+        │     └── extractMenuOcr() + structureMenuWithLlm()  ←  Gemini OCR + OpenAI 结构化
         │
         ├── POST /api/google/places/search   ←  Google Places v1
         ├── POST /api/google/places/details  ←  Google Places v1

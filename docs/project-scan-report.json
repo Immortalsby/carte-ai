@@ -35,7 +35,7 @@
   "findings": {
     "project_classification": "Monolith Next.js 16 web app, single-tenant demo, multi-language QR menu concierge.",
     "primary_tech": "Next.js 16.2.4 + React 19 + TypeScript 5 + Tailwind 4",
-    "llm_providers": "Anthropic Foundry (primary), OpenAI (fallback), local rules (final fallback)",
+    "llm_providers": "OpenAI (text/structure), Gemini (vision/OCR), local rules (fallback)",
     "external_apis": "Google Places v1",
     "persistence": "Static JSON (data/menu.json) + browser localStorage; no database",
     "test_coverage": "Zero — playwright installed but unused",

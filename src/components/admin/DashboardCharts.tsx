@@ -26,8 +26,7 @@ const COLORS = [
 
 const PROVIDER_LABELS: Record<string, string> = {
   openai: "OpenAI",
-  "anthropic-foundry": "Anthropic Foundry",
-  anthropic: "Anthropic",
+  gemini: "Gemini",
   fallback: "Fallback",
   local: "Local",
   guardrail_fallback: "Guardrail",

@@ -20,8 +20,8 @@
 | Validation | Zod | 4.4.3 | 跨边界数据双层约束（类型 + 运行时） |
 | Icons | lucide-react | 1.14 | 唯一 UI 库 |
 | QR | qrcode | 1.5.4 | 海报页编译期生成 dataURL |
-| LLM Primary | fetch + Anthropic Foundry HTTP API | — | 不用官方 SDK，直接 POST `/v1/messages`（自建网关） |
-| LLM Fallback | openai SDK | 6.35 | OpenAI Responses API |
+| LLM Primary | openai SDK | 6.35 | OpenAI Responses API |
+| LLM Vision | Gemini API | — | Google Gemini 2.5 Flash（菜单 OCR） |
 | External | Google Places API v1 | — | 餐厅 Identity 来源 |
 | Test | playwright | 1.59 | ⚠️ 已装但无用例 |
 | Deploy | Vercel | — | 推 main 自动部署 |
@@ -57,8 +57,8 @@
                │
         ┌──────┼──────┐
         ▼      ▼      ▼
-   data/    Anthropic OpenAI    Google
-   menu.json Foundry  SDK       Places
+   data/    OpenAI  Gemini    Google
+   menu.json SDK     Vision    Places
 ```
 
 ## 4. 数据架构
@@ -76,7 +76,7 @@
 - 5 个 Route Handler，全部 POST 或 GET，无 auth
 - 业务原则：**永不返回 5xx**。LLM/外部失败时优雅降级到本地规则或 default menu
 - `/api/recommend` 是核心：本地规则永远先跑，LLM 只增强候选子集
-- `/api/ingest` 是次核心：JSON 直接 parse，PDF/图片走 Anthropic 多模态
+- `/api/ingest` 是次核心：JSON 直接 parse，PDF/图片走 Gemini Vision OCR + OpenAI 结构化
 
 ## 6. 推荐引擎设计（核心业务逻辑）
 

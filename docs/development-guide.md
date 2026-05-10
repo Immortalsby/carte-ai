@@ -33,18 +33,14 @@ npm run dev
 
 | 变量 | 必填 | 默认 / 示例 | 用途 |
 |------|------|-----------|------|
-| `OPENAI_API_KEY` | 否 | — | OpenAI 兜底 LLM。**未配时回退本地规则**，应用仍可用 |
-| `OPENAI_MODEL` | 否 | `gpt-5.4-mini` | OpenAI 模型 |
-| `ANTHROPIC_FOUNDRY_API_KEY` | 否 | — | Anthropic Foundry（主路）API key |
-| `ANTHROPIC_FOUNDRY_BASE_URL` | 否 | `https://...` | Foundry 网关基址（无尾斜杠） |
-| `ANTHROPIC_MODEL` | 否 | `OPUS` 或具体模型名 | 设为 `OPUS` 时用 `ANTHROPIC_DEFAULT_OPUS_MODEL` |
-| `ANTHROPIC_DEFAULT_OPUS_MODEL` | 否 | `claude-opus-4-6` | 当 `ANTHROPIC_MODEL=OPUS` 时实际使用的模型名 |
-| `CLAUDE_CODE_USE_FOUNDRY` | 否 | `1` | 仅给 Claude Code CLI 用（非应用代码消费） |
+| `OPENAI_API_KEY` | 否 | — | OpenAI 文本 LLM。**未配时回退本地规则**，应用仍可用 |
+| `OPENAI_MODEL` | 否 | `gpt-4.1-mini` | OpenAI 模型 |
+| `GEMINI_API_KEY` | 否 | — | Google Gemini Vision（菜单 OCR） |
 | `GOOGLE_MAPS_API_KEY` | 否 | — | Google Places v1。**未配时**老板端搜索餐馆会提示但不报错 |
 | `NEXT_PUBLIC_APP_NAME` | 否 | `CarteAI` | 客户端可读 |
 | `NEXT_PUBLIC_APP_URL` | 否 | `https://carte-ai.link` | 客户端可读 |
 
-**LLM 优先级**：Anthropic Foundry → OpenAI → 本地规则。任何一层失败自动降级。
+**LLM 优先级**：OpenAI（文本推荐/结构化） + Gemini（Vision OCR） → 本地规则。失败自动降级。
 
 ## 命令速查
 
@@ -94,7 +90,6 @@ LLM 调用必须遵循（已在 `lib/llm.ts` system prompt 写死）：
 ## 调试技巧
 
 - **强制走本地规则**：暂时注释 `.env.local` 里的 LLM keys
-- **强制走 OpenAI**：删 `ANTHROPIC_FOUNDRY_API_KEY`
 - **观察 LLM 决策**：响应里 `provider` 字段直接显示用了哪条路径
 - **菜单覆盖**：在浏览器 DevTools `Application > LocalStorage > carteai.menu` 直接编辑 JSON
 

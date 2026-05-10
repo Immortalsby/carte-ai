@@ -27,24 +27,6 @@ type LlmRecommendationResult = {
   safetyNotice: string;
 };
 
-type AnthropicContentBlock =
-  | { type: "text"; text: string }
-  | {
-      type: "image";
-      source: {
-        type: "base64";
-        media_type: string;
-        data: string;
-      };
-    }
-  | {
-      type: "document";
-      source: {
-        type: "base64";
-        media_type: string;
-        data: string;
-      };
-    };
 
 /**
  * 6 LLM Safety Guardrails (PRD FR31)
@@ -129,106 +111,8 @@ function stripJson(text: string) {
   return match?.[0] ?? trimmed;
 }
 
-function getAnthropicModel() {
-  if (process.env.ANTHROPIC_MODEL === "OPUS") {
-    return process.env.ANTHROPIC_DEFAULT_OPUS_MODEL || "claude-opus-4-6";
-  }
-
-  return process.env.ANTHROPIC_MODEL || process.env.ANTHROPIC_DEFAULT_OPUS_MODEL;
-}
-
-function getAnthropicUrl() {
-  const base = process.env.ANTHROPIC_FOUNDRY_BASE_URL?.replace(/\/$/, "");
-  return base ? `${base}/v1/messages` : undefined;
-}
-
 export function hasCloudLlm() {
-  return Boolean(
-    (process.env.ANTHROPIC_FOUNDRY_API_KEY && getAnthropicUrl() && getAnthropicModel()) ||
-      process.env.OPENAI_API_KEY,
-  );
-}
-
-async function recommendWithAnthropic(input: LlmRecommendationInput, modelOverride?: string) {
-  const apiKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
-  const url = getAnthropicUrl();
-  const model = modelOverride || getAnthropicModel();
-
-  if (!apiKey || !url || !model) return null;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 1200,
-      temperature: 0.2,
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: `${jsonInstruction}\n\n${JSON.stringify(input)}`,
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Anthropic Foundry failed with ${response.status}`);
-  }
-
-  const payload = await response.json();
-  const text =
-    payload?.content
-      ?.map((part: { type?: string; text?: string }) =>
-        part.type === "text" ? part.text : "",
-      )
-      .join("") ?? "";
-  return JSON.parse(stripJson(text)) as LlmRecommendationResult;
-}
-
-async function createAnthropicMessage(content: string | AnthropicContentBlock[]) {
-  const apiKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
-  const url = getAnthropicUrl();
-  const model = getAnthropicModel();
-
-  if (!apiKey || !url || !model) return null;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 16000,
-      temperature: 0,
-      system:
-        "You are CarteAI's menu ingestion engine. Extract ALL dishes from the restaurant menu into strict JSON. Never skip dishes — include every single item. Never invent allergens, calories, ingredients, prices, or dish names. If a field is missing, use safe placeholders and mark allergens as unknown when needed.",
-      messages: [{ role: "user", content }],
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Anthropic Foundry failed with ${response.status}`);
-  }
-
-  const payload = await response.json();
-  return (
-    payload?.content
-      ?.map((part: { type?: string; text?: string }) =>
-        part.type === "text" ? part.text : "",
-      )
-      .join("") ?? ""
-  );
+  return Boolean(process.env.OPENAI_API_KEY);
 }
 
 export function hasGeminiVision() {
@@ -300,22 +184,6 @@ export async function recommendWithLlm(
 ) {
   const pref = options?.provider ?? "auto";
 
-  if (pref === "openai") {
-    const openai = await recommendWithOpenAI(input, options?.model);
-    if (openai) return { provider: "openai", result: openai };
-    return null;
-  }
-
-  if (pref === "anthropic") {
-    const anthropic = await recommendWithAnthropic(input, options?.model);
-    if (anthropic) return { provider: "anthropic", result: anthropic };
-    return null;
-  }
-
-  // "auto" — try Anthropic first, then OpenAI
-  const anthropic = await recommendWithAnthropic(input, options?.model);
-  if (anthropic) return { provider: "anthropic", result: anthropic };
-
   const openai = await recommendWithOpenAI(input, options?.model);
   if (openai) return { provider: "openai", result: openai };
 
@@ -327,47 +195,10 @@ export async function recommendWithLlm(
  * Used by the admin settings to verify provider/model configuration.
  */
 export async function testLlmConnection(
-  provider: "anthropic" | "openai" | "gemini",
+  provider: "openai" | "gemini",
   modelOverride?: string,
 ): Promise<{ success: boolean; model?: string; response?: string; error?: string }> {
   try {
-    if (provider === "anthropic") {
-      const apiKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
-      const url = getAnthropicUrl();
-      const model = modelOverride || getAnthropicModel();
-      if (!apiKey || !url || !model) {
-        return { success: false, error: "Anthropic Foundry not configured (missing API key, URL, or model)" };
-      }
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model,
-          max_tokens: 50,
-          temperature: 0,
-          messages: [{ role: "user", content: "Reply with exactly: OK" }],
-        }),
-      });
-
-      if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        return { success: false, error: `HTTP ${response.status}: ${text.slice(0, 200)}` };
-      }
-
-      const payload = await response.json();
-      const text =
-        payload?.content
-          ?.map((p: { type?: string; text?: string }) => (p.type === "text" ? p.text : ""))
-          .join("") ?? "";
-      return { success: true, model, response: text.trim() };
-    }
-
     if (provider === "openai") {
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
@@ -444,39 +275,6 @@ Rules:
 - Do NOT mention allergens or prices — the UI already shows those.
 - Reply in the language specified, nothing else.`;
 
-async function explainWithAnthropic(input: DishExplainInput): Promise<string | null> {
-  const apiKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
-  const url = getAnthropicUrl();
-  const model = getAnthropicModel();
-  if (!apiKey || !url || !model) return null;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 300,
-      temperature: 0.4,
-      system: explainSystemPrompt,
-      messages: [{
-        role: "user",
-        content: `Language: ${input.lang}\nCuisine: ${input.cuisine}\nDish: ${input.dishName}\nDescription: ${input.dishDescription}\nIngredients: ${input.ingredients.join(", ") || "not listed"}`,
-      }],
-    }),
-  });
-
-  if (!response.ok) return null;
-  const payload = await response.json();
-  return payload?.content
-    ?.map((part: { type?: string; text?: string }) => part.type === "text" ? part.text : "")
-    .join("") ?? null;
-}
-
 async function explainWithOpenAI(input: DishExplainInput): Promise<string | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
@@ -499,25 +297,8 @@ export async function explainDishWithLlm(
   input: DishExplainInput,
   options?: { provider?: string },
 ): Promise<{ provider: string; text: string } | null> {
-  const pref = options?.provider ?? "auto";
-
-  if (pref === "openai") {
-    const text = await explainWithOpenAI(input);
-    return text ? { provider: "openai", text } : null;
-  }
-  if (pref === "anthropic") {
-    const text = await explainWithAnthropic(input);
-    return text ? { provider: "anthropic", text } : null;
-  }
-
-  // auto: Anthropic first, then OpenAI
-  const anthropic = await explainWithAnthropic(input);
-  if (anthropic) return { provider: "anthropic", text: anthropic };
-
-  const openai = await explainWithOpenAI(input);
-  if (openai) return { provider: "openai", text: openai };
-
-  return null;
+  const text = await explainWithOpenAI(input);
+  return text ? { provider: "openai", text } : null;
 }
 
 // ── Allergen analysis ──
@@ -539,30 +320,14 @@ export async function analyzeAllergens(
 ): Promise<{ provider: string; allergens: string[]; none: boolean } | null> {
   const userContent = `Cuisine: ${input.cuisine}\nDish: ${input.dishName}\nDescription: ${input.dishDescription}\nIngredients: ${input.ingredients.join(", ") || "not listed"}`;
 
-  const pref = options?.provider ?? "auto";
-  let text: string | null = null;
-  let provider = "anthropic";
-
-  if (pref === "openai") {
-    text = await callOpenAISimple(allergenAnalysisPrompt, userContent);
-    provider = "openai";
-  } else if (pref === "anthropic") {
-    text = await callAnthropicSimple(allergenAnalysisPrompt, userContent);
-  } else {
-    text = await callAnthropicSimple(allergenAnalysisPrompt, userContent);
-    if (!text) {
-      text = await callOpenAISimple(allergenAnalysisPrompt, userContent);
-      provider = "openai";
-    }
-  }
-
+  const text = await callOpenAISimple(allergenAnalysisPrompt, userContent);
   if (!text) return null;
 
   try {
     const cleaned = text.replace(/```json\n?|\n?```/g, "").trim();
     const parsed = JSON.parse(cleaned);
     return {
-      provider,
+      provider: "openai",
       allergens: Array.isArray(parsed.allergens) ? parsed.allergens : [],
       none: !!parsed.none,
     };
@@ -587,30 +352,14 @@ export async function estimateCalories(
 ): Promise<{ provider: string; kcal: number; range: string } | null> {
   const userContent = `Cuisine: ${input.cuisine}\nDish: ${input.dishName}\nDescription: ${input.dishDescription}\nIngredients: ${input.ingredients.join(", ") || "not listed"}`;
 
-  const pref = options?.provider ?? "auto";
-  let text: string | null = null;
-  let provider = "anthropic";
-
-  if (pref === "openai") {
-    text = await callOpenAISimple(calorieEstimatePrompt, userContent);
-    provider = "openai";
-  } else if (pref === "anthropic") {
-    text = await callAnthropicSimple(calorieEstimatePrompt, userContent);
-  } else {
-    text = await callAnthropicSimple(calorieEstimatePrompt, userContent);
-    if (!text) {
-      text = await callOpenAISimple(calorieEstimatePrompt, userContent);
-      provider = "openai";
-    }
-  }
-
+  const text = await callOpenAISimple(calorieEstimatePrompt, userContent);
   if (!text) return null;
 
   try {
     const cleaned = text.replace(/```json\n?|\n?```/g, "").trim();
     const parsed = JSON.parse(cleaned);
     return {
-      provider,
+      provider: "openai",
       kcal: typeof parsed.kcal === "number" ? parsed.kcal : 0,
       range: parsed.range || "",
     };
@@ -620,36 +369,6 @@ export async function estimateCalories(
 }
 
 // ── Shared helpers for simple system+user prompts ──
-
-export async function callAnthropicSimple(system: string, user: string, maxTokens = 200): Promise<string | null> {
-  const apiKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
-  const url = getAnthropicUrl();
-  const model = getAnthropicModel();
-  if (!apiKey || !url || !model) return null;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      temperature: 0.2,
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-
-  if (!response.ok) return null;
-  const payload = await response.json();
-  return payload?.content
-    ?.map((part: { type?: string; text?: string }) => part.type === "text" ? part.text : "")
-    .join("") ?? null;
-}
 
 export async function callOpenAISimple(system: string, user: string): Promise<string | null> {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -710,9 +429,19 @@ If the source does not provide allergens, use ["unknown"]. If calories are absen
 portionScore guidelines: 1 = small/light (tapas, amuse-bouche, small side, single drink, small dessert), 2 = standard individual portion (a normal main, a bowl of soup, a salad, a regular starter), 3 = large/shareable (family-style platter, sharing plate, large combo, XL portion). Default to 2 if unsure.`;
 
   if (input.text) {
-    const text = await createAnthropicMessage(
-      `${schemaInstruction}\n\nFile name: ${input.fileName}\nMIME: ${input.mimeType}\n\nMenu source:\n${input.text}`,
-    );
+    // Use OpenAI for text-only menu extraction
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return null;
+
+    const client = new OpenAI({ apiKey, timeout: 45_000 });
+    const response = await client.responses.create({
+      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+      input: [
+        { role: "system", content: schemaInstruction },
+        { role: "user", content: `File name: ${input.fileName}\nMIME: ${input.mimeType}\n\nMenu source:\n${input.text}` },
+      ],
+    });
+    const text = response.output_text;
     if (!text) return null;
     return JSON.parse(stripJson(text)) as RestaurantMenu;
   }
@@ -723,45 +452,16 @@ portionScore guidelines: 1 = small/light (tapas, amuse-bouche, small side, singl
       "You are CarteAI's menu ingestion engine. Extract ALL dishes from the restaurant menu into strict JSON. Never skip dishes — include every single item on every page. Never invent allergens, calories, ingredients, prices, or dish names. If a field is missing, use safe placeholders and mark allergens as unknown when needed.";
     const prompt = `${schemaInstruction}\n\nFile name: ${input.fileName}\nMIME: ${input.mimeType}`;
 
-    // Try Gemini first for vision tasks (images/PDFs)
+    // Use Gemini for vision tasks (images/PDFs)
     if (hasGeminiVision()) {
-      try {
-        const text = await createGeminiMessage(visionSystemPrompt, [
-          { text: prompt },
-          { inlineData: { mimeType: contentType, data: input.base64 } },
-        ]);
-        if (text) return JSON.parse(stripJson(text)) as RestaurantMenu;
-      } catch {
-        // Fall through to Anthropic
-      }
+      const text = await createGeminiMessage(visionSystemPrompt, [
+        { text: prompt },
+        { inlineData: { mimeType: contentType, data: input.base64 } },
+      ]);
+      if (text) return JSON.parse(stripJson(text)) as RestaurantMenu;
     }
 
-    // Fallback: Anthropic vision
-    const fileBlock: AnthropicContentBlock =
-      contentType === "application/pdf"
-        ? {
-            type: "document",
-            source: {
-              type: "base64",
-              media_type: contentType,
-              data: input.base64,
-            },
-          }
-        : {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: contentType,
-              data: input.base64,
-            },
-          };
-
-    const text = await createAnthropicMessage([
-      { type: "text", text: prompt },
-      fileBlock,
-    ]);
-    if (!text) return null;
-    return JSON.parse(stripJson(text)) as RestaurantMenu;
+    return null;
   }
 
   return null;
@@ -821,21 +521,12 @@ Rules:
           .join("") ?? "";
         if (text) return text;
       }
-    } catch {
-      // Fall through to Anthropic
+    } catch (err) {
+      console.error("[extractMenuOcr] Gemini failed:", err instanceof Error ? err.message : err);
     }
   }
 
-  // Fallback: Anthropic vision
-  const fileBlock: AnthropicContentBlock =
-    contentType === "application/pdf"
-      ? { type: "document", source: { type: "base64", media_type: contentType, data: input.base64 } }
-      : { type: "image", source: { type: "base64", media_type: contentType, data: input.base64 } };
-
-  return createAnthropicMessage([
-    { type: "text", text: ocrPrompt },
-    fileBlock,
-  ]);
+  return null;
 }
 
 /**
@@ -861,39 +552,27 @@ Allergens: gluten,crustaceans,eggs,fish,peanuts,soy,milk,nuts,celery,mustard,ses
 DietaryTags: vegetarian,vegan,halal_possible,contains_pork,contains_beef,contains_seafood,spicy,signature,popular.
 Prices in cents (18.50€=1850), default EUR. portionScore: 1=small 2=normal 3=large/sharing. Description: leave empty string if not obvious, do NOT generate creative descriptions.`;
 
-  // Try OpenAI first (fast for text-only tasks) — 45s timeout to leave room for Anthropic fallback
   const openaiKey = process.env.OPENAI_API_KEY;
-  if (openaiKey) {
-    try {
-      const client = new OpenAI({ apiKey: openaiKey, timeout: 45_000 });
-      const response = await client.responses.create({
-        model: process.env.OPENAI_STRUCTURE_MODEL || "gpt-4.1-mini",
-        input: [
-          { role: "system", content: structurePrompt },
-          { role: "user", content: `Menu OCR:\n${ocrText}` },
-        ],
-      });
-      const text = response.output_text;
-      if (text) {
-        const parsed = JSON.parse(stripJson(text)) as RestaurantMenu;
-        if (parsed?.dishes?.length > 0) return parsed;
-        console.warn("[structureMenu] OpenAI returned 0 dishes, falling through to Anthropic");
-      }
-    } catch (err) {
-      console.error("[structureMenu] OpenAI failed:", err instanceof Error ? err.message : err);
-      // Fall through to Anthropic
-    }
-  }
+  if (!openaiKey) return null;
 
-  // Fallback: Anthropic (also with 45s timeout via AbortSignal)
   try {
-    const text = await createAnthropicMessage(
-      `${structurePrompt}\n\nMenu OCR:\n${ocrText}`,
-    );
-    if (!text) return null;
-    return JSON.parse(stripJson(text)) as RestaurantMenu;
+    const client = new OpenAI({ apiKey: openaiKey, timeout: 45_000 });
+    const response = await client.responses.create({
+      model: process.env.OPENAI_STRUCTURE_MODEL || "gpt-4.1-mini",
+      input: [
+        { role: "system", content: structurePrompt },
+        { role: "user", content: `Menu OCR:\n${ocrText}` },
+      ],
+    });
+    const text = response.output_text;
+    if (text) {
+      const parsed = JSON.parse(stripJson(text)) as RestaurantMenu;
+      if (parsed?.dishes?.length > 0) return parsed;
+      console.warn("[structureMenu] OpenAI returned 0 dishes");
+    }
+    return null;
   } catch (err) {
-    console.error("[structureMenu] Anthropic failed:", err instanceof Error ? err.message : err);
+    console.error("[structureMenu] OpenAI failed:", err instanceof Error ? err.message : err);
     return null;
   }
 }

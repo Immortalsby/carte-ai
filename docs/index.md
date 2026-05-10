@@ -16,7 +16,7 @@
 | 入口 | `src/app/page.tsx` （`/`、`/demo`、`/admin`、`/poster`） |
 | 业务核心 | `src/lib/recommender.ts` + `src/lib/llm.ts` |
 | 数据 | `data/menu.json`（静态） + `localStorage`（运行时） |
-| LLM | Anthropic Foundry（主） + OpenAI（兜底） + 本地规则（终极降级） |
+| LLM | OpenAI（文本推荐/结构化） + Gemini（Vision OCR） + 本地规则（降级） |
 | 多语言 | 20 语言 + RTL |
 | 测试 | ❌ 零（playwright 已装未用） |
 | CI | ❌ 无 |

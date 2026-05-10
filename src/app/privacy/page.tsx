@@ -42,7 +42,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="mt-3 list-disc pl-5 space-y-1.5">
               <li>Cloud infrastructure providers (Vercel, Neon) for hosting.</li>
-              <li>AI model providers (Anthropic, OpenAI) for generating recommendations — only menu data is sent, never personal information.</li>
+              <li>AI model providers (OpenAI, Google Gemini) for generating recommendations — only menu data is sent, never personal information.</li>
             </ul>
           </section>
 

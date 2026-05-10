@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { explainRateLimit } from "@/lib/rate-limit";
 import { isSessionVerified } from "@/lib/turnstile";
-import { callAnthropicSimple, callOpenAISimple } from "@/lib/llm";
-import { hasCloudLlm } from "@/lib/llm";
+import { callOpenAISimple, hasCloudLlm } from "@/lib/llm";
 
 export async function POST(request: Request) {
   // Origin check
@@ -111,11 +110,7 @@ INSTRUCTIONS:
     let summary: string | null = null;
     const systemPrompt = "You are a restaurant order assistant. Generate clean, professional order summaries for waiters.";
 
-    const maxTokens = 300 + dishes.length * 80;
-    summary = await callAnthropicSimple(systemPrompt, prompt, maxTokens);
-    if (!summary) {
-      summary = await callOpenAISimple(systemPrompt, prompt);
-    }
+    summary = await callOpenAISimple(systemPrompt, prompt);
     if (!summary) {
       return NextResponse.json({ error: "AI unavailable" }, { status: 503 });
     }
