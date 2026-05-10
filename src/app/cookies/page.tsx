@@ -136,14 +136,6 @@ export default function CookiesPage() {
                     <td className="py-2">Un plat recommand&eacute; est command&eacute;</td>
                   </tr>
                   <tr>
-                    <td className="py-2 pr-4 font-mono text-xs text-emerald-400">mode_switch</td>
-                    <td className="py-2">Changement de mode de recommandation</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4 font-mono text-xs text-emerald-400">culture_match</td>
-                    <td className="py-2">D&eacute;tection automatique du mode groupe</td>
-                  </tr>
-                  <tr>
                     <td className="py-2 pr-4 font-mono text-xs text-emerald-400">wishlist_heart</td>
                     <td className="py-2">Un plat est ajout&eacute; ou retir&eacute; des favoris</td>
                   </tr>

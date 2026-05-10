@@ -253,19 +253,6 @@ export async function getDashboardStats(
     .groupBy(sql`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`)
     .orderBy(sql`to_char(created_at AT TIME ZONE '${sql.raw(safeTz(tz))}', 'YYYY-MM-DD')`);
 
-  // Culture match count (FR37)
-  const cultureMatches = await db
-    .select({ count: count() })
-    .from(analytics_events)
-    .where(
-      and(
-        eq(analytics_events.tenant_id, tenantId),
-        eq(analytics_events.event_type, "culture_match"),
-        gte(analytics_events.created_at, from),
-        lte(analytics_events.created_at, to),
-      ),
-    );
-
   // Share events
   const shares = await db
     .select({ count: count() })
@@ -357,19 +344,6 @@ export async function getDashboardStats(
       ),
     );
 
-  // Mode switch count (FR46)
-  const modeSwitches = await db
-    .select({ count: count() })
-    .from(analytics_events)
-    .where(
-      and(
-        eq(analytics_events.tenant_id, tenantId),
-        eq(analytics_events.event_type, "mode_switch"),
-        gte(analytics_events.created_at, from),
-        lte(analytics_events.created_at, to),
-      ),
-    );
-
   return {
     scans: Number(scans[0]?.count ?? 0),
     recommendations: Number(recommendations[0]?.count ?? 0),
@@ -377,16 +351,6 @@ export async function getDashboardStats(
     adoptionRate:
       Number(recommendations[0]?.count)
         ? Number(adoptions[0]?.count ?? 0) / Number(recommendations[0].count)
-        : 0,
-    cultureMatches: Number(cultureMatches[0]?.count ?? 0),
-    cultureMatchRate:
-      Number(scans[0]?.count)
-        ? Number(cultureMatches[0]?.count ?? 0) / Number(scans[0].count)
-        : 0,
-    modeSwitches: Number(modeSwitches[0]?.count ?? 0),
-    modeSwitchRate:
-      Number(scans[0]?.count)
-        ? Number(modeSwitches[0]?.count ?? 0) / Number(scans[0].count)
         : 0,
     shares: Number(shares[0]?.count ?? 0),
     totalHearts: Number(totalHearts[0]?.count ?? 0),

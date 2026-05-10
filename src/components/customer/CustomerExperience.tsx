@@ -6,7 +6,6 @@ import type { LanguageCode, Allergen, RestaurantMenu } from "@/types/menu";
 import type { PlanStatus } from "@/lib/trial";
 import { detectLanguage } from "@/lib/languages";
 import { trackEvent } from "@/lib/analytics-client";
-import { isCultureMatch } from "@/lib/culture-match";
 import { languageDirection } from "@/lib/languages";
 import { useWishlist } from "@/hooks/useWishlist";
 import { FunnelIcon, QuestionIcon } from "@phosphor-icons/react";
@@ -48,8 +47,6 @@ const Turnstile = dynamic(
   { ssr: false },
 );
 
-export type ExperienceMode = "tourist" | "group_meal";
-
 interface CustomerExperienceProps {
   menu: RestaurantMenu;
   tenantId: string;
@@ -67,7 +64,6 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
   const [lang, setLang] = useState<LanguageCode>("fr");
   const [excludedAllergens, setExcludedAllergens] = useState<Allergen[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [experienceMode, setExperienceMode] = useState<ExperienceMode>("tourist");
   const [showShareBubble, setShowShareBubble] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
@@ -94,12 +90,6 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
     setDetectedLang(detected);
     trackEvent(tenantId, "scan", { slug: menu.restaurant.slug }, detected);
 
-    // Cultural awareness: auto-switch to group meal mode (FR16)
-    if (isCultureMatch(detected, cuisineType)) {
-      setExperienceMode("group_meal");
-      trackEvent(tenantId, "culture_match", { cuisineType, detectedLang: detected }, detected);
-    }
-
     // Dwell time tracking (FR35): track when user leaves the page
     const entryTime = Date.now();
     const trackDwell = () => {
@@ -118,13 +108,6 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
       window.removeEventListener("beforeunload", trackDwell);
     };
   }, [tenantId, menu.restaurant.slug, cuisineType]);
-
-  // Track mode switch button clicks (FR37)
-  function toggleExperienceMode() {
-    const newMode = experienceMode === "tourist" ? "group_meal" : "tourist";
-    setExperienceMode(newMode);
-    trackEvent(tenantId, "mode_switch", { from: experienceMode, to: newMode }, lang);
-  }
 
   // Filter dishes by excluded allergens
   const filteredDishes = menu.dishes.filter((dish) => {
@@ -147,20 +130,6 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
       : lang === "fr"
         ? `Filtres ${excludedAllergens.length > 0 ? `(${excludedAllergens.length})` : ""}`
         : `Filter ${excludedAllergens.length > 0 ? `(${excludedAllergens.length})` : ""}`;
-
-  // Mode switch button labels (FR18: subtle, discoverable)
-  const modeSwitchLabel =
-    experienceMode === "group_meal"
-      ? lang === "zh"
-        ? "\u7b2c\u4e00\u6b21\u6765\u8fd9\u5bb6\uff1f"
-        : lang === "fr"
-          ? "Premi\u00e8re visite ?"
-          : "First time here?"
-      : lang === "zh"
-        ? "\u7ec4\u83dc\u987e\u95ee"
-        : lang === "fr"
-          ? "Conseiller repas"
-          : "Group meal advisor";
 
   const dir = languageDirection(lang);
 
@@ -192,7 +161,6 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         menu={menu}
         excludedAllergens={excludedAllergens}
         tenantId={tenantId}
-        experienceMode={experienceMode}
         cuisineType={cuisineType}
         planStatus={planStatus}
         allowDrinksOnly={allowDrinksOnly}
@@ -273,15 +241,8 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
         onToggleSave={(id) => handleToggleSave([id])}
       />
 
-      {/* Mode switch + share buttons — subtle, at bottom (FR18) */}
-      <div className="mt-6 flex items-center justify-center gap-4">
-        <button
-          type="button"
-          onClick={toggleExperienceMode}
-          className="text-xs text-carte-text-dim underline-offset-2 hover:text-carte-text-muted hover:underline"
-        >
-          {modeSwitchLabel}
-        </button>
+      {/* Share button — subtle, at bottom */}
+      <div className="mt-6 flex items-center justify-center">
         <button
           type="button"
           onClick={() => { setShowWishlist(false); setShowShare(true); }}

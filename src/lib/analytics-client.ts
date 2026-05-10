@@ -47,9 +47,7 @@ type EventType =
   | "recommend_view"
   | "adoption"
   | "dwell"
-  | "mode_switch"
   | "share"
-  | "culture_match"
   | "review_click"
   | "wishlist_heart";
 

@@ -107,16 +107,6 @@ export default async function AdminDashboard({
 
       {/* Secondary KPIs */}
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label={t.cultureMatchRate}
-          value={`${(stats.cultureMatchRate * 100).toFixed(1)}%`}
-          subtitle={`${stats.cultureMatches} ${t.matches}`}
-        />
-        <StatCard
-          label={t.modeSwitches}
-          value={stats.modeSwitches}
-          subtitle={`${(stats.modeSwitchRate * 100).toFixed(1)}% ${t.ofScans}`}
-        />
         <StatCard label={t.shares} value={stats.shares} />
         {founder && (
           <StatCard

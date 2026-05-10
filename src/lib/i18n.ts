@@ -30,10 +30,7 @@ type Dictionary = {
   // Mascot assistant
   mascotTapMe: string;
   mascotClose: string;
-  // Group meal mode (FR16/FR17)
-  groupMealConcierge: string;
-  groupMealPrompt: string;
-  groupMealRecommend: string;
+  // Sharing / occasion modes
   twoPersons: string;
   threePersons: string;
   fourPersons: string;
@@ -77,9 +74,6 @@ const en: Dictionary = {
   mascotTapMe: "Tap me for suggestions!",
   mascotClose: "Close",
   // Group meal mode
-  groupMealConcierge: "Group Meal Advisor",
-  groupMealPrompt: "How many people? I'll pair dishes for you",
-  groupMealRecommend: "Plan our meal",
   twoPersons: "2 people",
   threePersons: "3-4 people",
   fourPersons: "5+ people",
@@ -121,9 +115,6 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     aiImageNotice: "Image de référence générée par IA. Confirmez avec l'équipe ou la vraie photo du menu.",
     mascotTapMe: "Touchez-moi pour des suggestions !",
     mascotClose: "Fermer",
-    groupMealConcierge: "Conseiller repas de groupe",
-    groupMealPrompt: "Combien de personnes ? Je compose le repas pour vous",
-    groupMealRecommend: "Composer notre repas",
     twoPersons: "2 personnes",
     threePersons: "3-4 personnes",
     fourPersons: "5+ personnes",
@@ -163,9 +154,6 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     aiImageNotice: "AI 生成参考图，请向服务员确认或以真实菜单图片为准。",
     mascotTapMe: "点我，帮你推荐好吃的~",
     mascotClose: "关闭",
-    groupMealConcierge: "组菜顾问",
-    groupMealPrompt: "几个人吃？帮你搭配菜品",
-    groupMealRecommend: "帮我们组菜",
     twoPersons: "2个人",
     threePersons: "3-4个人",
     fourPersons: "5人以上",

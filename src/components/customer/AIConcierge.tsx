@@ -9,7 +9,6 @@ import type {
   RecommendationResponse,
   DiningOccasion,
 } from "@/types/recommendation";
-import type { ExperienceMode } from "./CustomerExperience";
 import { getDictionary } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics-client";
 import { useToast } from "@/components/ui/Toast";
@@ -69,23 +68,13 @@ const drinksModes: ModeEntry[] = [
   { mode: "not_sure", dictKey: "drinksAsk", icon: <Question weight="duotone" />, partySize: 2 },
 ];
 
-// "A proper meal" — tourist perspective
-const mealTouristModes: ModeEntry[] = [
+// "A proper meal" — unified modes (individual + sharing options)
+const mealModes: ModeEntry[] = [
   { mode: "first_time", dictKey: "firstTime", icon: <Sparkle weight="duotone" /> },
-  { mode: "cheap", dictKey: "cheap", icon: <CurrencyEur weight="duotone" />, defaults: { budgetCents: 1000 } },
   { mode: "signature", dictKey: "signature", icon: <Star weight="duotone" /> },
+  { mode: "cheap", dictKey: "cheap", icon: <CurrencyEur weight="duotone" />, defaults: { budgetCents: 1000 } },
   { mode: "healthy", dictKey: "healthy", icon: <Leaf weight="duotone" /> },
   { mode: "sharing", dictKey: "sharing", icon: <Users weight="duotone" />, partySize: 2 },
-  { mode: "not_sure", dictKey: "prompt", icon: <Question weight="duotone" /> },
-];
-
-// "A proper meal" — group meal perspective
-const mealGroupModes: ModeEntry[] = [
-  { mode: "sharing", dictKey: "twoPersons", icon: <Users weight="duotone" />, partySize: 2 },
-  { mode: "sharing", dictKey: "threePersons", icon: <UsersThree weight="duotone" />, partySize: 3 },
-  { mode: "sharing", dictKey: "fourPersons", icon: <UsersFour weight="duotone" />, partySize: 4 },
-  { mode: "signature", dictKey: "hotAndCold", icon: <><Fire weight="duotone" /><Snowflake weight="duotone" /></> },
-  { mode: "healthy", dictKey: "lightMeal", icon: <Leaf weight="duotone" /> },
   { mode: "not_sure", dictKey: "prompt", icon: <Question weight="duotone" /> },
 ];
 
@@ -98,12 +87,12 @@ const feastModes: ModeEntry[] = [
   { mode: "not_sure", dictKey: "prompt", icon: <Question weight="duotone" /> },
 ];
 
-function getModesForOccasion(occasion: DiningOccasion | null, isGroupMeal: boolean): ModeEntry[] {
+function getModesForOccasion(occasion: DiningOccasion | null): ModeEntry[] {
   switch (occasion) {
     case "drinks": return drinksModes;
     case "feast": return feastModes;
-    case "meal": return isGroupMeal ? mealGroupModes : mealTouristModes;
-    default: return isGroupMeal ? mealGroupModes : mealTouristModes;
+    case "meal":
+    default: return mealModes;
   }
 }
 
@@ -136,7 +125,6 @@ export interface ConciergePanelProps {
   menu: RestaurantMenu;
   excludedAllergens: Allergen[];
   tenantId: string;
-  experienceMode: ExperienceMode;
   allowDrinksOnly?: boolean;
   onResults?: () => void;
   onClose: () => void;
@@ -150,7 +138,6 @@ export function ConciergePanel({
   menu,
   excludedAllergens,
   tenantId,
-  experienceMode,
   allowDrinksOnly = true,
   onResults,
   onClose,
@@ -172,8 +159,7 @@ export function ConciergePanel({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const dict = getDictionary(lang);
   const { toast } = useToast();
-  const isGroupMeal = experienceMode === "group_meal";
-  const modes = getModesForOccasion(occasion, isGroupMeal);
+  const modes = getModesForOccasion(occasion);
 
   // Dish explanation state (keyed by dishId)
   const [explanations, setExplanations] = useState<Record<string, string>>({});
@@ -322,7 +308,7 @@ export function ConciergePanel({
         "recommend_view",
         {
           mode: selectedMode.mode,
-          experienceMode,
+          occasion,
           partySize,
           budgetCents,
           maxSpice,
@@ -356,7 +342,7 @@ export function ConciergePanel({
   return (
     <div className="rounded-xl border border-carte-border bg-carte-surface p-4 backdrop-blur-sm">
       <h2 className="text-center text-sm font-bold text-carte-primary">
-        {isGroupMeal ? dict.groupMealConcierge : dict.concierge}
+        {dict.concierge}
       </h2>
 
       {/* ── Step 0: Dining occasion ── */}
@@ -640,7 +626,7 @@ export function ConciergePanel({
             onClick={resetFlow}
             className="w-full rounded-lg border border-carte-border py-2 text-xs font-medium text-carte-text-muted hover:bg-carte-surface"
           >
-            {isGroupMeal ? dict.groupMealPrompt : dict.prompt}
+            {dict.prompt}
           </button>
         </div>
       )}

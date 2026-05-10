@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode, Allergen, RestaurantMenu } from "@/types/menu";
 import type { PlanStatus } from "@/lib/trial";
-import type { ExperienceMode } from "./CustomerExperience";
 import type { MascotState } from "./CSSMascot";
 import type { ConciergeStep } from "./AIConcierge";
 import { CSSMascot } from "./CSSMascot";
@@ -80,7 +79,6 @@ interface MascotAssistantProps {
   menu: RestaurantMenu;
   excludedAllergens: Allergen[];
   tenantId: string;
-  experienceMode: ExperienceMode;
   cuisineType?: string | null;
   planStatus?: PlanStatus;
   allowDrinksOnly?: boolean;
@@ -101,7 +99,6 @@ export function MascotAssistant({
   menu,
   excludedAllergens,
   tenantId,
-  experienceMode,
   cuisineType,
   planStatus,
   allowDrinksOnly = true,
@@ -560,7 +557,6 @@ export function MascotAssistant({
                   menu={menu}
                   excludedAllergens={excludedAllergens}
                   tenantId={tenantId}
-                  experienceMode={experienceMode}
                   allowDrinksOnly={allowDrinksOnly}
                   onResults={onResults}
                   onClose={closePanel}
