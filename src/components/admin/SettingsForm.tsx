@@ -21,11 +21,19 @@ interface VisionConfig {
   model: string;
 }
 
+interface StructuredAddress {
+  street: string;
+  city: string;
+  postal: string;
+  country: string;
+}
+
 interface SettingsFormProps {
   slug: string;
   initialName: string;
   initialCuisineType: string;
   initialAddress: string;
+  initialStructuredAddress?: StructuredAddress;
   initialAllowDrinksOnly?: boolean;
   initialGoogleMapsLink?: string;
   initialEnableReviewNudge?: boolean;
@@ -36,6 +44,41 @@ interface SettingsFormProps {
   isFounder?: boolean;
   locale?: AdminLocale;
 }
+
+const countryOptions = [
+  { code: "FR", label: "France" },
+  { code: "US", label: "United States" },
+  { code: "GB", label: "United Kingdom" },
+  { code: "DE", label: "Deutschland" },
+  { code: "ES", label: "España" },
+  { code: "IT", label: "Italia" },
+  { code: "PT", label: "Portugal" },
+  { code: "NL", label: "Nederland" },
+  { code: "BE", label: "Belgique" },
+  { code: "CH", label: "Suisse / Schweiz" },
+  { code: "AT", label: "Österreich" },
+  { code: "CN", label: "中国" },
+  { code: "JP", label: "日本" },
+  { code: "KR", label: "한국" },
+  { code: "TH", label: "ไทย" },
+  { code: "VN", label: "Việt Nam" },
+  { code: "IN", label: "India" },
+  { code: "LB", label: "لبنان (Lebanon)" },
+  { code: "MA", label: "المغرب (Morocco)" },
+  { code: "TR", label: "Türkiye" },
+  { code: "GR", label: "Ελλάδα (Greece)" },
+  { code: "MX", label: "México" },
+  { code: "BR", label: "Brasil" },
+  { code: "PE", label: "Perú" },
+  { code: "AE", label: "الإمارات (UAE)" },
+  { code: "SA", label: "السعودية (Saudi Arabia)" },
+  { code: "AU", label: "Australia" },
+  { code: "CA", label: "Canada" },
+  { code: "SG", label: "Singapore" },
+  { code: "HK", label: "Hong Kong" },
+  { code: "TW", label: "Taiwan" },
+  { code: "OTHER", label: "Other" },
+] as const;
 
 const cuisineOptions = [
   "french", "italian", "chinese", "japanese", "japanese_fusion",
@@ -76,6 +119,7 @@ export function SettingsForm({
   initialName,
   initialCuisineType,
   initialAddress,
+  initialStructuredAddress,
   initialAllowDrinksOnly = true,
   initialGoogleMapsLink = "",
   initialEnableReviewNudge = false,
@@ -90,7 +134,10 @@ export function SettingsForm({
   const showLlmQuota = initialLlmQuotaCalls != null;
   const [name, setName] = useState(initialName);
   const [cuisineType, setCuisineType] = useState(initialCuisineType);
-  const [address, setAddress] = useState(initialAddress);
+  const [addressStreet, setAddressStreet] = useState(initialStructuredAddress?.street ?? initialAddress);
+  const [addressCity, setAddressCity] = useState(initialStructuredAddress?.city ?? "");
+  const [addressPostal, setAddressPostal] = useState(initialStructuredAddress?.postal ?? "");
+  const [addressCountry, setAddressCountry] = useState(initialStructuredAddress?.country ?? "FR");
   const [allowDrinksOnly, setAllowDrinksOnly] = useState(initialAllowDrinksOnly);
   const [googleMapsLink, setGoogleMapsLink] = useState(initialGoogleMapsLink);
   const [enableReviewNudge, setEnableReviewNudge] = useState(initialEnableReviewNudge);
@@ -120,8 +167,12 @@ export function SettingsForm({
         body: JSON.stringify({
           name,
           cuisine_type: cuisineType,
-          address,
+          address: [addressStreet, addressPostal, addressCity, countryOptions.find((c) => c.code === addressCountry)?.label ?? addressCountry].filter(Boolean).join(", "),
           settings: {
+            address_street: addressStreet,
+            address_city: addressCity,
+            address_postal: addressPostal,
+            address_country: addressCountry,
             allow_drinks_only: allowDrinksOnly,
             google_maps_url: googleMapsLink || undefined,
             enable_review_nudge: enableReviewNudge,
@@ -184,15 +235,53 @@ export function SettingsForm({
         </select>
       </div>
 
-      <div>
-        <label className="text-sm font-medium text-foreground">{t.address}</label>
-        <input
-          type="text"
-          value={address}
-          onChange={(e) => { setAddress(e.target.value); setSaved(false); setTouched(true); }}
-          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-        />
-      </div>
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-medium text-foreground">{t.address}</legend>
+        <div>
+          <label className="text-xs text-muted-foreground">{t.addressCountry}</label>
+          <select
+            value={addressCountry}
+            onChange={(e) => { setAddressCountry(e.target.value); setSaved(false); setTouched(true); }}
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+          >
+            {countryOptions.map((c) => (
+              <option key={c.code} value={c.code}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground">{t.addressStreet}</label>
+          <input
+            type="text"
+            value={addressStreet}
+            onChange={(e) => { setAddressStreet(e.target.value); setSaved(false); setTouched(true); }}
+            placeholder={t.addressStreetPlaceholder}
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+          />
+        </div>
+        <div className="flex gap-3">
+          <div className="w-1/3">
+            <label className="text-xs text-muted-foreground">{t.addressPostal}</label>
+            <input
+              type="text"
+              value={addressPostal}
+              onChange={(e) => { setAddressPostal(e.target.value); setSaved(false); setTouched(true); }}
+              placeholder={t.addressPostalPlaceholder}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="text-xs text-muted-foreground">{t.addressCity}</label>
+            <input
+              type="text"
+              value={addressCity}
+              onChange={(e) => { setAddressCity(e.target.value); setSaved(false); setTouched(true); }}
+              placeholder={t.addressCityPlaceholder}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+            />
+          </div>
+        </div>
+      </fieldset>
 
       <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/50 p-4">
         <label className="relative mt-0.5 inline-flex cursor-pointer items-center">

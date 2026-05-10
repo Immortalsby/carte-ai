@@ -621,7 +621,7 @@ export async function estimateCalories(
 
 // ── Shared helpers for simple system+user prompts ──
 
-async function callAnthropicSimple(system: string, user: string): Promise<string | null> {
+export async function callAnthropicSimple(system: string, user: string): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
   const url = getAnthropicUrl();
   const model = getAnthropicModel();
@@ -651,7 +651,7 @@ async function callAnthropicSimple(system: string, user: string): Promise<string
     .join("") ?? null;
 }
 
-async function callOpenAISimple(system: string, user: string): Promise<string | null> {
+export async function callOpenAISimple(system: string, user: string): Promise<string | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 

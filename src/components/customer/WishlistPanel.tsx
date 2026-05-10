@@ -10,6 +10,7 @@ const labels = {
   clearAll: { en: "Clear all", fr: "Tout supprimer", zh: "清空" },
   close: { en: "Close", fr: "Fermer", zh: "关闭" },
   total: { en: "Total", fr: "Total", zh: "合计" },
+  showWaiter: { en: "Show to waiter", fr: "Montrer au serveur", zh: "给服务员看" },
 };
 
 function t(key: keyof typeof labels, lang: LanguageCode) {
@@ -27,6 +28,7 @@ interface WishlistPanelProps {
   onClear: () => void;
   onClose: () => void;
   onDishTap?: (dish: Dish) => void;
+  onShowWaiter?: () => void;
 }
 
 export function WishlistPanel({
@@ -39,6 +41,7 @@ export function WishlistPanel({
   onClear,
   onClose,
   onDishTap,
+  onShowWaiter,
 }: WishlistPanelProps) {
   useEffect(() => {
     if (visible) {
@@ -169,14 +172,25 @@ export function WishlistPanel({
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="mt-4 w-full rounded-xl py-3 text-sm font-semibold text-carte-bg active:opacity-80"
-              style={{ backgroundColor: "var(--carte-primary)" }}
-            >
-              {t("close", lang)}
-            </button>
+            <div className="mt-4 flex gap-2">
+              {dishes.length > 0 && onShowWaiter && (
+                <button
+                  type="button"
+                  onClick={onShowWaiter}
+                  className="flex-1 rounded-xl border border-carte-border py-3 text-sm font-semibold text-carte-text transition-colors hover:bg-carte-surface active:opacity-80"
+                >
+                  {t("showWaiter", lang)}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-xl py-3 text-sm font-semibold text-carte-bg active:opacity-80"
+                style={{ backgroundColor: "var(--carte-primary)" }}
+              >
+                {t("close", lang)}
+              </button>
+            </div>
           </motion.div>
         </div>
       )}

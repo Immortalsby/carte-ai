@@ -61,6 +61,9 @@ export default async function CustomerPage({
           enableReviewNudge={
             ((tenant.settings as Record<string, unknown> | null)?.enable_review_nudge as boolean) ?? false
           }
+          addressCountry={
+            ((tenant.settings as Record<string, unknown> | null)?.address_country as string) || undefined
+          }
         />
       ) : (
         <>

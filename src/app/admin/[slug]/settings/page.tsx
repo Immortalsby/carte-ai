@@ -81,6 +81,14 @@ export default async function SettingsPage({
           initialName={tenant.name}
           initialCuisineType={tenant.cuisine_type ?? ""}
           initialAddress={tenant.address ?? ""}
+          initialStructuredAddress={
+            tenantSettings.address_country ? {
+              street: (tenantSettings.address_street as string) ?? "",
+              city: (tenantSettings.address_city as string) ?? "",
+              postal: (tenantSettings.address_postal as string) ?? "",
+              country: (tenantSettings.address_country as string) ?? "FR",
+            } : undefined
+          }
           initialAllowDrinksOnly={
             ((tenant.settings as Record<string, unknown> | null)?.allow_drinks_only as boolean) ?? true
           }

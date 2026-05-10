@@ -28,6 +28,10 @@ const SharePanel = dynamic(
 const WishlistPanel = dynamic(
   () => import("./WishlistPanel").then((m) => m.WishlistPanel),
 );
+const WaiterSummary = dynamic(
+  () => import("./WaiterSummary").then((m) => m.WaiterSummary),
+  { ssr: false },
+);
 const ClocheCookieConsent = dynamic(
   () => import("./ClocheCookieConsent").then((m) => m.ClocheCookieConsent),
   { ssr: false },
@@ -52,9 +56,10 @@ interface CustomerExperienceProps {
   allowDrinksOnly?: boolean;
   googleMapsUrl?: string;
   enableReviewNudge?: boolean;
+  addressCountry?: string;
 }
 
-export function CustomerExperience({ menu, tenantId, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false }: CustomerExperienceProps) {
+export function CustomerExperience({ menu, tenantId, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false, addressCountry }: CustomerExperienceProps) {
   const [lang, setLang] = useState<LanguageCode>("fr");
   const [excludedAllergens, setExcludedAllergens] = useState<Allergen[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -64,6 +69,7 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
   const [showWishlist, setShowWishlist] = useState(false);
   const [highlightDishId, setHighlightDishId] = useState<string | null>(null);
   const [detectedLang, setDetectedLang] = useState<LanguageCode | undefined>(undefined);
+  const [showWaiterSummary, setShowWaiterSummary] = useState(false);
   const wishlist = useWishlist();
   const turnstileTokenRef = useRef<string | null>(null);
   const handleTurnstileSuccess = useCallback((token: string) => {
@@ -311,6 +317,23 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
           setShowWishlist(false);
           setHighlightDishId(dish.id);
         }}
+        onShowWaiter={() => {
+          setShowWishlist(false);
+          setShowWaiterSummary(true);
+        }}
+      />
+
+      {/* Waiter summary */}
+      <WaiterSummary
+        visible={showWaiterSummary}
+        lang={lang}
+        dishes={wishlist.savedIds
+          .map((id) => menu.dishes.find((d) => d.id === id))
+          .filter(Boolean) as import("@/types/menu").Dish[]}
+        addressCountry={addressCountry}
+        cuisine={cuisineType ?? undefined}
+        tenantSlug={menu.restaurant.slug}
+        onClose={() => setShowWaiterSummary(false)}
       />
 
       {/* Share panel */}
