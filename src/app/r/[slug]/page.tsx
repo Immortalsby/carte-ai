@@ -41,10 +41,9 @@ export default async function CustomerPage({
 
   return (
     <main
-      className="h-full overflow-y-auto overscroll-none bg-carte-bg"
+      className="mx-auto max-w-lg md:max-w-3xl px-4 py-6 bg-carte-bg min-h-screen"
       data-cuisine={tenant.cuisine_type ?? undefined}
     >
-      <div className="mx-auto max-w-lg md:max-w-3xl px-4 py-6">
       {menuData && menuData.dishes.length > 0 ? (
         <CustomerExperience
           menu={menuData}
@@ -83,7 +82,6 @@ export default async function CustomerPage({
       )}
 
       {/* Allergen disclaimer + contact footer moved into CustomerExperience for i18n */}
-      </div>
     </main>
   );
 }
