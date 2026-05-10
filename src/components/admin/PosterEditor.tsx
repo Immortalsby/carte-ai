@@ -113,7 +113,7 @@ export function PosterEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Character limits per poster language
-  const charLimit = posterLocale === "zh" ? 15 : 30;
+  const charLimit = posterLocale === "zh" ? 8 : 20;
 
   function toggleElement(key: string) {
     setSelectedElements((prev) =>
