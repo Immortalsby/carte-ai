@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { getPublishedMenu, createMenuVersion } from "@/lib/db/queries/menus";
 import { restaurantMenuSchema } from "@/lib/validation";
+import { sanitizeRawMenu } from "@/lib/menu";
 import { isFounder } from "@/lib/roles";
 
 // GET — public: fetch published menu by slug
@@ -59,14 +60,17 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const parsed = restaurantMenuSchema.parse(body);
+    const sanitized = sanitizeRawMenu(body as Record<string, unknown>);
+    const parsed = restaurantMenuSchema.parse(sanitized);
     const menu = await createMenuVersion(tenant.id, parsed);
 
     return NextResponse.json(menu, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.name === "ZodError") {
+      const zodError = error as Error & { issues?: Array<{ path: (string | number)[]; message: string }> };
+      const fields = (zodError.issues ?? []).map((i) => `${i.path.join(".")}: ${i.message}`);
       return NextResponse.json(
-        { error: "Validation failed" },
+        { error: "Validation failed", fields },
         { status: 400 },
       );
     }

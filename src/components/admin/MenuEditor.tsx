@@ -113,8 +113,8 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
     const newDish: Dish = {
       id,
       category,
-      name: { zh: "", fr: "", en: "" },
-      description: { zh: "", fr: "", en: "" },
+      name: { zh: "新菜品", fr: "Nouveau plat", en: "New Dish" },
+      description: { zh: "-", fr: "-", en: "-" },
       priceCents: 0,
       currency: "EUR",
       ingredients: [],
@@ -211,7 +211,10 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
         }
       } else {
         const err = await res.json();
-        toast(`${t.saveFailed}: ${err.error || ""}`);
+        const detail = err.fields?.length
+          ? `\n${(err.fields as string[]).slice(0, 5).join("\n")}`
+          : "";
+        toast(`${t.saveFailed}: ${err.error || ""}${detail}`);
       }
     } catch {
       toast(t.networkError);

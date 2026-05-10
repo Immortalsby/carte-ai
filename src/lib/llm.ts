@@ -546,11 +546,13 @@ Tasks:
 5. Generate kebab-case ID from English name
 
 Return ONLY valid JSON:
-{"restaurant":{"id":"imported","slug":"imported","name":"Imported Menu","cuisine":"","city":"","currency":"EUR","languages":${JSON.stringify(supportedLanguageCodes)},"welcome":{"zh":"欢迎","fr":"Bienvenue","en":"Welcome"}},"updatedAt":"${new Date().toISOString()}","dishes":[{"id":"kebab-id","category":"main","name":{"zh":"名","fr":"Nom","en":"Name"},"description":{"zh":"","fr":"","en":""},"priceCents":1850,"currency":"EUR","ingredients":[],"allergens":["unknown"],"dietaryTags":[],"spiceLevel":0,"available":true,"marginPriority":1,"portionScore":2}]}
+{"restaurant":{"id":"imported","slug":"imported","name":"Imported Menu","cuisine":"international","city":"Paris","currency":"EUR","languages":${JSON.stringify(supportedLanguageCodes)},"welcome":{"zh":"欢迎","fr":"Bienvenue","en":"Welcome"}},"updatedAt":"${new Date().toISOString()}","dishes":[{"id":"kebab-id","category":"main","name":{"zh":"名","fr":"Nom","en":"Name"},"description":{"zh":"描述","fr":"Description","en":"Description"},"priceCents":1850,"currency":"EUR","ingredients":[],"allergens":["unknown"],"dietaryTags":[],"spiceLevel":0,"available":true,"marginPriority":1,"portionScore":2}]}
 
 Allergens: gluten,crustaceans,eggs,fish,peanuts,soy,milk,nuts,celery,mustard,sesame,sulphites,lupin,molluscs,alcohol,unknown.
 DietaryTags: vegetarian,vegan,halal_possible,contains_pork,contains_beef,contains_seafood,spicy,signature,popular.
-Prices in cents (18.50€=1850), default EUR. portionScore: 1=small 2=normal 3=large/sharing. Description: leave empty string if not obvious, do NOT generate creative descriptions.`;
+Prices in cents (18.50€=1850), default EUR. portionScore: 1=small 2=normal 3=large/sharing.
+IMPORTANT: cuisine must reflect the actual cuisine type (e.g. "chinese", "french", "italian"). city must be filled if visible on the menu, otherwise use "unknown".
+IMPORTANT: description must always have non-empty zh, fr, en values. Write a short factual description based on the dish name and visible ingredients. If unsure, write a minimal one-line description.`;
 
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) return null;
