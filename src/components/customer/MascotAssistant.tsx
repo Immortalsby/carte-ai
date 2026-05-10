@@ -92,6 +92,7 @@ interface MascotAssistantProps {
   /** Delay (ms) before Cloche asks "did you order?" after results. Default 90s */
   postMealDelayMs?: number;
   onPostMealDone?: () => void;
+  onPopularDishClick?: (dishId: string) => void;
 }
 
 export function MascotAssistant({
@@ -111,6 +112,7 @@ export function MascotAssistant({
   googleMapsUrl,
   postMealDelayMs = 90_000,
   onPostMealDone,
+  onPopularDishClick,
 }: MascotAssistantProps) {
   const isExpired = planStatus === "trial_expired";
   const [panelOpen, setPanelOpen] = useState(false);
@@ -142,13 +144,16 @@ export function MascotAssistant({
 
   // ─── Speech bubble ───
   const [bubbleMessage, setBubbleMessage] = useState("");
+  const [bubbleDishId, setBubbleDishId] = useState<string | null>(null);
   const [bubbleVisible, setBubbleVisible] = useState(false);
   const lastIdxRef = useRef(-1);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const popularDishDismissedRef = useRef(false);
 
   const showNextIdleMessage = useCallback(() => {
     if (isExpired) {
       setBubbleMessage(pickSadMessage(lang));
+      setBubbleDishId(null);
       setBubbleVisible(true);
       return;
     }
@@ -156,12 +161,14 @@ export function MascotAssistant({
       Math.random() < 0.3
         ? pickContextualMessage(lang, menu, cuisineType)
         : null;
-    if (contextual) {
-      setBubbleMessage(contextual);
+    if (contextual && !(contextual.dishId && popularDishDismissedRef.current)) {
+      setBubbleMessage(contextual.message);
+      setBubbleDishId(contextual.dishId ?? null);
     } else {
       const { message, index } = pickIdleMessage(lang, lastIdxRef.current);
       lastIdxRef.current = index;
       setBubbleMessage(message);
+      setBubbleDishId(null);
     }
     setBubbleVisible(true);
   }, [lang, menu, cuisineType, isExpired]);
@@ -583,9 +590,51 @@ export function MascotAssistant({
                   ? undefined
                   : shareMessage
                     ? onShareClick
-                    : openPanel
+                    : bubbleDishId
+                      ? undefined
+                      : openPanel
               }
             />
+
+            {/* Popular dish: try it / dismiss buttons */}
+            <AnimatePresence>
+              {bubbleDishId && bubbleVisible && warpPhase === null && postMealPhase === "idle" && !shareMessage && (
+                <motion.div
+                  key="popular-dish-actions"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  className="mb-1 flex gap-2"
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setBubbleVisible(false);
+                      setBubbleDishId(null);
+                      onPopularDishClick?.(bubbleDishId);
+                    }}
+                    className="min-h-[36px] rounded-full px-4 py-1.5 text-xs font-semibold text-carte-bg"
+                    style={{ backgroundColor: "var(--carte-primary)" }}
+                  >
+                    {lang === "zh" ? "尝试一下" : lang === "fr" ? "J'essaie !" : "Try it!"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setBubbleVisible(false);
+                      setBubbleDishId(null);
+                      popularDishDismissedRef.current = true;
+                      scheduleNextMessage();
+                    }}
+                    className="min-h-[36px] rounded-full border border-carte-border px-4 py-1.5 text-xs font-medium text-carte-text-muted hover:bg-carte-surface"
+                  >
+                    {lang === "zh" ? "自己看看" : lang === "fr" ? "Je regarde" : "I'll browse"}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Post-meal: yes/no buttons under the bubble */}
             <AnimatePresence>
