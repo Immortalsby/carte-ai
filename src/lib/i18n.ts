@@ -40,6 +40,10 @@ type Dictionary = {
   hotAndCold: string;
   familyStyle: string;
   lightMeal: string;
+  // Drinks occasion modes
+  drinksPopular: string;
+  drinksBudget: string;
+  drinksAsk: string;
 };
 
 const en: Dictionary = {
@@ -82,6 +86,9 @@ const en: Dictionary = {
   hotAndCold: "Hot & cold mix",
   familyStyle: "Family style",
   lightMeal: "Light meal",
+  drinksPopular: "Popular drinks",
+  drinksBudget: "Budget-friendly",
+  drinksAsk: "Surprise me",
 };
 
 const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
@@ -123,6 +130,9 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     hotAndCold: "Chaud & froid",
     familyStyle: "Pour la table",
     lightMeal: "Repas léger",
+    drinksPopular: "Boissons populaires",
+    drinksBudget: "Petit budget",
+    drinksAsk: "Surprenez-moi",
   },
   zh: {
     concierge: "Ask Cloché",
@@ -162,6 +172,9 @@ const overrides: Partial<Record<LanguageCode, Partial<Dictionary>>> = {
     hotAndCold: "冷热搭配",
     familyStyle: "家庭聚餐",
     lightMeal: "简单吃点",
+    drinksPopular: "人气饮品",
+    drinksBudget: "经济实惠",
+    drinksAsk: "随便来点",
   },
   "zh-Hant": {
     concierge: "Ask Cloché",

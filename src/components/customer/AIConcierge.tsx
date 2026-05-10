@@ -60,23 +60,50 @@ type ModeEntry = {
   };
 };
 
-const touristModes: ModeEntry[] = [
+/* ─── Mode lists per occasion ─── */
+
+// "Just drinks" → drinks-focused options
+const drinksModes: ModeEntry[] = [
+  { mode: "first_time", dictKey: "drinksPopular", icon: <Star weight="duotone" /> },
+  { mode: "cheap", dictKey: "drinksBudget", icon: <CurrencyEur weight="duotone" />, defaults: { budgetCents: 1000 } },
+  { mode: "not_sure", dictKey: "drinksAsk", icon: <Question weight="duotone" /> },
+];
+
+// "A proper meal" — tourist perspective
+const mealTouristModes: ModeEntry[] = [
   { mode: "first_time", dictKey: "firstTime", icon: <Sparkle weight="duotone" /> },
   { mode: "cheap", dictKey: "cheap", icon: <CurrencyEur weight="duotone" />, defaults: { budgetCents: 1000 } },
   { mode: "signature", dictKey: "signature", icon: <Star weight="duotone" /> },
   { mode: "healthy", dictKey: "healthy", icon: <Leaf weight="duotone" /> },
-  { mode: "sharing", dictKey: "sharing", icon: <BeerStein weight="duotone" /> },
   { mode: "not_sure", dictKey: "prompt", icon: <Question weight="duotone" /> },
 ];
 
-const groupMealModes: ModeEntry[] = [
+// "A proper meal" — group meal perspective
+const mealGroupModes: ModeEntry[] = [
+  { mode: "sharing", dictKey: "twoPersons", icon: <Users weight="duotone" />, partySize: 2 },
+  { mode: "sharing", dictKey: "threePersons", icon: <UsersThree weight="duotone" />, partySize: 3 },
+  { mode: "sharing", dictKey: "fourPersons", icon: <UsersFour weight="duotone" />, partySize: 4 },
+  { mode: "healthy", dictKey: "lightMeal", icon: <Leaf weight="duotone" /> },
+  { mode: "not_sure", dictKey: "prompt", icon: <Question weight="duotone" /> },
+];
+
+// "Sharing feast" — always group/sharing oriented
+const feastModes: ModeEntry[] = [
   { mode: "sharing", dictKey: "twoPersons", icon: <Users weight="duotone" />, partySize: 2 },
   { mode: "sharing", dictKey: "threePersons", icon: <UsersThree weight="duotone" />, partySize: 3 },
   { mode: "sharing", dictKey: "fourPersons", icon: <UsersFour weight="duotone" />, partySize: 4 },
   { mode: "signature", dictKey: "hotAndCold", icon: <><Fire weight="duotone" /><Snowflake weight="duotone" /></> },
-  { mode: "healthy", dictKey: "lightMeal", icon: <Leaf weight="duotone" /> },
   { mode: "not_sure", dictKey: "prompt", icon: <Question weight="duotone" /> },
 ];
+
+function getModesForOccasion(occasion: DiningOccasion | null, isGroupMeal: boolean): ModeEntry[] {
+  switch (occasion) {
+    case "drinks": return drinksModes;
+    case "feast": return feastModes;
+    case "meal": return isGroupMeal ? mealGroupModes : mealTouristModes;
+    default: return isGroupMeal ? mealGroupModes : mealTouristModes;
+  }
+}
 
 const spiceLevels = [
   { value: 0 as const, label: { en: "No spice", fr: "Non \u00e9pic\u00e9", zh: "\u4e0d\u8fa3" }, icon: <Snowflake weight="duotone" /> },
@@ -144,7 +171,7 @@ export function ConciergePanel({
   const dict = getDictionary(lang);
   const { toast } = useToast();
   const isGroupMeal = experienceMode === "group_meal";
-  const modes = isGroupMeal ? groupMealModes : touristModes;
+  const modes = getModesForOccasion(occasion, isGroupMeal);
 
   // Dish explanation state (keyed by dishId)
   const [explanations, setExplanations] = useState<Record<string, string>>({});
