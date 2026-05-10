@@ -605,7 +605,7 @@ export function MascotAssistant({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="mb-1 flex gap-2"
+                  className="mb-1 flex gap-2 rounded-full bg-carte-bg/80 px-1 py-1 backdrop-blur-md"
                 >
                   <button
                     type="button"
@@ -645,7 +645,7 @@ export function MascotAssistant({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="mb-1 flex gap-2"
+                  className="mb-1 flex gap-2 rounded-full bg-carte-bg/80 px-1 py-1 backdrop-blur-md"
                 >
                   <button
                     type="button"
@@ -670,7 +670,7 @@ export function MascotAssistant({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="mb-1 flex gap-2"
+                  className="mb-1 flex gap-2 rounded-full bg-carte-bg/80 px-1 py-1 backdrop-blur-md"
                 >
                   <a
                     href={googleMapsUrl}
