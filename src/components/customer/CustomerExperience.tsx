@@ -175,19 +175,16 @@ export function CustomerExperience({ menu, tenantId, cuisineType, rating, addres
           onSuccess={handleTurnstileSuccess}
         />
       )}
-      {/* Restaurant header with cuisine theming */}
+      {/* Restaurant header with cuisine theming + language switcher */}
       <RestaurantHeader
         name={menu.restaurant.name}
         cuisineType={cuisineType}
         rating={rating}
         address={address}
         lang={lang}
-      />
-
-      {/* Language switcher */}
-      <div className="mt-4">
+      >
         <LanguageSwitcher current={lang} onChange={setLang} detectedLang={detectedLang} />
-      </div>
+      </RestaurantHeader>
 
       {/* Mascot Assistant (fixed position, always visible) */}
       <MascotAssistant

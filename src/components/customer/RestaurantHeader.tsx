@@ -6,6 +6,7 @@ interface RestaurantHeaderProps {
   rating?: string | null;
   address?: string | null;
   lang: LanguageCode;
+  children?: React.ReactNode;
 }
 
 const cuisineLabels: Record<string, Record<string, string>> = {
@@ -70,6 +71,7 @@ export function RestaurantHeader({
   rating,
   address,
   lang,
+  children,
 }: RestaurantHeaderProps) {
   const showRating = rating && parseFloat(rating) >= 4.5;
 
@@ -116,6 +118,11 @@ export function RestaurantHeader({
       {/* Layer 3: Address */}
       {address && (
         <p className="relative mt-1 text-xs text-carte-text-dim">{address}</p>
+      )}
+
+      {/* Layer 4: Optional children (e.g. language switcher) */}
+      {children && (
+        <div className="relative mt-2.5">{children}</div>
       )}
     </header>
   );

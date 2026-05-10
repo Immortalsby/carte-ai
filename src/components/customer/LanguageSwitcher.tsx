@@ -3,41 +3,42 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode } from "@/types/menu";
+import { GlobeIcon } from "@phosphor-icons/react";
 
 const languageNames: Partial<Record<LanguageCode, string>> = {
-  fr: "Fran\u00e7ais",
+  fr: "Français",
   en: "English",
-  zh: "\u4e2d\u6587",
-  "zh-Hant": "\u7e41\u9ad4",
-  es: "Espa\u00f1ol",
+  zh: "中文",
+  "zh-Hant": "繁體",
+  es: "Español",
   it: "Italiano",
   de: "Deutsch",
-  pt: "Portugu\u00eas",
-  ar: "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
-  ja: "\u65e5\u672c\u8a9e",
-  ko: "\ud55c\uad6d\uc5b4",
-  ru: "\u0420\u0443\u0441\u0441\u043a\u0438\u0439",
-  tr: "T\u00fcrk\u00e7e",
+  pt: "Português",
+  ar: "العربية",
+  ja: "日本語",
+  ko: "한국어",
+  ru: "Русский",
+  tr: "Türkçe",
   nl: "Nederlands",
-  vi: "Ti\u1ebfng Vi\u1ec7t",
-  th: "\u0e44\u0e17\u0e22",
-  hi: "\u0939\u093f\u0928\u094d\u0926\u0940",
+  vi: "Tiếng Việt",
+  th: "ไทย",
+  hi: "हिन्दी",
 };
 
-// Default primary languages shown as buttons
+// Default primary languages shown in the picker
 const defaultPrimaryLanguages: LanguageCode[] = ["fr", "en", "zh", "ja", "es"];
 
 interface LanguageSwitcherProps {
   current: LanguageCode;
   onChange: (lang: LanguageCode) => void;
-  /** Browser-detected language — always shown first in primary row */
+  /** Browser-detected language — always shown first */
   detectedLang?: LanguageCode;
 }
 
 export function LanguageSwitcher({ current, onChange, detectedLang }: LanguageSwitcherProps) {
-  const [modalOpen, setModalOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  // Build primary list: detected language first (if not already in defaults), then defaults
+  // Build primary list: detected language first (if not already in defaults)
   const primaryLanguages = (() => {
     if (!detectedLang || defaultPrimaryLanguages.includes(detectedLang) || !languageNames[detectedLang]) {
       return defaultPrimaryLanguages;
@@ -45,52 +46,31 @@ export function LanguageSwitcher({ current, onChange, detectedLang }: LanguageSw
     return [detectedLang, ...defaultPrimaryLanguages.slice(0, 4)];
   })();
 
-  const secondaryLanguages = (Object.keys(languageNames) as LanguageCode[]).filter(
-    (code) => !primaryLanguages.includes(code),
-  );
+  const allLanguages = [
+    ...primaryLanguages,
+    ...(Object.keys(languageNames) as LanguageCode[]).filter((c) => !primaryLanguages.includes(c)),
+  ];
 
-  // If current language is a secondary one, show it's selected in the "more" button
-  const currentIsSecondary = secondaryLanguages.includes(current);
-
-  function selectLanguage(lang: LanguageCode) {
+  function select(lang: LanguageCode) {
     onChange(lang);
-    setModalOpen(false);
+    setOpen(false);
   }
 
   return (
     <>
-      <div className="flex flex-wrap justify-center gap-1">
-        {primaryLanguages.map((lang) => (
-          <button
-            key={lang}
-            type="button"
-            onClick={() => onChange(lang)}
-            className={`min-h-[36px] rounded-full px-3 py-1 text-xs font-medium transition-all ${
-              current === lang
-                ? "bg-carte-primary text-carte-bg shadow-sm"
-                : "border border-carte-border text-carte-text-dim hover:border-carte-text-muted hover:text-carte-text-muted"
-            }`}
-          >
-            {languageNames[lang]}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className={`min-h-[36px] rounded-full px-3 py-1 text-xs font-medium transition-all ${
-            currentIsSecondary
-              ? "bg-carte-primary text-carte-bg shadow-sm"
-              : "border border-carte-border text-carte-text-dim hover:border-carte-text-muted hover:text-carte-text-muted"
-          }`}
-          aria-label="More languages"
-        >
-          {currentIsSecondary ? languageNames[current] : "···"}
-        </button>
-      </div>
+      {/* Compact trigger — just the current language name + globe icon */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="relative inline-flex items-center gap-1.5 rounded-full border border-carte-border/50 px-2.5 py-1 text-xs text-carte-text-dim transition-colors hover:border-carte-text-muted hover:text-carte-text-muted"
+      >
+        <GlobeIcon weight="regular" className="h-3.5 w-3.5" />
+        {languageNames[current] || current}
+      </button>
 
-      {/* Language picker modal */}
+      {/* Full language picker — modal overlay */}
       <AnimatePresence>
-        {modalOpen && (
+        {open && (
           <motion.div
             key="lang-modal"
             initial={{ opacity: 0 }}
@@ -100,7 +80,7 @@ export function LanguageSwitcher({ current, onChange, detectedLang }: LanguageSw
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
             onClick={(e) => {
-              if (e.target === e.currentTarget) setModalOpen(false);
+              if (e.target === e.currentTarget) setOpen(false);
             }}
           >
             <motion.div
@@ -117,24 +97,23 @@ export function LanguageSwitcher({ current, onChange, detectedLang }: LanguageSw
                 </h3>
                 <button
                   type="button"
-                  onClick={() => setModalOpen(false)}
+                  onClick={() => setOpen(false)}
                   className="text-lg text-carte-text-dim hover:text-carte-text"
                 >
                   &times;
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {secondaryLanguages.map((lang) => (
+              <div className="grid grid-cols-2 gap-1.5">
+                {allLanguages.map((lang) => (
                   <button
                     key={lang}
                     type="button"
-                    onClick={() => selectLanguage(lang)}
-                    className="min-h-[44px] rounded-xl px-3 py-2.5 text-left text-sm transition-colors"
-                    style={
+                    onClick={() => select(lang)}
+                    className={`min-h-[40px] rounded-xl px-3 py-2 text-left text-sm transition-colors ${
                       current === lang
-                        ? { backgroundColor: "color-mix(in srgb, var(--carte-primary) 20%, transparent)", color: "var(--carte-primary)" }
-                        : { color: "var(--carte-text)", backgroundColor: "transparent" }
-                    }
+                        ? "bg-carte-primary/15 font-medium text-carte-primary"
+                        : "text-carte-text hover:bg-carte-surface"
+                    }`}
                   >
                     {languageNames[lang]}
                   </button>
