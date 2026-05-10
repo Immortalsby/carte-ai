@@ -149,8 +149,6 @@ export function MascotAssistant({
   const [bubbleVisible, setBubbleVisible] = useState(false);
   const lastIdxRef = useRef(-1);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const popularDishDismissedRef = useRef(false);
-
   const showNextIdleMessage = useCallback(() => {
     if (isExpired) {
       setBubbleMessage(pickSadMessage(lang));
@@ -162,7 +160,7 @@ export function MascotAssistant({
       Math.random() < 0.3
         ? pickContextualMessage(lang, menu, cuisineType)
         : null;
-    if (contextual && !(contextual.dishId && popularDishDismissedRef.current)) {
+    if (contextual) {
       setBubbleMessage(contextual.message);
       setBubbleDishId(contextual.dishId ?? null);
     } else {
@@ -597,7 +595,7 @@ export function MascotAssistant({
               }
             />
 
-            {/* Popular dish: try it / dismiss buttons */}
+            {/* Popular dish: try it button */}
             <AnimatePresence>
               {bubbleDishId && bubbleVisible && warpPhase === null && postMealPhase === "idle" && !shareMessage && (
                 <motion.div
@@ -605,7 +603,7 @@ export function MascotAssistant({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="mb-1 flex gap-2 rounded-full bg-carte-bg/80 px-1 py-1 backdrop-blur-md"
+                  className="mb-1"
                 >
                   <button
                     type="button"
@@ -615,23 +613,10 @@ export function MascotAssistant({
                       setBubbleDishId(null);
                       onPopularDishClick?.(bubbleDishId);
                     }}
-                    className="min-h-[36px] rounded-full px-4 py-1.5 text-xs font-semibold text-carte-bg"
+                    className="min-h-[36px] rounded-full px-4 py-1.5 text-xs font-semibold text-carte-bg shadow-sm"
                     style={{ backgroundColor: "var(--carte-primary)" }}
                   >
                     {lang === "zh" ? "尝试一下" : lang === "fr" ? "J'essaie !" : "Try it!"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setBubbleVisible(false);
-                      setBubbleDishId(null);
-                      popularDishDismissedRef.current = true;
-                      scheduleNextMessage();
-                    }}
-                    className="min-h-[36px] rounded-full border border-carte-border px-4 py-1.5 text-xs font-medium text-carte-text-muted hover:bg-carte-surface"
-                  >
-                    {lang === "zh" ? "自己看看" : lang === "fr" ? "Je regarde" : "I'll browse"}
                   </button>
                 </motion.div>
               )}
