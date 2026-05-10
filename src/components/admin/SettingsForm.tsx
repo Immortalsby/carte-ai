@@ -157,19 +157,23 @@ export function SettingsForm({
 
   // Auto-fill city from postal code via zippopotam.us
   const postalDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
   useEffect(() => {
     if (postalDebounceRef.current) clearTimeout(postalDebounceRef.current);
+    setCitySuggestions([]);
     if (!addressPostal || addressPostal.length < 3 || addressCountry === "OTHER") return;
     postalDebounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(`https://api.zippopotam.us/${addressCountry}/${addressPostal}`);
         if (!res.ok) return;
         const data = await res.json();
-        const place = data?.places?.[0]?.["place name"];
-        if (place) {
-          setAddressCity(place);
+        const places: string[] = (data?.places ?? []).map((p: Record<string, string>) => p["place name"]).filter(Boolean);
+        if (places.length === 1) {
+          setAddressCity(places[0]);
           setSaved(false);
           setTouched(true);
+        } else if (places.length > 1) {
+          setCitySuggestions(places);
         }
       } catch {}
     }, 500);
@@ -293,13 +297,26 @@ export function SettingsForm({
           </div>
           <div className="flex-1">
             <label className="text-xs text-muted-foreground">{t.addressCity}</label>
-            <input
-              type="text"
-              value={addressCity}
-              onChange={(e) => { setAddressCity(e.target.value); setSaved(false); setTouched(true); }}
-              placeholder={t.addressCityPlaceholder}
-              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-            />
+            {citySuggestions.length > 1 ? (
+              <select
+                value={addressCity}
+                onChange={(e) => { setAddressCity(e.target.value); setCitySuggestions([]); setSaved(false); setTouched(true); }}
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              >
+                <option value="">{t.select}</option>
+                {citySuggestions.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={addressCity}
+                onChange={(e) => { setAddressCity(e.target.value); setSaved(false); setTouched(true); }}
+                placeholder={t.addressCityPlaceholder}
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              />
+            )}
           </div>
         </div>
       </fieldset>
