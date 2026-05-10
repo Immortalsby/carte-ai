@@ -18,6 +18,7 @@ import type { Dish, RestaurantMenu, MenuCategory, Allergen } from "@/types/menu"
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
+import { MenuImporter } from "./MenuImporter";
 
 const categoryOrder: MenuCategory[] = [
   "combo", "brunch", "sharing", "starter", "soup", "main", "pasta",
@@ -51,6 +52,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
   const [imageGenProgress, setImageGenProgress] = useState<{ current: number; total: number; failed: number } | null>(null);
   const imageGenAbortRef = useRef(false);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [showMergeImport, setShowMergeImport] = useState(false);
   const { toast } = useToast();
 
   // dnd-kit sensors: pointer needs 8px movement to start (so clicks work), touch needs 250ms hold
@@ -126,6 +128,35 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
     setMenu((prev) => ({ ...prev, dishes: [...prev.dishes, newDish] }));
     setEditingDish(id);
     setSaved(false);
+  }
+
+  function handleMergeImport(draft: RestaurantMenu) {
+    const existingKeys = new Set(
+      menu.dishes.map((d) =>
+        `${d.name.fr || ""}|${d.name.en || ""}|${d.name.zh || ""}`.toLowerCase(),
+      ),
+    );
+    const newDishes = draft.dishes.filter((d) => {
+      const key = `${d.name.fr || ""}|${d.name.en || ""}|${d.name.zh || ""}`.toLowerCase();
+      return key !== "||" && !existingKeys.has(key);
+    });
+
+    if (newDishes.length === 0) {
+      toast(tAny.mergeNoDishes || "No new dishes found to add");
+      setShowMergeImport(false);
+      return;
+    }
+
+    setMenu((prev) => ({
+      ...prev,
+      dishes: [...prev.dishes, ...newDishes],
+    }));
+    setSaved(false);
+    setShowMergeImport(false);
+    toast(
+      (tAny.mergeSuccess || `${newDishes.length} dishes added`).replace("{count}", String(newDishes.length)),
+      "success",
+    );
   }
 
   function toggleAvailability(dishId: string) {
@@ -287,6 +318,17 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowMergeImport(!showMergeImport)}
+            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+              showMergeImport
+                ? "border-purple-400 bg-purple-50 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300"
+                : "text-foreground hover:bg-muted"
+            }`}
+          >
+            {tAny.mergeImport || "+ Import & merge"}
+          </button>
           {onReImport && (
             <button
               type="button"
@@ -306,6 +348,25 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
           </button>
         </div>
       </div>
+
+      {/* Merge import panel */}
+      {showMergeImport && (
+        <div className="mt-4 rounded-xl border border-purple-300 bg-purple-50/50 p-4 dark:border-purple-700 dark:bg-purple-900/20">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+              {tAny.mergeImportDesc || "Import a file to add dishes to the existing menu. Duplicates will be skipped."}
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowMergeImport(false)}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              ✕
+            </button>
+          </div>
+          <MenuImporter slug={slug} locale={locale} onImported={handleMergeImport} />
+        </div>
+      )}
 
       {/* Dish list by category — with dnd-kit drag and drop */}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => { setActiveDragId(null); document.body.style.overflow = ""; }}>
