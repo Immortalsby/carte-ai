@@ -111,14 +111,12 @@ INSTRUCTIONS:
     let summary: string | null = null;
     const systemPrompt = "You are a restaurant order assistant. Generate clean, professional order summaries for waiters.";
 
-    try {
-      summary = await callAnthropicSimple(systemPrompt, prompt);
-    } catch {
-      try {
-        summary = await callOpenAISimple(systemPrompt, prompt);
-      } catch {
-        return NextResponse.json({ error: "AI unavailable" }, { status: 503 });
-      }
+    summary = await callAnthropicSimple(systemPrompt, prompt, 800);
+    if (!summary) {
+      summary = await callOpenAISimple(systemPrompt, prompt);
+    }
+    if (!summary) {
+      return NextResponse.json({ error: "AI unavailable" }, { status: 503 });
     }
 
     return NextResponse.json({ summary });

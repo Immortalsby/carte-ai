@@ -621,7 +621,7 @@ export async function estimateCalories(
 
 // ── Shared helpers for simple system+user prompts ──
 
-export async function callAnthropicSimple(system: string, user: string): Promise<string | null> {
+export async function callAnthropicSimple(system: string, user: string, maxTokens = 200): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_FOUNDRY_API_KEY;
   const url = getAnthropicUrl();
   const model = getAnthropicModel();
@@ -637,7 +637,7 @@ export async function callAnthropicSimple(system: string, user: string): Promise
     },
     body: JSON.stringify({
       model,
-      max_tokens: 200,
+      max_tokens: maxTokens,
       temperature: 0.2,
       system,
       messages: [{ role: "user", content: user }],
