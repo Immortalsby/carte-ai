@@ -9,7 +9,7 @@ import { getAdminDict } from "@/lib/admin-i18n";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB per file
 const MAX_FILES = 10;
 const FETCH_TIMEOUT = 55_000; // 55s — just under Vercel Hobby 60s limit
-const OCR_CHUNK_MAX_CHARS = 3000; // Split OCR text into chunks to keep each structure call fast
+const OCR_CHUNK_MAX_CHARS = 1500; // Split OCR text into chunks to keep each structure call under 45s
 
 const ACCEPTED_TYPES = [
   "application/pdf",

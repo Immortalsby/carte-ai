@@ -534,26 +534,39 @@ Rules:
  * Translates to 3 languages, categorizes, infers allergens, generates descriptions.
  */
 export async function structureMenuWithLlm(ocrText: string): Promise<RestaurantMenu | null> {
-  const structurePrompt = `You are CarteAI's menu structuring engine. Convert raw OCR text into structured JSON. Be fast and concise.
+  const structurePrompt = `Convert OCR menu text to JSON. Be fast, output only JSON.
 
-Input: Raw OCR text from a restaurant menu (any language).
+The OCR text may already contain translations (zh/fr/en). USE existing translations directly — do NOT re-translate.
+If only one language exists, translate to fill zh, fr, en.
 
-Tasks:
-1. Extract each dish: name, price, description, category
-2. Translate names into zh, fr, en (keep original accurate)
-3. Categorize: starter|main|side|dessert|drink|combo|sharing|soup|pasta|wine|cocktail|brunch
-4. Infer allergens from name/ingredients — use ["unknown"] if unsure
-5. Generate kebab-case ID from English name
+Output schema:
+{"restaurant":{"id":"imported","slug":"imported","name":"Imported Menu","cuisine":"chinese","city":"unknown","currency":"EUR","languages":${JSON.stringify(supportedLanguageCodes)},"welcome":{"zh":"欢迎","fr":"Bienvenue","en":"Welcome"}},"updatedAt":"${new Date().toISOString()}","dishes":[{"id":"kebab-id","category":"main","name":{"zh":"中文名","fr":"Nom FR","en":"Name EN"},"description":{"zh":"简述","fr":"Description","en":"Description"},"priceCents":1850,"currency":"EUR","ingredients":[],"allergens":["unknown"],"dietaryTags":[],"spiceLevel":0,"available":true}]}
 
-Return ONLY valid JSON:
-{"restaurant":{"id":"imported","slug":"imported","name":"Imported Menu","cuisine":"international","city":"Paris","currency":"EUR","languages":${JSON.stringify(supportedLanguageCodes)},"welcome":{"zh":"欢迎","fr":"Bienvenue","en":"Welcome"}},"updatedAt":"${new Date().toISOString()}","dishes":[{"id":"kebab-id","category":"main","name":{"zh":"名","fr":"Nom","en":"Name"},"description":{"zh":"描述","fr":"Description","en":"Description"},"priceCents":1850,"currency":"EUR","ingredients":[],"allergens":["unknown"],"dietaryTags":[],"spiceLevel":0,"available":true,"marginPriority":1,"portionScore":2}]}
+Rules:
+- category: starter|main|side|dessert|drink|combo|sharing|soup|pasta|wine|cocktail|brunch
+- priceCents: price in euro cents (18.50€=1850)
+- allergens: gluten,crustaceans,eggs,fish,peanuts,soy,milk,nuts,celery,mustard,sesame,sulphites,lupin,molluscs,alcohol,unknown
+- cuisine: actual type (chinese/french/italian/etc)
+- description: non-empty zh,fr,en — one short line each, based on dish name
+- id: kebab-case from English name`;
 
-Allergens: gluten,crustaceans,eggs,fish,peanuts,soy,milk,nuts,celery,mustard,sesame,sulphites,lupin,molluscs,alcohol,unknown.
-DietaryTags: vegetarian,vegan,halal_possible,contains_pork,contains_beef,contains_seafood,spicy,signature,popular.
-Prices in cents (18.50€=1850), default EUR. portionScore: 1=small 2=normal 3=large/sharing.
-IMPORTANT: cuisine must reflect the actual cuisine type (e.g. "chinese", "french", "italian"). city must be filled if visible on the menu, otherwise use "unknown".
-IMPORTANT: description must always have non-empty zh, fr, en values. Write a short factual description based on the dish name and visible ingredients. If unsure, write a minimal one-line description.`;
+  // Try Gemini first (much faster for structuring)
+  if (hasGeminiVision()) {
+    try {
+      const text = await createGeminiMessage(structurePrompt, [{ text: ocrText }]);
+      if (text) {
+        const parsed = JSON.parse(stripJson(text)) as RestaurantMenu;
+        if (parsed?.dishes?.length > 0) {
+          console.log(`[structureMenu] Gemini OK: ${parsed.dishes.length} dishes`);
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.warn("[structureMenu] Gemini failed, trying OpenAI:", err instanceof Error ? err.message : err);
+    }
+  }
 
+  // Fallback to OpenAI
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) return null;
 
@@ -563,8 +576,9 @@ IMPORTANT: description must always have non-empty zh, fr, en values. Write a sho
       model: process.env.OPENAI_STRUCTURE_MODEL || "gpt-4.1-mini",
       input: [
         { role: "system", content: structurePrompt },
-        { role: "user", content: `Menu OCR:\n${ocrText}` },
+        { role: "user", content: ocrText },
       ],
+      text: { format: { type: "json_object" } },
     });
     const text = response.output_text;
     if (text) {
