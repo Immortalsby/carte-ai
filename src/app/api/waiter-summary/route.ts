@@ -111,7 +111,8 @@ INSTRUCTIONS:
     let summary: string | null = null;
     const systemPrompt = "You are a restaurant order assistant. Generate clean, professional order summaries for waiters.";
 
-    summary = await callAnthropicSimple(systemPrompt, prompt, 800);
+    const maxTokens = 300 + dishes.length * 80;
+    summary = await callAnthropicSimple(systemPrompt, prompt, maxTokens);
     if (!summary) {
       summary = await callOpenAISimple(systemPrompt, prompt);
     }
