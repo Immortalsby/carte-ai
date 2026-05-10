@@ -603,7 +603,7 @@ export function MascotAssistant({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="mb-1"
+                  className="mb-1 flex justify-center"
                 >
                   <button
                     type="button"

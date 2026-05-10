@@ -305,6 +305,18 @@ const dict = {
     pdfDownloaded: "PDF downloaded",
     pdfFailed: "PDF failed",
 
+    // Custom elements & image upload
+    customElements: "Custom Text Elements",
+    customElementsHint: "Add up to 3 short text elements to display on the poster.",
+    addElement: "Add element",
+    customElementPlaceholder: "e.g. Happy Hour 5-7pm",
+    customElementCharLimit: (max: number) => `${max} characters max`,
+    uploadBgImage: "Upload Background Image",
+    uploadBgImageHint: "JPG or PNG, min 1200×1700px, max 5 MB. Portrait orientation recommended.",
+    uploadBgImageBtn: "Choose image",
+    uploadBgImageInvalid: "Image must be JPG/PNG, min 1200×1700px, max 5 MB",
+    removeElement: "Remove",
+
     // LLM settings (founder only)
     llmSettings: "LLM Configuration",
     llmSettingsHint: "Configure which AI provider and model to use for recommendations.",
@@ -764,6 +776,18 @@ const dict = {
     pdfDownloaded: "PDF téléchargé",
     pdfFailed: "Échec du PDF",
 
+    // Custom elements & image upload
+    customElements: "Éléments texte personnalisés",
+    customElementsHint: "Ajoutez jusqu'à 3 courts textes à afficher sur l'affiche.",
+    addElement: "Ajouter un élément",
+    customElementPlaceholder: "ex. Happy Hour 17h-19h",
+    customElementCharLimit: (max: number) => `${max} caractères max`,
+    uploadBgImage: "Importer une image de fond",
+    uploadBgImageHint: "JPG ou PNG, min 1200×1700px, max 5 Mo. Orientation portrait recommandée.",
+    uploadBgImageBtn: "Choisir une image",
+    uploadBgImageInvalid: "L'image doit être JPG/PNG, min 1200×1700px, max 5 Mo",
+    removeElement: "Supprimer",
+
     // LLM settings (founder only)
     llmSettings: "Configuration LLM",
     llmSettingsHint: "Configurez le fournisseur et le modèle d'IA pour les recommandations.",
@@ -1213,6 +1237,18 @@ const dict = {
     bgFailed: "背景生成失败，请重试",
     pdfDownloaded: "PDF 已下载",
     pdfFailed: "PDF 生成失败",
+
+    // Custom elements & image upload
+    customElements: "自定义文本元素",
+    customElementsHint: "最多添加 3 个短文本元素显示在海报上。",
+    addElement: "添加元素",
+    customElementPlaceholder: "例如：欢乐时光 17-19点",
+    customElementCharLimit: (max: number) => `最多 ${max} 个字符`,
+    uploadBgImage: "上传背景图片",
+    uploadBgImageHint: "JPG 或 PNG，最小 1200×1700px，最大 5 MB。建议使用竖版图片。",
+    uploadBgImageBtn: "选择图片",
+    uploadBgImageInvalid: "图片需为 JPG/PNG，最小 1200×1700px，最大 5 MB",
+    removeElement: "删除",
 
     // LLM settings (founder only)
     llmSettings: "LLM 配置",

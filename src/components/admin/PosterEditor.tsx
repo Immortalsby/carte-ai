@@ -108,11 +108,66 @@ export function PosterEditor({
   const [selectedElements, setSelectedElements] = useState<string[]>([]);
   const [generatingBg, setGeneratingBg] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [customTexts, setCustomTexts] = useState<string[]>([]);
+  const [uploadedBgImage, setUploadedBgImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Character limits per poster language
+  const charLimit = posterLocale === "zh" ? 15 : 30;
 
   function toggleElement(key: string) {
     setSelectedElements((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
     );
+  }
+
+  function addCustomText() {
+    if (customTexts.length >= 3) return;
+    setCustomTexts((prev) => [...prev, ""]);
+  }
+
+  function updateCustomText(index: number, value: string) {
+    if (value.length > charLimit) return;
+    setCustomTexts((prev) => prev.map((t2, i) => (i === index ? value : t2)));
+  }
+
+  function removeCustomText(index: number) {
+    setCustomTexts((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Validate type
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      toast(tAny.uploadBgImageInvalid);
+      return;
+    }
+    // Validate size (5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast(tAny.uploadBgImageInvalid);
+      return;
+    }
+    // Validate dimensions
+    const img = new window.Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      if (img.width < 1200 || img.height < 1700) {
+        toast(tAny.uploadBgImageInvalid);
+        URL.revokeObjectURL(url);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        setUploadedBgImage(reader.result as string);
+        setBgImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+    // Reset input so same file can be re-selected
+    e.target.value = "";
   }
 
   const activeBg = customBg || theme.bg;
@@ -318,6 +373,81 @@ export function PosterEditor({
           </div>
         </div>
 
+        {/* Custom text elements */}
+        <div>
+          <label className="text-sm font-medium text-foreground">
+            {tAny.customElements}
+            <span className="ml-2 text-xs font-normal text-gray-400">
+              ({customTexts.length}/3)
+            </span>
+          </label>
+          <p className="mt-0.5 text-xs text-muted-foreground">{tAny.customElementsHint}</p>
+          <div className="mt-2 space-y-2">
+            {customTexts.map((text, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={text}
+                  onChange={(e) => updateCustomText(idx, e.target.value)}
+                  placeholder={tAny.customElementPlaceholder}
+                  maxLength={charLimit}
+                  className="flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                />
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {text.length}/{charLimit}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeCustomText(idx)}
+                  className="text-xs text-destructive hover:underline"
+                >
+                  {tAny.removeElement}
+                </button>
+              </div>
+            ))}
+            {customTexts.length < 3 && (
+              <button
+                type="button"
+                onClick={addCustomText}
+                className="rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground hover:border-foreground hover:text-foreground"
+              >
+                + {tAny.addElement}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Upload background image */}
+        <div>
+          <label className="text-sm font-medium text-foreground">{tAny.uploadBgImage}</label>
+          <p className="mt-0.5 text-xs text-muted-foreground">{tAny.uploadBgImageHint}</p>
+          <div className="mt-2 flex items-center gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
+            >
+              {tAny.uploadBgImageBtn}
+            </button>
+            {uploadedBgImage && (
+              <button
+                type="button"
+                onClick={() => { setUploadedBgImage(null); if (bgImage === uploadedBgImage) setBgImage(null); }}
+                className="text-xs text-destructive hover:underline"
+              >
+                {tAny.removeElement}
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* AI Background + PDF buttons */}
         <div className="flex flex-wrap gap-3">
           <button
@@ -435,6 +565,20 @@ export function PosterEditor({
               >
                 {cuisineType?.replace(/_/g, " ")}
               </p>
+              {/* Custom text elements */}
+              {customTexts.filter(Boolean).length > 0 && (
+                <div className="mt-4 space-y-1.5">
+                  {customTexts.filter(Boolean).map((text, idx) => (
+                    <p
+                      key={idx}
+                      className="text-sm font-medium"
+                      style={{ color: hexToRgba(activeText, 0.75) }}
+                    >
+                      {text}
+                    </p>
+                  ))}
+                </div>
+              )}
               <p
                 className="mt-6 font-mono text-sm"
                 style={{ color: activeAccent }}
