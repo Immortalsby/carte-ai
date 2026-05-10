@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Dish, LanguageCode } from "@/types/menu";
 import { CSSMascot } from "./CSSMascot";
@@ -19,10 +19,6 @@ const labels = {
   close: { en: "Close", fr: "Fermer", zh: "关闭" },
   error: { en: "Could not generate summary", fr: "Impossible de générer le résumé", zh: "无法生成摘要" },
   retry: { en: "Retry", fr: "Réessayer", zh: "重试" },
-  orderFor: { en: "Order for", fr: "Commande pour", zh: "点餐：" },
-  people: { en: "people", fr: "personnes", zh: "人" },
-  person: { en: "person", fr: "personne", zh: "人" },
-  howMany: { en: "How many people?", fr: "Combien de personnes ?", zh: "几位用餐？" },
 };
 
 function t(key: keyof typeof labels, lang: LanguageCode): string {
@@ -48,13 +44,6 @@ interface WaiterSummaryProps {
   onClose: () => void;
 }
 
-interface AiQuestion {
-  id: string;
-  question: string;
-  options?: string[];
-  dishName?: string;
-}
-
 export function WaiterSummary({
   visible,
   lang,
@@ -64,25 +53,27 @@ export function WaiterSummary({
   tenantSlug,
   onClose,
 }: WaiterSummaryProps) {
-  const [step, setStep] = useState<"questions" | "loading" | "result" | "error">("questions");
-  const [questions, setQuestions] = useState<AiQuestion[]>(() => generateQuestions(dishes, lang));
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [step, setStep] = useState<"idle" | "loading" | "result" | "error">("idle");
   const [notes, setNotes] = useState("");
-  const [peopleCount, setPeopleCount] = useState(1);
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Reset state when becoming visible
   const [lastVisible, setLastVisible] = useState(false);
   if (visible && !lastVisible) {
-    setStep("questions");
-    setQuestions(generateQuestions(dishes, lang));
-    setAnswers({});
+    setStep("idle");
     setNotes("");
     setSummary("");
-    setPeopleCount(1);
   }
   if (visible !== lastVisible) setLastVisible(visible);
+
+  // Lock body scroll when visible
+  useEffect(() => {
+    if (visible) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [visible]);
 
   async function handleGenerate() {
     setStep("loading");
@@ -100,9 +91,9 @@ export function WaiterSummary({
             allergens: d.allergens,
             priceCents: d.priceCents,
           })),
-          answers,
+          answers: {},
           notes,
-          peopleCount,
+          peopleCount: 1,
           customerLang: lang,
           targetLang,
           cuisine: cuisine || "",
@@ -140,21 +131,16 @@ export function WaiterSummary({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            drag="y"
-            dragConstraints={{ top: 0 }}
-            dragElastic={0.2}
-            onDragEnd={(_e, info) => {
-              if (info.offset.y > 100 || info.velocity.y > 300) onClose();
-            }}
-            className="relative w-full max-w-lg rounded-t-2xl border-t border-carte-border px-5 pb-8 pt-4"
+            className="relative w-full max-w-lg rounded-t-2xl border-t border-carte-border px-5 pb-8 pt-4 overflow-y-auto"
             style={{ backgroundColor: "var(--carte-bg)", maxHeight: "85vh" }}
           >
-            <div className="mx-auto mb-4 h-1 w-10 cursor-grab rounded-full bg-carte-border active:cursor-grabbing" />
+            {/* Drag handle — visual only, no drag behavior */}
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-carte-border" />
 
             <h2 className="text-base font-bold text-carte-text">{t("title", lang)}</h2>
 
             {/* Dish list preview */}
-            <div className="mt-3 space-y-1.5 overflow-y-auto" style={{ maxHeight: step === "result" ? "20vh" : "25vh" }}>
+            <div className="mt-3 space-y-1.5">
               {dishes.map((dish) => {
                 const name = dish.name[lang] || dish.name.en || dish.name.fr;
                 return (
@@ -166,78 +152,9 @@ export function WaiterSummary({
               })}
             </div>
 
-            {/* Questions step */}
-            {step === "questions" && (
-              <div className="mt-4 space-y-4 overflow-y-auto" style={{ maxHeight: "35vh" }}>
-                {/* People count */}
-                <div>
-                  <p className="text-xs font-medium text-carte-text-muted">{t("howMany", lang)}</p>
-                  <div className="mt-1.5 flex gap-2">
-                    {[1, 2, 3, 4].map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setPeopleCount(n)}
-                        className={`min-h-[36px] rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-                          peopleCount === n
-                            ? "bg-carte-primary text-carte-bg"
-                            : "border border-carte-border text-carte-text-muted hover:bg-carte-surface"
-                        }`}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                    <input
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={peopleCount > 4 ? peopleCount : ""}
-                      placeholder="5+"
-                      onChange={(e) => {
-                        const v = parseInt(e.target.value);
-                        if (v > 0) setPeopleCount(v);
-                      }}
-                      className="w-16 rounded-full border border-carte-border bg-transparent px-3 py-1.5 text-center text-xs text-carte-text"
-                    />
-                  </div>
-                </div>
-
-                {/* AI-generated questions */}
-                {questions.map((q) => (
-                  <div key={q.id}>
-                    <p className="text-xs font-medium text-carte-text-muted">
-                      {q.dishName && <span className="text-carte-primary">{q.dishName}: </span>}
-                      {q.question}
-                    </p>
-                    {q.options ? (
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        {q.options.map((opt) => (
-                          <button
-                            key={opt}
-                            type="button"
-                            onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: opt }))}
-                            className={`rounded-full px-3 py-1 text-xs transition-colors ${
-                              answers[q.id] === opt
-                                ? "bg-carte-primary text-carte-bg"
-                                : "border border-carte-border text-carte-text-muted hover:bg-carte-surface"
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <input
-                        type="text"
-                        value={answers[q.id] ?? ""}
-                        onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                        className="mt-1 w-full rounded-lg border border-carte-border bg-transparent px-3 py-1.5 text-xs text-carte-text"
-                      />
-                    )}
-                  </div>
-                ))}
-
-                {/* Free-text notes */}
+            {/* Idle step — notes + generate button */}
+            {step === "idle" && (
+              <div className="mt-4 space-y-4">
                 <div>
                   <p className="text-xs font-medium text-carte-text-muted">{t("addNotes", lang)}</p>
                   <textarea
@@ -272,8 +189,7 @@ export function WaiterSummary({
             {step === "result" && (
               <div className="mt-4">
                 <div
-                  className="overflow-y-auto rounded-xl border border-carte-border bg-carte-surface p-4 text-sm leading-relaxed text-carte-text whitespace-pre-wrap"
-                  style={{ maxHeight: "40vh" }}
+                  className="rounded-xl border border-carte-border bg-carte-surface p-4 text-sm leading-relaxed text-carte-text whitespace-pre-wrap"
                 >
                   {summary}
                 </div>
@@ -317,82 +233,4 @@ export function WaiterSummary({
       )}
     </AnimatePresence>
   );
-}
-
-/** Generate client-side questions based on dish categories and common waiter questions */
-function generateQuestions(dishes: Dish[], lang: LanguageCode): AiQuestion[] {
-  const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
-  const qs: AiQuestion[] = [];
-
-  // Steak / meat doneness
-  const meats = dishes.filter((d) => {
-    const name = (d.name.en ?? d.name.fr ?? "").toLowerCase();
-    const desc = (d.description.en ?? d.description.fr ?? "").toLowerCase();
-    const combined = name + " " + desc;
-    return /steak|bœuf|boeuf|beef|entrecôte|entrecote|côte de|filet|牛排|ribeye|sirloin|faux.?filet|bavette|onglet|rumsteak|t.?bone/.test(combined);
-  });
-  for (const m of meats) {
-    const dishName = m.name[lang] || m.name.en || m.name.fr;
-    qs.push({
-      id: `doneness-${m.id}`,
-      question: { en: "How would you like it cooked?", fr: "Quelle cuisson ?", zh: "几分熟？" }[l],
-      options: { en: ["Rare", "Medium Rare", "Medium", "Well Done"], fr: ["Saignant", "À point", "Bien cuit"], zh: ["三分熟", "五分熟", "七分熟", "全熟"] }[l] as string[],
-      dishName,
-    });
-  }
-
-  // Eggs
-  const eggs = dishes.filter((d) => {
-    const name = (d.name.en ?? d.name.fr ?? "").toLowerCase();
-    const desc = (d.description.en ?? d.description.fr ?? "").toLowerCase();
-    return /\begg|œuf|oeuf|鸡蛋|煎蛋|荷包蛋/.test(name + " " + desc) && /brunch|breakfast|petit.?déjeuner/.test(d.category + " " + name + " " + desc);
-  });
-  for (const e of eggs) {
-    const dishName = e.name[lang] || e.name.en || e.name.fr;
-    qs.push({
-      id: `egg-${e.id}`,
-      question: { en: "How do you like your eggs?", fr: "Cuisson des œufs ?", zh: "鸡蛋怎么做？" }[l],
-      options: { en: ["Scrambled", "Sunny Side Up", "Poached", "Over Easy"], fr: ["Brouillés", "Au plat", "Pochés", "Mollets"], zh: ["炒蛋", "太阳蛋", "水波蛋", "溏心蛋"] }[l] as string[],
-      dishName,
-    });
-  }
-
-  // Spice level
-  const spicy = dishes.filter((d) => d.spiceLevel > 0);
-  if (spicy.length > 0) {
-    qs.push({
-      id: "spice-preference",
-      question: { en: "Spice level preference?", fr: "Niveau de piquant souhaité ?", zh: "辣度偏好？" }[l],
-      options: { en: ["Mild", "Medium", "Spicy", "Extra Spicy"], fr: ["Doux", "Moyen", "Piquant", "Très piquant"], zh: ["微辣", "中辣", "辣", "特辣"] }[l] as string[],
-    });
-  }
-
-  // Side dish choice (if mains without explicit sides)
-  const mains = dishes.filter((d) => d.category === "main");
-  if (mains.length > 0) {
-    qs.push({
-      id: "side-preference",
-      question: { en: "Any side preference?", fr: "Choix d'accompagnement ?", zh: "配菜偏好？" }[l],
-      options: { en: ["Fries", "Salad", "Rice", "Vegetables", "No preference"], fr: ["Frites", "Salade", "Riz", "Légumes", "Pas de préférence"], zh: ["薯条", "沙拉", "米饭", "蔬菜", "无偏好"] }[l] as string[],
-    });
-  }
-
-  // Drinks with meals
-  const hasDrinks = dishes.some((d) => ["drink", "wine", "cocktail"].includes(d.category));
-  if (!hasDrinks && dishes.length > 0) {
-    qs.push({
-      id: "drink-preference",
-      question: { en: "Would you like a drink?", fr: "Souhaitez-vous une boisson ?", zh: "需要饮品吗？" }[l],
-      options: { en: ["Water (tap)", "Sparkling Water", "Soft Drink", "Wine", "No thanks"], fr: ["Carafe d'eau", "Eau gazeuse", "Soda", "Vin", "Non merci"], zh: ["自来水", "气泡水", "软饮", "葡萄酒", "不需要"] }[l] as string[],
-    });
-  }
-
-  // Allergies catch-all
-  qs.push({
-    id: "allergies",
-    question: { en: "Any allergies or dietary restrictions?", fr: "Allergies ou restrictions alimentaires ?", zh: "有过敏或饮食限制吗？" }[l],
-    options: { en: ["None", "Gluten-free", "Lactose-free", "Nut allergy", "Other (specify in notes)"], fr: ["Aucune", "Sans gluten", "Sans lactose", "Allergie aux noix", "Autre (préciser)"], zh: ["无", "无麸质", "无乳糖", "坚果过敏", "其他（在备注中说明）"] }[l] as string[],
-  });
-
-  return qs;
 }
