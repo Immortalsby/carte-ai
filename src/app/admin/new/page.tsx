@@ -23,15 +23,29 @@ const cuisineOptions = [
   "african", "mediterranean", "american", "fusion", "other",
 ];
 
+type PlaceStructuredAddress = {
+  street: string;
+  city: string;
+  postal: string;
+  country: string;
+};
+
 type PlaceCandidate = {
   id: string;
   name: string;
   address?: string;
+  structuredAddress?: PlaceStructuredAddress;
   googleMapsUri?: string;
   websiteUri?: string;
   rating?: number;
   userRatingCount?: number;
 };
+
+/** Build a Google Maps search URL from restaurant name + address */
+function buildGoogleMapsUrl(name: string, address?: string): string {
+  const query = address ? `${name}, ${address}` : name;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
 
 function getCuisineKey(cuisine: string): string {
   const map: Record<string, string> = {
@@ -71,7 +85,9 @@ export default function NewRestaurantPage() {
   const [slugManual, setSlugManual] = useState(false);
   const [cuisineType, setCuisineType] = useState("");
   const [address, setAddress] = useState("");
+  const [structuredAddress, setStructuredAddress] = useState<PlaceStructuredAddress | undefined>(undefined);
   const [googlePlaceId, setGooglePlaceId] = useState("");
+  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   const [rating, setRating] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -141,6 +157,8 @@ export default function NewRestaurantPage() {
       setSlug(slugify(place.name));
     }
     if (place.address) setAddress(place.address);
+    if (place.structuredAddress) setStructuredAddress(place.structuredAddress);
+    setGoogleMapsUrl(place.googleMapsUri || buildGoogleMapsUrl(place.name, place.address));
     if (place.rating) setRating(place.rating.toFixed(1));
     toast(tAny.googlePlaceSelected, "success");
   }
@@ -161,6 +179,15 @@ export default function NewRestaurantPage() {
           address: address || undefined,
           google_place_id: googlePlaceId || undefined,
           rating: rating || undefined,
+          settings: (structuredAddress || googleMapsUrl) ? {
+            ...(structuredAddress && {
+              address_street: structuredAddress.street,
+              address_city: structuredAddress.city,
+              address_postal: structuredAddress.postal,
+              address_country: structuredAddress.country,
+            }),
+            ...(googleMapsUrl && { google_maps_url: googleMapsUrl }),
+          } : undefined,
         }),
       });
 
@@ -265,7 +292,7 @@ export default function NewRestaurantPage() {
               value={slug}
               onChange={(e) => handleSlugChange(e.target.value)}
               required
-              pattern="[-a-z0-9]+"
+              pattern="[a-z0-9\-]+"
               placeholder={tAny.slugPlaceholder}
               className="w-full rounded-r-lg border-l px-3 py-2 text-sm"
             />

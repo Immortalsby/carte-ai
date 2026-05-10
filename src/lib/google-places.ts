@@ -3,12 +3,19 @@ type GoogleDisplayName = {
   languageCode?: string;
 };
 
+type GoogleAddressComponent = {
+  longText?: string;
+  shortText?: string;
+  types?: string[];
+};
+
 type GooglePlace = {
   id?: string;
   name?: string;
   displayName?: GoogleDisplayName;
   formattedAddress?: string;
   shortFormattedAddress?: string;
+  addressComponents?: GoogleAddressComponent[];
   googleMapsUri?: string;
   websiteUri?: string;
   nationalPhoneNumber?: string;
@@ -28,11 +35,19 @@ type GooglePlace = {
   }>;
 };
 
+export type PlaceStructuredAddress = {
+  street: string;
+  city: string;
+  postal: string;
+  country: string;
+};
+
 export type PlaceCandidate = {
   id: string;
   resourceName?: string;
   name: string;
   address?: string;
+  structuredAddress?: PlaceStructuredAddress;
   googleMapsUri?: string;
   websiteUri?: string;
   rating?: number;
@@ -43,6 +58,28 @@ function getGoogleApiKey() {
   return process.env.GOOGLE_MAPS_API_KEY;
 }
 
+function extractComponent(components: GoogleAddressComponent[] | undefined, type: string): string {
+  return components?.find((c) => c.types?.includes(type))?.longText ?? "";
+}
+
+function parseStructuredAddress(place: GooglePlace): PlaceStructuredAddress | undefined {
+  const components = place.addressComponents;
+  if (!components || components.length === 0) return undefined;
+
+  const streetNumber = extractComponent(components, "street_number");
+  const route = extractComponent(components, "route");
+  const street = [streetNumber, route].filter(Boolean).join(" ");
+  const city =
+    extractComponent(components, "locality") ||
+    extractComponent(components, "sublocality") ||
+    extractComponent(components, "administrative_area_level_2");
+  const postal = extractComponent(components, "postal_code");
+  const country =
+    components.find((c) => c.types?.includes("country"))?.shortText ?? "";
+
+  return { street, city, postal, country };
+}
+
 function toCandidate(place: GooglePlace): PlaceCandidate | null {
   if (!place.id || !place.displayName?.text) return null;
 
@@ -51,6 +88,7 @@ function toCandidate(place: GooglePlace): PlaceCandidate | null {
     resourceName: place.name,
     name: place.displayName.text,
     address: place.formattedAddress || place.shortFormattedAddress,
+    structuredAddress: parseStructuredAddress(place),
     googleMapsUri: place.googleMapsUri,
     websiteUri: place.websiteUri,
     rating: place.rating,
@@ -78,7 +116,7 @@ export async function searchGooglePlaces(input: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": apiKey,
       "X-Goog-FieldMask":
-        "places.id,places.name,places.displayName,places.formattedAddress,places.googleMapsUri,places.websiteUri,places.rating,places.userRatingCount",
+        "places.id,places.name,places.displayName,places.formattedAddress,places.addressComponents,places.googleMapsUri,places.websiteUri,places.rating,places.userRatingCount",
     },
     body: JSON.stringify({
       textQuery: input.query,

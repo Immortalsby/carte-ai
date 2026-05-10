@@ -32,6 +32,7 @@ export async function createTenant(data: {
   address?: string;
   plan?: string;
   trial_ends_at?: Date | null;
+  settings?: Record<string, unknown>;
 }) {
   const result = await db.insert(tenants).values(data).returning();
   return result[0];

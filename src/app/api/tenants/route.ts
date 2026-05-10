@@ -12,6 +12,7 @@ const createTenantSchema = z.object({
   address: z.string().optional(),
   google_place_id: z.string().optional(),
   rating: z.string().optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
 });
 
 async function findUniqueSlug(baseSlug: string): Promise<string> {
@@ -47,12 +48,14 @@ export async function POST(request: Request) {
     const plan = founder ? "alacarte" : "trial";
     const trialEndsAt = founder ? null : new Date(Date.now() + 14 * 86400000);
 
+    const { settings, ...tenantData } = parsed;
     const tenant = await createTenant({
-      ...parsed,
+      ...tenantData,
       slug: uniqueSlug,
       owner_id: session.user.id,
       plan,
       trial_ends_at: trialEndsAt,
+      settings: settings || undefined,
     });
 
     return NextResponse.json(tenant, { status: 201 });

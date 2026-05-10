@@ -98,6 +98,7 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
       }
 
       // Step 1: OCR for vision files (Gemini)
+      let lastError = "";
       for (let i = 0; i < visionFiles.length; i++) {
         if (files.length > 1) setProgress({ current: i + 1, total: files.length });
 
@@ -112,9 +113,14 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
           if (res.ok) {
             const data = await res.json();
             if (data.ocrText) allOcrTexts.push(data.ocrText);
+          } else {
+            const data = await res.json().catch(() => ({}));
+            lastError = data.error || `OCR ${res.status}`;
+            console.error(`[MenuImporter] OCR failed for ${visionFiles[i].name}:`, data);
           }
-        } catch {
-          // Skip failed file
+        } catch (err) {
+          lastError = err instanceof Error ? err.message : "OCR network error";
+          console.error(`[MenuImporter] OCR exception for ${visionFiles[i].name}:`, err);
         }
       }
 
@@ -134,16 +140,21 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
             if (data.draftMenu && data.status !== "error") {
               textDrafts.push(data.draftMenu);
             }
+          } else {
+            const data = await res.json().catch(() => ({}));
+            lastError = data.error || `Ingest ${res.status}`;
+            console.error(`[MenuImporter] Ingest failed for ${file.name}:`, data);
           }
-        } catch {
-          // Skip
+        } catch (err) {
+          lastError = err instanceof Error ? err.message : "Ingest network error";
+          console.error(`[MenuImporter] Ingest exception for ${file.name}:`, err);
         }
       }
 
       // If no OCR text extracted and no text drafts, fail
       if (allOcrTexts.length === 0 && textDrafts.length === 0) {
         setState("error");
-        toast(t.importFailed);
+        toast(lastError ? `${t.importFailed}: ${lastError}` : t.importFailed);
         return;
       }
 
@@ -164,16 +175,21 @@ export function MenuImporter({ slug, locale = "en", onImported }: MenuImporterPr
           if (res.ok) {
             const data = await res.json();
             if (data.draftMenu) ocrDrafts = [data.draftMenu];
+          } else {
+            const data = await res.json().catch(() => ({}));
+            lastError = data.error || `Structure ${res.status}`;
+            console.error("[MenuImporter] Structure failed:", data);
           }
-        } catch {
-          // If structuring fails, fall back to error
+        } catch (err) {
+          lastError = err instanceof Error ? err.message : "Structure network error";
+          console.error("[MenuImporter] Structure exception:", err);
         }
       }
 
       const allDrafts = [...ocrDrafts, ...textDrafts];
       if (allDrafts.length === 0) {
         setState("error");
-        toast(t.importFailed);
+        toast(lastError ? `${t.importFailed}: ${lastError}` : t.importFailed);
         return;
       }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
@@ -155,29 +155,27 @@ export function SettingsForm({
   const { toast } = useToast();
   const dirty = touched && !saved && !saving;
 
-  // Auto-fill city from postal code via zippopotam.us
-  const postalDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // Auto-fill city from postal code via zippopotam.us (fires on blur)
   const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
-  useEffect(() => {
-    if (postalDebounceRef.current) clearTimeout(postalDebounceRef.current);
+  const lastLookedUpPostal = useRef("");
+  const lookupCity = useCallback(async () => {
+    if (!addressPostal || addressPostal.length < 4 || addressCountry === "OTHER") return;
+    if (lastLookedUpPostal.current === `${addressCountry}:${addressPostal}`) return;
+    lastLookedUpPostal.current = `${addressCountry}:${addressPostal}`;
     setCitySuggestions([]);
-    if (!addressPostal || addressPostal.length < 3 || addressCountry === "OTHER") return;
-    postalDebounceRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`https://api.zippopotam.us/${addressCountry}/${addressPostal}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        const places: string[] = (data?.places ?? []).map((p: Record<string, string>) => p["place name"]).filter(Boolean);
-        if (places.length === 1) {
-          setAddressCity(places[0]);
-          setSaved(false);
-          setTouched(true);
-        } else if (places.length > 1) {
-          setCitySuggestions(places);
-        }
-      } catch {}
-    }, 500);
-    return () => { if (postalDebounceRef.current) clearTimeout(postalDebounceRef.current); };
+    try {
+      const res = await fetch(`https://api.zippopotam.us/${addressCountry}/${addressPostal}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const places: string[] = (data?.places ?? []).map((p: Record<string, string>) => p["place name"]).filter(Boolean);
+      if (places.length === 1) {
+        setAddressCity(places[0]);
+        setSaved(false);
+        setTouched(true);
+      } else if (places.length > 1) {
+        setCitySuggestions(places);
+      }
+    } catch {}
   }, [addressPostal, addressCountry]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -291,6 +289,7 @@ export function SettingsForm({
               type="text"
               value={addressPostal}
               onChange={(e) => { setAddressPostal(e.target.value); setSaved(false); setTouched(true); }}
+              onBlur={lookupCity}
               placeholder={t.addressPostalPlaceholder}
               className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
             />
