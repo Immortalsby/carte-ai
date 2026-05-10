@@ -8,6 +8,7 @@ import { detectLanguage } from "@/lib/languages";
 import { trackEvent } from "@/lib/analytics-client";
 import { languageDirection } from "@/lib/languages";
 import { useWishlist } from "@/hooks/useWishlist";
+import { getDictionary } from "@/lib/i18n";
 import { FunnelIcon, QuestionIcon } from "@phosphor-icons/react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { MenuBrowser } from "./MenuBrowser";
@@ -61,7 +62,8 @@ interface CustomerExperienceProps {
   addressCountry?: string;
 }
 
-export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false, addressCountry }: CustomerExperienceProps) {
+export function CustomerExperience({ menu: initialMenu, tenantId, tenantName, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false, addressCountry }: CustomerExperienceProps) {
+  const [menu, setMenu] = useState(initialMenu);
   const [lang, setLang] = useState<LanguageCode>("fr");
   const [excludedAllergens, setExcludedAllergens] = useState<Allergen[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -72,7 +74,9 @@ export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, ra
   const [detectedLang, setDetectedLang] = useState<LanguageCode | undefined>(undefined);
   const [showWaiterSummary, setShowWaiterSummary] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
-  const wishlist = useWishlist();
+  const [translating, setTranslating] = useState(false);
+  const translatedLangsRef = useRef<Set<string>>(new Set(["zh", "fr", "en"]));
+  const wishlist = useWishlist(menu.restaurant.slug);
   const turnstileTokenRef = useRef<string | null>(null);
   const handleTurnstileSuccess = useCallback((token: string) => {
     turnstileTokenRef.current = token;
@@ -120,6 +124,44 @@ export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, ra
     };
   }, [tenantId, menu.restaurant.slug, cuisineType]);
 
+  // On-demand menu translation: when user switches to a non-core language,
+  // check if dishes have translations. If not, trigger LLM translation.
+  useEffect(() => {
+    if (["zh", "fr", "en"].includes(lang)) return;
+    if (translatedLangsRef.current.has(lang)) return;
+
+    // Check if most dishes already have translations for this language
+    const missing = menu.dishes.filter((d) => !d.name[lang] || !d.description[lang]);
+    if (missing.length === 0) {
+      translatedLangsRef.current.add(lang);
+      return;
+    }
+
+    setTranslating(true);
+    fetch("/api/translate-menu", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: menu.restaurant.slug, targetLang: lang }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && data.count > 0) {
+          // Re-fetch the menu to get updated translations
+          fetch(`/api/menus/${menu.restaurant.slug}`)
+            .then((r) => r.json())
+            .then((updated) => {
+              if (updated?.dishes?.length > 0) {
+                setMenu(updated);
+              }
+            })
+            .catch(() => {});
+        }
+        translatedLangsRef.current.add(lang);
+      })
+      .catch(() => {})
+      .finally(() => setTranslating(false));
+  }, [lang, menu.restaurant.slug, menu.dishes]);
+
   // Filter dishes by excluded allergens
   const filteredDishes = menu.dishes.filter((dish) => {
     if (excludedAllergens.length === 0) return true;
@@ -135,12 +177,11 @@ export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, ra
     wishlist.toggle(dishIds);
   };
 
-  const filterLabel =
-    lang === "zh"
-      ? `\u8fc7\u6ee4 ${excludedAllergens.length > 0 ? `(${excludedAllergens.length})` : ""}`
-      : lang === "fr"
-        ? `Filtres ${excludedAllergens.length > 0 ? `(${excludedAllergens.length})` : ""}`
-        : `Filter ${excludedAllergens.length > 0 ? `(${excludedAllergens.length})` : ""}`;
+  const t = getDictionary(lang);
+
+  const filterLabel = excludedAllergens.length > 0
+    ? `${t.filter} (${excludedAllergens.length})`
+    : t.filter;
 
   const dir = languageDirection(lang);
 
@@ -179,7 +220,7 @@ export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, ra
 
         shareMessage={
           showShareBubble && !showShare
-            ? lang === "zh" ? "用得不错？分享给朋友吧~" : lang === "fr" ? "Vous aimez ? Partagez !" : "Enjoying it? Share with friends!"
+            ? t.sharePrompt
             : null
         }
         onShareClick={() => { setShowShareBubble(false); setShowShare(true); }}
@@ -224,7 +265,7 @@ export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, ra
           className="flex min-h-[36px] items-center gap-1.5 rounded-full border border-carte-primary/30 px-3 py-1.5 text-xs font-medium text-carte-primary transition-colors hover:bg-carte-primary/10"
         >
           <QuestionIcon weight="bold" className="h-3.5 w-3.5" />
-          {lang === "zh" ? "使用指南" : lang === "fr" ? "Guide" : "Guide"}
+          {t.guide}
         </button>
       </div>
 
@@ -235,6 +276,14 @@ export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, ra
             onChange={setExcludedAllergens}
             lang={lang}
           />
+        </div>
+      )}
+
+      {/* On-demand translation banner */}
+      {translating && (
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-carte-primary/20 bg-carte-primary/5 px-3 py-2.5 text-xs text-carte-text-muted animate-fade-in">
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-carte-primary border-t-transparent" />
+          {t.translating}
         </div>
       )}
 
@@ -259,7 +308,7 @@ export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, ra
           onClick={() => { setShowWishlist(false); setShowShare(true); }}
           className="text-xs text-carte-text-dim underline-offset-2 hover:text-carte-text-muted hover:underline"
         >
-          {lang === "zh" ? "\u5206\u4eab" : lang === "fr" ? "Partager" : "Share"}
+          {t.share}
         </button>
       </div>
 
@@ -338,11 +387,7 @@ export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, ra
         role="alert"
         className="mt-8 rounded-lg border border-carte-border bg-carte-surface p-3 text-center text-xs text-carte-warning"
       >
-        {lang === "zh"
-          ? "过敏原信息仅供参考。下单前请与服务员确认。"
-          : lang === "fr"
-            ? "Les informations sur les allergènes sont fournies à titre indicatif. Veuillez confirmer auprès de votre serveur avant de commander."
-            : "Allergen information is provided for reference only. Please confirm with your server before ordering."}
+        {t.allergenDisclaimer}
       </footer>
 
       {/* Contact email (FR57) + cookie settings */}

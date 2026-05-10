@@ -48,6 +48,23 @@ export async function patchDishImageUrl(
     .where(eq(menus.id, menu.id));
 }
 
+/**
+ * Patch the published menu payload with updated translations (in-place, no new version).
+ * Used by on-demand translation to persist dish translations.
+ */
+export async function patchMenuTranslations(
+  tenantId: string,
+  payload: RestaurantMenu,
+) {
+  const menu = await getPublishedMenu(tenantId);
+  if (!menu) return;
+
+  await db
+    .update(menus)
+    .set({ payload: payload as unknown as Record<string, unknown> })
+    .where(eq(menus.id, menu.id));
+}
+
 /** Maximum number of menu versions to keep per tenant */
 const MAX_VERSIONS = 10;
 

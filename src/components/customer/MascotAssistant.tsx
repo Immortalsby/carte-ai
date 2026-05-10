@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode, Allergen, RestaurantMenu } from "@/types/menu";
+import { getDictionary } from "@/lib/i18n";
 import type { PlanStatus } from "@/lib/trial";
 import type { MascotState } from "./CSSMascot";
 import type { ConciergeStep } from "./AIConcierge";
@@ -112,6 +113,7 @@ export function MascotAssistant({
   onPostMealDone,
   onPopularDishClick,
 }: MascotAssistantProps) {
+  const t = getDictionary(lang);
   const isExpired = planStatus === "trial_expired";
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelKey, setPanelKey] = useState(0); // increment to force ConciergePanel remount
@@ -612,7 +614,7 @@ export function MascotAssistant({
                     className="min-h-[36px] rounded-full px-4 py-1.5 text-xs font-semibold text-carte-bg shadow-sm"
                     style={{ backgroundColor: "var(--carte-primary)" }}
                   >
-                    {lang === "zh" ? "尝试一下" : lang === "fr" ? "J'essaie !" : "Try it!"}
+                    {t.tryIt}
                   </button>
                 </motion.div>
               )}
@@ -634,14 +636,14 @@ export function MascotAssistant({
                     className="min-h-[36px] rounded-full px-4 py-1.5 text-xs font-semibold text-carte-bg"
                     style={{ backgroundColor: "var(--carte-primary)" }}
                   >
-                    {lang === "zh" ? "点了！" : lang === "fr" ? "Oui !" : "Yes!"}
+                    {t.yesOrdered}
                   </button>
                   <button
                     type="button"
                     onClick={() => handlePostMealAnswer(false)}
                     className="min-h-[36px] rounded-full border border-carte-border px-4 py-1.5 text-xs font-medium text-carte-text-muted hover:bg-carte-surface"
                   >
-                    {lang === "zh" ? "没有" : lang === "fr" ? "Non" : "Not yet"}
+                    {t.notYet}
                   </button>
                 </motion.div>
               )}
@@ -671,7 +673,7 @@ export function MascotAssistant({
                     onClick={handlePostMealReviewDone}
                     className="min-h-[36px] rounded-full border border-carte-border px-4 py-1.5 text-xs font-medium text-carte-text-muted hover:bg-carte-surface"
                   >
-                    {lang === "zh" ? "下次吧" : lang === "fr" ? "Plus tard" : "Maybe later"}
+                    {t.maybeLater}
                   </button>
                 </motion.div>
               )}

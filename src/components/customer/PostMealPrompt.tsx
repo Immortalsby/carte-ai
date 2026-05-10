@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode } from "@/types/menu";
+import { getDictionary } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics-client";
 
 const labels: Record<string, Record<string, string>> = {
@@ -129,7 +130,7 @@ export function PostMealPrompt({
                     onClick={handleReviewDismiss}
                     className="min-h-[44px] flex-1 rounded-lg border border-carte-border py-2 text-sm font-medium text-carte-text-muted hover:bg-carte-surface-hover"
                   >
-                    {lang === "zh" ? "\u4e0b\u6b21\u518d\u8bf4" : lang === "fr" ? "Plus tard" : "Maybe later"}
+                    {getDictionary(lang).maybeLater}
                   </button>
                 </div>
               </>

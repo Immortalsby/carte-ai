@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode } from "@/types/menu";
+import { getDictionary } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics-client";
 import { useToast } from "@/components/ui/Toast";
 
@@ -31,6 +32,7 @@ export function SharePanel({
   onClose,
 }: SharePanelProps) {
   const { toast } = useToast();
+  const t = getDictionary(lang);
   const l = (key: string) =>
     shareLabels[key]?.[lang] || shareLabels[key]?.en || key;
 
@@ -241,7 +243,7 @@ export function SharePanel({
                     <polyline points="16 6 12 2 8 6"/>
                     <line x1="12" y1="2" x2="12" y2="15"/>
                   </svg>
-                  <span className="text-[10px]">{lang === "zh" ? "更多" : lang === "fr" ? "Plus" : "More"}</span>
+                  <span className="text-[10px]">{t.more}</span>
                 </button>
               )}
             </div>
@@ -251,7 +253,7 @@ export function SharePanel({
               onClick={onClose}
               className="mt-4 w-full text-center text-xs text-carte-text-dim"
             >
-              {lang === "zh" ? "\u5173\u95ed" : lang === "fr" ? "Fermer" : "Close"}
+              {t.close}
             </button>
           </motion.div>
         </>

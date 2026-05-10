@@ -3,28 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Dish, LanguageCode } from "@/types/menu";
+import { getDictionary } from "@/lib/i18n";
 import { CSSMascot } from "./CSSMascot";
-
-const labels = {
-  title: { en: "Show to Waiter", fr: "Montrer au serveur", zh: "给服务员看" },
-  generating: { en: "Cloché is preparing your order...", fr: "Cloché prépare votre commande...", zh: "Cloché 正在准备您的订单..." },
-  addNotes: { en: "Anything else to tell the waiter?", fr: "Autre chose à dire au serveur ?", zh: "还有什么要告诉服务员的吗？" },
-  notesPlaceholder: {
-    en: "e.g. tap water please, extra bread, birthday celebration...",
-    fr: "ex. une carafe d'eau SVP, du pain supplémentaire, anniversaire...",
-    zh: "如自来水、多要面包、生日庆祝等...",
-  },
-  generate: { en: "Generate order summary", fr: "Générer le résumé", zh: "生成订单摘要" },
-  regenerate: { en: "Regenerate", fr: "Régénérer", zh: "重新生成" },
-  close: { en: "Close", fr: "Fermer", zh: "关闭" },
-  error: { en: "Could not generate summary", fr: "Impossible de générer le résumé", zh: "无法生成摘要" },
-  retry: { en: "Retry", fr: "Réessayer", zh: "重试" },
-};
-
-function t(key: keyof typeof labels, lang: LanguageCode): string {
-  const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
-  return labels[key][l];
-}
 
 /** Map country code → language code for the waiter summary output */
 const countryToLang: Record<string, string> = {
@@ -53,6 +33,7 @@ export function WaiterSummary({
   tenantSlug,
   onClose,
 }: WaiterSummaryProps) {
+  const t = getDictionary(lang);
   const [step, setStep] = useState<"idle" | "loading" | "result" | "error">("idle");
   const [notes, setNotes] = useState("");
   const [summary, setSummary] = useState("");
@@ -137,7 +118,7 @@ export function WaiterSummary({
             {/* Drag handle — visual only, no drag behavior */}
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-carte-border" />
 
-            <h2 className="text-base font-bold text-carte-text">{t("title", lang)}</h2>
+            <h2 className="text-base font-bold text-carte-text">{t.waiterTitle}</h2>
 
             {/* Dish list preview */}
             <div className="mt-3 space-y-1.5">
@@ -156,11 +137,11 @@ export function WaiterSummary({
             {step === "idle" && (
               <div className="mt-4 space-y-4">
                 <div>
-                  <p className="text-xs font-medium text-carte-text-muted">{t("addNotes", lang)}</p>
+                  <p className="text-xs font-medium text-carte-text-muted">{t.waiterAddNotes}</p>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder={t("notesPlaceholder", lang)}
+                    placeholder={t.waiterNotesPlaceholder}
                     rows={2}
                     className="mt-1 w-full resize-none rounded-lg border border-carte-border bg-transparent px-3 py-2 text-xs text-carte-text placeholder:text-carte-text-dim"
                   />
@@ -172,7 +153,7 @@ export function WaiterSummary({
                   className="w-full rounded-xl py-3 text-sm font-semibold text-carte-bg active:opacity-80"
                   style={{ backgroundColor: "var(--carte-primary)" }}
                 >
-                  {t("generate", lang)}
+                  {t.waiterGenerate}
                 </button>
               </div>
             )}
@@ -181,7 +162,7 @@ export function WaiterSummary({
             {step === "loading" && (
               <div className="mt-6 flex flex-col items-center gap-3 py-8">
                 <CSSMascot state="thinking" className="h-16 w-16" />
-                <p className="text-xs text-carte-text-dim">{t("generating", lang)}</p>
+                <p className="text-xs text-carte-text-dim">{t.waiterGenerating}</p>
               </div>
             )}
 
@@ -200,7 +181,7 @@ export function WaiterSummary({
                     disabled={loading}
                     className="flex-1 rounded-xl border border-carte-border py-2.5 text-xs font-medium text-carte-text-muted hover:bg-carte-surface disabled:opacity-50"
                   >
-                    {t("regenerate", lang)}
+                    {t.waiterRegenerate}
                   </button>
                   <button
                     type="button"
@@ -208,7 +189,7 @@ export function WaiterSummary({
                     className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-carte-bg active:opacity-80"
                     style={{ backgroundColor: "var(--carte-primary)" }}
                   >
-                    {t("close", lang)}
+                    {t.close}
                   </button>
                 </div>
               </div>
@@ -218,13 +199,13 @@ export function WaiterSummary({
             {step === "error" && (
               <div className="mt-6 flex flex-col items-center gap-3 py-8">
                 <CSSMascot state="sad" className="h-16 w-16" />
-                <p className="text-xs text-carte-text-dim">{t("error", lang)}</p>
+                <p className="text-xs text-carte-text-dim">{t.waiterError}</p>
                 <button
                   type="button"
                   onClick={handleGenerate}
                   className="rounded-full border border-carte-border px-4 py-1.5 text-xs text-carte-text-muted hover:bg-carte-surface"
                 >
-                  {t("retry", lang)}
+                  {t.waiterRetry}
                 </button>
               </div>
             )}

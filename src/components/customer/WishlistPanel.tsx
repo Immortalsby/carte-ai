@@ -3,20 +3,7 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Dish, LanguageCode } from "@/types/menu";
-
-const labels = {
-  title: { en: "Saved Dishes", fr: "Plats sauvegardés", zh: "心愿单" },
-  empty: { en: "No saved dishes yet", fr: "Aucun plat sauvegardé", zh: "还没有保存的菜" },
-  clearAll: { en: "Clear all", fr: "Tout supprimer", zh: "清空" },
-  close: { en: "Close", fr: "Fermer", zh: "关闭" },
-  total: { en: "Total", fr: "Total", zh: "合计" },
-  showWaiter: { en: "Show to waiter", fr: "Montrer au serveur", zh: "给服务员看" },
-};
-
-function t(key: keyof typeof labels, lang: LanguageCode) {
-  const l = lang.startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
-  return labels[key][l];
-}
+import { getDictionary } from "@/lib/i18n";
 
 interface WishlistPanelProps {
   visible: boolean;
@@ -43,6 +30,8 @@ export function WishlistPanel({
   onDishTap,
   onShowWaiter,
 }: WishlistPanelProps) {
+  const t = getDictionary(lang);
+
   useEffect(() => {
     if (visible) {
       document.body.style.overflow = "hidden";
@@ -85,7 +74,7 @@ export function WishlistPanel({
 
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-carte-text">
-                {t("title", lang)}
+                {t.wishlistTitle}
                 {dishes.length > 0 && (
                   <span className="ml-2 text-sm font-normal text-carte-text-muted">
                     ({dishes.length})
@@ -98,14 +87,14 @@ export function WishlistPanel({
                   onClick={onClear}
                   className="text-xs text-carte-text-dim hover:text-carte-warning"
                 >
-                  {t("clearAll", lang)}
+                  {t.clearAll}
                 </button>
               )}
             </div>
 
             {dishes.length === 0 ? (
               <p className="mt-8 text-center text-sm text-carte-text-dim">
-                {t("empty", lang)}
+                {t.wishlistEmpty}
               </p>
             ) : (
               <div className="mt-3 space-y-2 overflow-y-auto" style={{ maxHeight: "calc(80vh - 180px)" }}>
@@ -165,7 +154,7 @@ export function WishlistPanel({
             {/* Total + close */}
             {dishes.length > 0 && (
               <div className="mt-4 flex items-center justify-between border-t border-carte-border pt-3">
-                <span className="text-sm text-carte-text-muted">{t("total", lang)}</span>
+                <span className="text-sm text-carte-text-muted">{t.total}</span>
                 <span className="text-base font-bold tabular-nums text-carte-primary">
                   &euro;{(total / 100).toFixed(2)}
                 </span>
@@ -179,7 +168,7 @@ export function WishlistPanel({
                   onClick={onShowWaiter}
                   className="flex-1 rounded-xl border border-carte-border py-3 text-sm font-semibold text-carte-text transition-colors hover:bg-carte-surface active:opacity-80"
                 >
-                  {t("showWaiter", lang)}
+                  {t.showWaiter}
                 </button>
               )}
               <button
@@ -188,7 +177,7 @@ export function WishlistPanel({
                 className="flex-1 rounded-xl py-3 text-sm font-semibold text-carte-bg active:opacity-80"
                 style={{ backgroundColor: "var(--carte-primary)" }}
               >
-                {t("close", lang)}
+                {t.close}
               </button>
             </div>
           </motion.div>

@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { getPublishedMenu, createMenuVersion } from "@/lib/db/queries/menus";
 import { restaurantMenuSchema } from "@/lib/validation";
-import { sanitizeRawMenu } from "@/lib/menu";
+import { sanitizeRawMenu, stripNonCoreTranslations } from "@/lib/menu";
 import { isFounder } from "@/lib/roles";
 
 // GET — public: fetch published menu by slug
@@ -62,7 +62,9 @@ export async function PUT(
     const body = await request.json();
     const sanitized = sanitizeRawMenu(body as Record<string, unknown>);
     const parsed = restaurantMenuSchema.parse(sanitized);
-    const menu = await createMenuVersion(tenant.id, parsed);
+    // Strip non-core translations so they regenerate on next customer visit
+    const cleaned = stripNonCoreTranslations(parsed);
+    const menu = await createMenuVersion(tenant.id, cleaned);
 
     return NextResponse.json(menu, { status: 201 });
   } catch (error) {

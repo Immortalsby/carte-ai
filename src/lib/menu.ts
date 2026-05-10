@@ -103,6 +103,28 @@ export function sanitizeRawMenu(raw: Record<string, unknown>): Record<string, un
   };
 }
 
+const CORE_LANGS = new Set(["zh", "fr", "en"]);
+
+/**
+ * Strip all non-core (non zh/fr/en) translations from dish names and descriptions.
+ * Called before saving a menu so that on-demand translations are regenerated
+ * on the next customer visit, staying in sync with updated content.
+ */
+export function stripNonCoreTranslations(menu: RestaurantMenu): RestaurantMenu {
+  return {
+    ...menu,
+    dishes: menu.dishes.map((dish) => ({
+      ...dish,
+      name: Object.fromEntries(
+        Object.entries(dish.name).filter(([k]) => CORE_LANGS.has(k)),
+      ) as typeof dish.name,
+      description: Object.fromEntries(
+        Object.entries(dish.description).filter(([k]) => CORE_LANGS.has(k)),
+      ) as typeof dish.description,
+    })),
+  };
+}
+
 export function findDishes(menu: RestaurantMenu, ids: string[]) {
   const byId = new Map(menu.dishes.map((dish) => [dish.id, dish]));
   return ids.flatMap((id) => {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { Dish, LanguageCode, Allergen, DietaryTag } from "@/types/menu";
+import { getDictionary } from "@/lib/i18n";
 
 const allergenEmoji: Record<Allergen, string> = {
   gluten: "\ud83c\udf3e",
@@ -39,6 +40,7 @@ interface DishCardProps {
 }
 
 export function DishCard({ dish, lang, cuisine, tenantId, onTap }: DishCardProps) {
+  const t = getDictionary(lang);
   const name = dish.name[lang] || dish.name.en || dish.name.fr;
   const desc = dish.description[lang] || dish.description.en || dish.description.fr;
   const price = (dish.priceCents / 100).toFixed(2);
@@ -89,7 +91,7 @@ export function DishCard({ dish, lang, cuisine, tenantId, onTap }: DishCardProps
           {/* AI Generated badge (FR24) */}
           {displayImage.includes("dish-images/") && (
             <span className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5 text-center text-[7px] leading-tight text-white/80">
-              {lang === "zh" ? "AI 生成 · 仅供参考" : lang === "fr" ? "IA · Indicatif" : "AI Generated · For Reference"}
+              {t.aiGenerated}
             </span>
           )}
         </div>
@@ -130,7 +132,7 @@ export function DishCard({ dish, lang, cuisine, tenantId, onTap }: DishCardProps
           </div>
         ) : dish.allergens.includes("unknown") ? (
           <p className="mt-1 text-[10px] text-carte-text-dim">
-            {lang === "zh" ? "过敏原信息请咨询店员" : lang === "fr" ? "Allergènes : veuillez demander" : "Allergens: please ask staff"}
+            {t.allergensAskStaff}
           </p>
         ) : null}
       </div>

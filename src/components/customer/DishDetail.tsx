@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { Dish, LanguageCode, Allergen } from "@/types/menu";
+import { getDictionary } from "@/lib/i18n";
 import { CSSMascot } from "./CSSMascot";
 import { ForkKnife, ShieldCheck, Fire } from "@phosphor-icons/react";
 
@@ -42,6 +43,7 @@ interface DishDetailProps {
 }
 
 export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, onToggleSave }: DishDetailProps) {
+  const t = getDictionary(lang);
   const name = dish.name[lang] || dish.name.en || dish.name.fr;
   const desc = dish.description[lang] || dish.description.en || dish.description.fr;
   const price = (dish.priceCents / 100).toFixed(2);
@@ -227,7 +229,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
         {dish.ingredients.length > 0 && (
           <div className="mt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
-              {lang === "zh" ? "食材" : lang === "fr" ? "Ingrédients" : "Ingredients"}
+              {t.ingredients}
             </h3>
             <p className="mt-1 text-sm text-carte-text-muted">
               {dish.ingredients.join(", ")}
@@ -239,7 +241,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
         {dish.allergens.filter((a) => a !== "unknown").length > 0 ? (
           <div className="mt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
-              {lang === "zh" ? "过敏原" : lang === "fr" ? "Allergènes" : "Allergens"}
+              {t.allergens}
             </h3>
             <div className="mt-1 flex flex-wrap gap-1.5">
               {dish.allergens
@@ -261,7 +263,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
         ) : (
           <div className="mt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
-              {lang === "zh" ? "过敏原" : lang === "fr" ? "Allergènes" : "Allergens"}
+              {t.allergens}
             </h3>
             {/* AI allergen analysis result */}
             {aiAllergens !== null ? (
@@ -299,12 +301,12 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
               <div className="mt-1 flex items-center gap-2">
                 <CSSMascot state="thinking" className="h-6 w-6 shrink-0" />
                 <span className="text-xs text-carte-text-dim">
-                  {lang === "zh" ? "Cloché 正在分析..." : lang === "fr" ? "Cloché analyse..." : "Cloché is analyzing..."}
+                  {t.clocheAnalyzing}
                 </span>
               </div>
             ) : allergenError ? (
               <p className="mt-1 text-xs text-carte-text-dim">
-                {lang === "zh" ? "分析暂时不可用" : lang === "fr" ? "Analyse indisponible" : "Analysis unavailable"}
+                {t.analysisUnavailable}
               </p>
             ) : (
               <button
@@ -313,7 +315,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
                 className="mt-1 flex items-center gap-1.5 text-xs text-carte-text-dim transition-colors hover:text-carte-text-muted"
               >
                 <ShieldCheck weight="duotone" className="h-3.5 w-3.5 text-carte-primary" />
-                {lang === "zh" ? "让 Cloché 分析过敏原" : lang === "fr" ? "Cloché analyse les allergènes" : "Ask Cloché to analyze allergens"}
+                {t.analyzeAllergens}
               </button>
             )}
           </div>
@@ -322,7 +324,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
         {/* Calories */}
         <div className="mt-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-carte-text-dim">
-            {lang === "zh" ? "卡路里" : lang === "fr" ? "Calories" : "Calories"}
+            {t.calories}
           </h3>
           {dish.caloriesKcal ? (
             <p className="mt-1 text-sm text-carte-text-muted">{dish.caloriesKcal} kcal</p>
@@ -338,12 +340,12 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
             <div className="mt-1 flex items-center gap-2">
               <CSSMascot state="thinking" className="h-6 w-6 shrink-0" />
               <span className="text-xs text-carte-text-dim">
-                {lang === "zh" ? "Cloché 正在估算..." : lang === "fr" ? "Cloché estime..." : "Cloché is estimating..."}
+                {t.clocheEstimating}
               </span>
             </div>
           ) : calorieError ? (
             <p className="mt-1 text-xs text-carte-text-dim">
-              {lang === "zh" ? "估算暂时不可用" : lang === "fr" ? "Estimation indisponible" : "Estimation unavailable"}
+              {t.estimationUnavailable}
             </p>
           ) : (
             <button
@@ -352,7 +354,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
               className="mt-1 flex items-center gap-1.5 text-xs text-carte-text-dim transition-colors hover:text-carte-text-muted"
             >
               <Fire weight="duotone" className="h-3.5 w-3.5 text-carte-primary" />
-              {lang === "zh" ? "让 Cloché 估算卡路里" : lang === "fr" ? "Cloché estime les calories" : "Ask Cloché to estimate calories"}
+              {t.estimateCalories}
             </button>
           )}
         </div>
@@ -360,7 +362,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
         {/* Spice level */}
         {dish.spiceLevel > 0 && (
           <div className="mt-3 text-sm text-carte-text-muted">
-            {lang === "zh" ? "辣度" : lang === "fr" ? "Piquant" : "Spice"}: {"\ud83c\udf36\ufe0f".repeat(dish.spiceLevel)}
+            {t.spice}: {"\ud83c\udf36\ufe0f".repeat(dish.spiceLevel)}
           </div>
         )}
 
@@ -416,7 +418,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
           className="mt-6 w-full rounded-xl py-3 text-sm font-semibold text-carte-bg active:opacity-80"
           style={{ backgroundColor: "var(--carte-primary)" }}
         >
-          {lang === "zh" ? "关闭" : lang === "fr" ? "Fermer" : "Close"}
+          {t.close}
         </button>
       </motion.div>
     </motion.div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode } from "@/types/menu";
+import { getDictionary } from "@/lib/i18n";
 import {
   ANALYTICS_CONSENT_KEY,
   setAnalyticsConsent,
@@ -281,7 +282,7 @@ export function CookieSettingsButton({ lang }: { lang: LanguageCode }) {
 
   if (!visible) return null;
 
-  const label = lang === "zh" ? "Cookie 设置" : lang === "fr" ? "Paramètres cookies" : "Cookie settings";
+  const label = getDictionary(lang).cookieSettings;
 
   return (
     <button
