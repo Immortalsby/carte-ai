@@ -867,15 +867,20 @@ Prices in cents (18.50€=1850), default EUR. portionScore: 1=small 2=normal 3=l
     try {
       const client = new OpenAI({ apiKey: openaiKey });
       const response = await client.responses.create({
-        model: process.env.OPENAI_STRUCTURE_MODEL || "gpt-4.1-nano",
+        model: process.env.OPENAI_STRUCTURE_MODEL || "gpt-4.1-mini",
         input: [
           { role: "system", content: structurePrompt },
           { role: "user", content: `Menu OCR:\n${ocrText}` },
         ],
       });
       const text = response.output_text;
-      if (text) return JSON.parse(stripJson(text)) as RestaurantMenu;
-    } catch {
+      if (text) {
+        const parsed = JSON.parse(stripJson(text)) as RestaurantMenu;
+        if (parsed?.dishes?.length > 0) return parsed;
+        console.warn("[structureMenu] OpenAI returned 0 dishes, falling through to Anthropic");
+      }
+    } catch (err) {
+      console.error("[structureMenu] OpenAI failed:", err instanceof Error ? err.message : err);
       // Fall through to Anthropic
     }
   }

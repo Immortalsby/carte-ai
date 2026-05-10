@@ -18,11 +18,14 @@ export async function POST(request: Request) {
   }
 
   try {
+    console.log(`[structure] OCR text length: ${ocrText.length} chars, first 200: ${ocrText.slice(0, 200)}`);
     const raw = await structureMenuWithLlm(ocrText);
 
     if (!raw || !Array.isArray(raw.dishes) || raw.dishes.length === 0) {
+      console.warn("[structure] LLM returned no dishes. raw:", JSON.stringify(raw)?.slice(0, 500));
       return NextResponse.json({ error: "Could not structure menu from OCR text" }, { status: 422 });
     }
+    console.log(`[structure] Success: ${raw.dishes.length} dishes extracted`);
 
     const menu = parseMenu(sanitizeRawMenu(raw as unknown as Record<string, unknown>));
 
