@@ -1,38 +1,63 @@
 export default function CustomerLoading() {
   return (
-    <main className="mx-auto max-w-lg animate-pulse px-4 py-6 bg-carte-bg min-h-screen">
-      {/* Header */}
-      <div className="text-center">
-        <div className="mx-auto h-7 w-48 rounded bg-carte-surface" />
-        <div className="mx-auto mt-2 h-4 w-28 rounded bg-carte-surface" />
-      </div>
+    <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center bg-carte-bg px-4">
+      {/* Cloché mascot silhouette with pulse animation */}
+      <div className="relative flex flex-col items-center gap-4">
+        {/* Glow ring behind mascot */}
+        <div
+          className="absolute -inset-4 animate-pulse rounded-full blur-xl opacity-30"
+          style={{ backgroundColor: "var(--cuisine-color, var(--carte-primary))" }}
+        />
 
-      {/* Language switcher */}
-      <div className="mt-4 flex gap-2">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-8 w-16 rounded-full bg-carte-surface" />
-        ))}
-      </div>
+        {/* Cloche dome icon (SVG) */}
+        <div className="relative animate-bounce" style={{ animationDuration: "1.4s" }}>
+          <svg
+            width="72"
+            height="72"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="drop-shadow-lg"
+          >
+            {/* Dome */}
+            <path
+              d="M8 44c0-13.255 10.745-24 24-24s24 10.745 24 24H8z"
+              fill="var(--cuisine-color, var(--carte-primary))"
+              opacity="0.85"
+            />
+            {/* Knob */}
+            <circle cx="32" cy="18" r="3.5" fill="var(--cuisine-color, var(--carte-primary))" />
+            {/* Plate */}
+            <rect x="4" y="44" width="56" height="4" rx="2" fill="var(--carte-text-muted)" opacity="0.5" />
+            {/* Shine highlight */}
+            <path
+              d="M18 36c0-7.732 6.268-14 14-14"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              opacity="0.3"
+            />
+          </svg>
+        </div>
 
-      {/* Category tabs */}
-      <div className="mt-4 flex gap-2 overflow-hidden">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="h-7 w-20 shrink-0 rounded-full bg-carte-surface" />
-        ))}
-      </div>
+        {/* Loading text */}
+        <p className="text-sm font-medium text-carte-text-muted animate-pulse">
+          Cloché prépare votre menu...
+        </p>
 
-      {/* Dish cards */}
-      <div className="mt-4 space-y-3">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="rounded-xl border border-carte-border p-4" style={{ backgroundColor: "var(--carte-surface)" }}>
-            <div className="flex items-center justify-between">
-              <div className="h-4 w-36 rounded bg-carte-border" />
-              <div className="h-4 w-12 rounded bg-carte-border" />
-            </div>
-            <div className="mt-2 h-3 w-full rounded bg-carte-border" />
-            <div className="mt-1 h-3 w-2/3 rounded bg-carte-border" />
-          </div>
-        ))}
+        {/* Subtle skeleton cards below */}
+        <div className="mt-6 w-full max-w-xs space-y-2.5 opacity-30">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-14 animate-pulse rounded-xl"
+              style={{
+                backgroundColor: "var(--carte-surface)",
+                animationDelay: `${i * 150}ms`,
+              }}
+            />
+          ))}
+        </div>
       </div>
     </main>
   );

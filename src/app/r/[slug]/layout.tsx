@@ -46,7 +46,7 @@ export default async function CustomerLayout({
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen bg-carte-bg"
       style={{ "--cuisine-color": themeColor } as React.CSSProperties}
     >
       {children}
