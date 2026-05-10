@@ -89,7 +89,17 @@ export function CustomerExperience({ menu, tenantId, tenantName, cuisineType, ra
     const detected = detectLanguage({ accept: [...navigator.languages], fallback: "fr" }) as LanguageCode;
     setLang(detected);
     setDetectedLang(detected);
-    trackEvent(tenantId, "scan", { slug: menu.restaurant.slug }, detected);
+    // Deduplicate scans: one per slug per browser tab session
+    const scanKey = `carte-scanned-${menu.restaurant.slug}`;
+    try {
+      if (!sessionStorage.getItem(scanKey)) {
+        trackEvent(tenantId, "scan", { slug: menu.restaurant.slug }, detected);
+        sessionStorage.setItem(scanKey, "1");
+      }
+    } catch {
+      // sessionStorage unavailable (private browsing) — send anyway
+      trackEvent(tenantId, "scan", { slug: menu.restaurant.slug }, detected);
+    }
 
     // Dwell time tracking (FR35): track when user leaves the page
     const entryTime = Date.now();
