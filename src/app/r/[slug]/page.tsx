@@ -41,7 +41,7 @@ export default async function CustomerPage({
 
   return (
     <main
-      className="mx-auto max-w-lg px-4 py-6 bg-carte-bg min-h-screen"
+      className="mx-auto max-w-lg md:max-w-2xl px-4 py-6 bg-carte-bg min-h-screen"
       data-cuisine={tenant.cuisine_type ?? undefined}
     >
       {menuData && menuData.dishes.length > 0 ? (

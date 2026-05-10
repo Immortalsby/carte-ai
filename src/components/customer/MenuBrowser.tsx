@@ -134,7 +134,7 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, t
             <h2 className="mb-2 text-sm font-bold uppercase tracking-wider text-carte-text-dim">
               {categoryLabels[category][lang] || categoryLabels[category].en}
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
               {items.map((dish) => (
                 <div key={dish.id} ref={(el) => { dishCardRefs.current[dish.id] = el; }}>
                   <DishCard
