@@ -861,11 +861,11 @@ Allergens: gluten,crustaceans,eggs,fish,peanuts,soy,milk,nuts,celery,mustard,ses
 DietaryTags: vegetarian,vegan,halal_possible,contains_pork,contains_beef,contains_seafood,spicy,signature,popular.
 Prices in cents (18.50€=1850), default EUR. portionScore: 1=small 2=normal 3=large/sharing. Description: leave empty string if not obvious, do NOT generate creative descriptions.`;
 
-  // Try OpenAI first (fast for text-only tasks)
+  // Try OpenAI first (fast for text-only tasks) — 45s timeout to leave room for Anthropic fallback
   const openaiKey = process.env.OPENAI_API_KEY;
   if (openaiKey) {
     try {
-      const client = new OpenAI({ apiKey: openaiKey });
+      const client = new OpenAI({ apiKey: openaiKey, timeout: 45_000 });
       const response = await client.responses.create({
         model: process.env.OPENAI_STRUCTURE_MODEL || "gpt-4.1-mini",
         input: [
@@ -885,10 +885,15 @@ Prices in cents (18.50€=1850), default EUR. portionScore: 1=small 2=normal 3=l
     }
   }
 
-  // Fallback: Anthropic
-  const text = await createAnthropicMessage(
-    `${structurePrompt}\n\nHere is the raw OCR text from the menu:\n\n${ocrText}`,
-  );
-  if (!text) return null;
-  return JSON.parse(stripJson(text)) as RestaurantMenu;
+  // Fallback: Anthropic (also with 45s timeout via AbortSignal)
+  try {
+    const text = await createAnthropicMessage(
+      `${structurePrompt}\n\nMenu OCR:\n${ocrText}`,
+    );
+    if (!text) return null;
+    return JSON.parse(stripJson(text)) as RestaurantMenu;
+  } catch (err) {
+    console.error("[structureMenu] Anthropic failed:", err instanceof Error ? err.message : err);
+    return null;
+  }
 }
