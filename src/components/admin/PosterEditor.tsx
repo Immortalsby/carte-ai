@@ -291,13 +291,13 @@ export function PosterEditor({
     if (!posterRef.current) return;
     setDownloadingPdf(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
+      const html2canvas = (await import("html2canvas-pro")).default;
       const { jsPDF } = await import("jspdf");
 
       const el = posterRef.current;
 
-      // html2canvas renders directly to canvas — no SVG intermediary,
-      // so large data-URL images (background, QR) are captured reliably.
+      // html2canvas-pro supports modern CSS color functions (oklch, oklab, lab, lch)
+      // and renders directly to canvas — reliable for large data-URL images.
       const canvas = await html2canvas(el, {
         scale: 2,
         backgroundColor: activeBg,
@@ -307,17 +307,6 @@ export function PosterEditor({
         allowTaint: true,
         onclone: (_doc: Document, cloned: HTMLElement) => {
           cloned.style.transform = "none";
-          // html2canvas v1 cannot parse modern CSS color functions (oklch, oklab, lab, lch).
-          // Replace them with a safe hex fallback in the cloned document's stylesheets.
-          // This does not affect the poster's visual output — it uses inline hex styles.
-          _doc.querySelectorAll("style").forEach((style) => {
-            if (style.textContent) {
-              style.textContent = style.textContent.replace(
-                /oklch\([^)]+\)|oklab\([^)]+\)|lab\([^)]+\)|lch\([^)]+\)/g,
-                "#808080",
-              );
-            }
-          });
         },
       });
 
