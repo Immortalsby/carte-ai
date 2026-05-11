@@ -14,7 +14,7 @@ import { TzCookie } from "@/components/admin/TzCookie";
 import { Link as LinkIcon, SignOut as SignOutIcon } from "@phosphor-icons/react/dist/ssr";
 import { TrialBanner } from "@/components/admin/TrialBanner";
 import { ExpiredGate } from "@/components/admin/ExpiredGate";
-import { OnboardingHelpButton } from "@/components/admin/OnboardingGuide";
+import { OnboardingGuide, OnboardingHelpButton } from "@/components/admin/OnboardingGuide";
 
 export default async function AdminLayout({
   children,
@@ -129,6 +129,7 @@ export default async function AdminLayout({
 
       {/* Main content */}
       <main className="flex-1 p-4 lg:p-6">
+        <OnboardingGuide locale={locale} />
         <TrialBanner
           plan={tenant.plan}
           daysLeft={

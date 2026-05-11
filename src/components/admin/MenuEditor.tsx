@@ -418,6 +418,27 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
             })}
           </div>
         )}
+        {/* Add custom category — shown above categories on mobile */}
+        {!activeDragId && (
+          <div className="mt-4 flex items-center gap-2 lg:hidden">
+            <input
+              type="text"
+              placeholder={t.addCategoryPlaceholder}
+              className="w-48 rounded-lg border border-dashed border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const val = (e.target as HTMLInputElement).value.trim().toLowerCase().replace(/\s+/g, "_");
+                  if (val && !categoryOrder.includes(val)) {
+                    setCustomCategories((prev) => [...prev, val]);
+                    setSaved(false);
+                  }
+                  (e.target as HTMLInputElement).value = "";
+                }
+              }}
+            />
+            <span className="text-xs text-muted-foreground">{t.addCategory}</span>
+          </div>
+        )}
         <div className="mt-6 space-y-6">
           {categoryOrder.map((category) => {
             const items = menu.dishes.filter((d) => d.category === category);
@@ -558,9 +579,9 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
           })}
         </div>
 
-        {/* Add custom category */}
+        {/* Add custom category — desktop only (mobile version is above) */}
         {!activeDragId && (
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-4 hidden items-center gap-2 lg:flex">
             <input
               type="text"
               placeholder={t.addCategoryPlaceholder}

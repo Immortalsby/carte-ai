@@ -10,7 +10,6 @@ import { getPublishedMenu } from "@/lib/db/queries/menus";
 import type { RestaurantMenu } from "@/types/menu";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
 import { ListBullets, ChartLineUp, Image, LinkSimple } from "@phosphor-icons/react/dist/ssr";
-import { OnboardingGuide } from "@/components/admin/OnboardingGuide";
 
 // LLM quota caps per tier (Phase 1: all POC)
 const LLM_QUOTA_CALLS = 5000;
@@ -65,10 +64,6 @@ export default async function AdminDashboard({
     <div>
       <h1 className="text-2xl font-bold">{t.dashboard}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{tAny.dashOverviewTitle}</p>
-
-      <div className="mt-6">
-        <OnboardingGuide locale={locale} />
-      </div>
 
       {/* Menu overview cards */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
