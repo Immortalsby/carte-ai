@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
@@ -100,6 +100,24 @@ export function PosterEditor({
   const tAny = t as unknown as Record<string, string>;
   const { toast } = useToast();
   const posterRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [posterScale, setPosterScale] = useState(1);
+
+  const POSTER_W = 760;
+  const POSTER_H = Math.round(POSTER_W * 1.414);
+
+  const recalcScale = useCallback(() => {
+    if (!wrapperRef.current) return;
+    const available = wrapperRef.current.clientWidth;
+    setPosterScale(Math.min(1, available / POSTER_W));
+  }, []);
+
+  useEffect(() => {
+    recalcScale();
+    window.addEventListener("resize", recalcScale);
+    return () => window.removeEventListener("resize", recalcScale);
+  }, [recalcScale]);
+
   const [posterLocale, setPosterLocale] = useState<AdminLocale>("fr");
   const pt = getAdminDict(posterLocale);
   const [theme, setTheme] = useState(presetThemes[0]);
@@ -509,13 +527,13 @@ export function PosterEditor({
         </div>
       </div>
 
-      {/* Poster Preview (A4 ratio) — fixed dimensions for PDF capture, scrollable on mobile */}
-      <div className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:px-0">
-        <div className="mx-auto w-fit">
+      {/* Poster Preview (A4 ratio) — fixed dimensions for PDF capture, scaled to fit on mobile */}
+      <div ref={wrapperRef} className="mx-auto w-full" style={{ maxWidth: POSTER_W }}>
+        <div className="relative overflow-hidden" style={{ height: POSTER_H * posterScale }}>
           <div
             ref={posterRef}
-            className="poster-content overflow-hidden rounded-[2rem] shadow-2xl print:rounded-none print:shadow-none"
-            style={{ backgroundColor: activeBg, width: 760, height: Math.round(760 * 1.414), padding: 40 }}
+            className="poster-content absolute left-0 top-0 origin-top-left overflow-hidden rounded-[2rem] shadow-2xl print:rounded-none print:shadow-none"
+            style={{ backgroundColor: activeBg, width: POSTER_W, height: POSTER_H, padding: 40, transform: `scale(${posterScale})` }}
           >
         <div
           className="relative flex h-full flex-col justify-between overflow-hidden rounded-[1.5rem] border p-9"
