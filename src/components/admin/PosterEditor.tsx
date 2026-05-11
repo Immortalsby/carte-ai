@@ -721,14 +721,38 @@ export function PosterEditor({
                       CarteAI
                     </p>
                   </div>
-                  {showUrl && (
-                    <p className="mt-3 font-mono text-sm" style={{ color: activeAccent }}>
-                      carte-ai.link
-                    </p>
+                  {showBadgeBudget && (
+                    <div
+                      className="mt-3 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
+                      style={{
+                        borderColor: hexToRgba(activeAccent, 0.2),
+                        backgroundColor: hexToRgba(activeAccent, 0.1),
+                        color: isLightBg ? activeAccent : hexToRgba(activeText, 0.9),
+                      }}
+                    >
+                      {pt.posterBadge1}
+                    </div>
+                  )}
+                  {showBadgeAI && (
+                    <div
+                      className={`${showBadgeBudget ? "mt-2 " : "mt-3 "}inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm`}
+                      style={{
+                        borderColor: hexToRgba(activeAccent, 0.15),
+                        backgroundColor: hexToRgba(activeAccent, 0.06),
+                        color: isLightBg ? activeAccent : hexToRgba(activeText, 0.85),
+                      }}
+                    >
+                      {pt.posterBadge2}
+                    </div>
                   )}
                 </div>
 
                 <div>
+                  {showUrl && (
+                    <p className="mb-3 font-mono text-sm" style={{ color: activeAccent }}>
+                      carte-ai.link
+                    </p>
+                  )}
                   <p className="text-3xl font-semibold" style={{ color: activeText }}>
                     {restaurantName}
                   </p>
@@ -742,33 +766,6 @@ export function PosterEditor({
                       {address}
                     </p>
                   )}
-                </div>
-
-                <div>
-                  {showBadgeBudget && (
-                    <div
-                      className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
-                      style={{
-                        borderColor: hexToRgba(activeAccent, 0.2),
-                        backgroundColor: hexToRgba(activeAccent, 0.1),
-                        color: isLightBg ? activeAccent : hexToRgba(activeText, 0.9),
-                      }}
-                    >
-                      {pt.posterBadge1}
-                    </div>
-                  )}
-                  {showBadgeAI && (
-                    <div
-                      className={`${showBadgeBudget ? "mt-2 " : ""}inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm`}
-                      style={{
-                        borderColor: hexToRgba(activeAccent, 0.15),
-                        backgroundColor: hexToRgba(activeAccent, 0.06),
-                        color: isLightBg ? activeAccent : hexToRgba(activeText, 0.85),
-                      }}
-                    >
-                      {pt.posterBadge2}
-                    </div>
-                  )}
                   {/* Custom text elements */}
                   {customTexts.filter(Boolean).length > 0 && (
                     <div className="mt-4 space-y-1.5">
@@ -780,6 +777,8 @@ export function PosterEditor({
                     </div>
                   )}
                 </div>
+
+                <div />
               </div>
 
               {/* Right side: QR code */}
@@ -817,6 +816,30 @@ export function PosterEditor({
                     CarteAI
                   </p>
                 </div>
+                {showBadgeBudget && (
+                  <div
+                    className="mt-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
+                    style={{
+                      borderColor: hexToRgba(activeAccent, 0.2),
+                      backgroundColor: hexToRgba(activeAccent, 0.1),
+                      color: isLightBg ? activeAccent : hexToRgba(activeText, 0.9),
+                    }}
+                  >
+                    {pt.posterBadge1}
+                  </div>
+                )}
+                {showBadgeAI && (
+                  <div
+                    className={`${showBadgeBudget ? "mt-2 " : "mt-4 "}inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm`}
+                    style={{
+                      borderColor: hexToRgba(activeAccent, 0.15),
+                      backgroundColor: hexToRgba(activeAccent, 0.06),
+                      color: isLightBg ? activeAccent : hexToRgba(activeText, 0.85),
+                    }}
+                  >
+                    {pt.posterBadge2}
+                  </div>
+                )}
                 <h1
                   className="mt-5 max-w-xl text-6xl font-semibold leading-[0.95]"
                   style={{ color: activeText }}
@@ -833,32 +856,8 @@ export function PosterEditor({
 
               <div className="relative z-10 grid grid-cols-[1fr_1.1fr] items-end gap-8">
                 <div>
-                  {showBadgeBudget && (
-                    <div
-                      className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
-                      style={{
-                        borderColor: hexToRgba(activeAccent, 0.2),
-                        backgroundColor: hexToRgba(activeAccent, 0.1),
-                        color: isLightBg ? activeAccent : hexToRgba(activeText, 0.9),
-                      }}
-                    >
-                      {pt.posterBadge1}
-                    </div>
-                  )}
-                  {showBadgeAI && (
-                    <div
-                      className={`${showBadgeBudget ? "mt-2 " : ""}inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm`}
-                      style={{
-                        borderColor: hexToRgba(activeAccent, 0.15),
-                        backgroundColor: hexToRgba(activeAccent, 0.06),
-                        color: isLightBg ? activeAccent : hexToRgba(activeText, 0.85),
-                      }}
-                    >
-                      {pt.posterBadge2}
-                    </div>
-                  )}
                   <p
-                    className="mt-5 text-3xl font-semibold"
+                    className="text-3xl font-semibold"
                     style={{ color: activeText }}
                   >
                     {restaurantName}
