@@ -11,70 +11,7 @@ import {
   resetAnalyticsConsent,
 } from "@/lib/analytics-client";
 
-const messages: Record<string, {
-  text: string;
-  detail: string;
-  accept: string;
-  reject: string;
-  settings: string;
-  settingsTitle: string;
-  essential: string;
-  essentialDesc: string;
-  analytics: string;
-  analyticsDesc: string;
-  alwaysOn: string;
-  save: string;
-}> = {
-  en: {
-    text: "We use cookies to improve your experience.",
-    detail: "Essential cookies keep the site working. Analytics cookies help us understand how you use CarteAI so we can improve it — they are only activated with your consent.",
-    accept: "Accept all",
-    reject: "Essential only",
-    settings: "Cookie settings",
-    settingsTitle: "Cookie Preferences",
-    essential: "Essential cookies",
-    essentialDesc: "Required for the site to function (authentication, language, timezone). Cannot be disabled.",
-    analytics: "Analytics cookies",
-    analyticsDesc: "Help us understand usage patterns (scans, recommendations, dwell time). No personal data is shared with third parties.",
-    alwaysOn: "Always on",
-    save: "Save preferences",
-  },
-  fr: {
-    text: "Nous utilisons des cookies pour améliorer votre expérience.",
-    detail: "Les cookies essentiels assurent le fonctionnement du site. Les cookies analytiques nous aident à comprendre comment vous utilisez CarteAI — ils ne sont activés qu'avec votre consentement.",
-    accept: "Tout accepter",
-    reject: "Essentiels uniquement",
-    settings: "Paramètres cookies",
-    settingsTitle: "Préférences de cookies",
-    essential: "Cookies essentiels",
-    essentialDesc: "Nécessaires au fonctionnement du site (authentification, langue, fuseau horaire). Ne peuvent pas être désactivés.",
-    analytics: "Cookies analytiques",
-    analyticsDesc: "Nous aident à comprendre les usages (scans, recommandations, temps de consultation). Aucune donnée personnelle n'est partagée avec des tiers.",
-    alwaysOn: "Toujours actifs",
-    save: "Enregistrer",
-  },
-  zh: {
-    text: "我们使用 Cookie 来改善您的体验。",
-    detail: "基本 Cookie 保证网站正常运行。分析 Cookie 帮助我们了解您如何使用 CarteAI——仅在您同意后才会启用。",
-    accept: "全部接受",
-    reject: "仅必要 Cookie",
-    settings: "Cookie 设置",
-    settingsTitle: "Cookie 偏好设置",
-    essential: "必要 Cookie",
-    essentialDesc: "网站正常运行所必需的（身份验证、语言、时区），无法关闭。",
-    analytics: "分析 Cookie",
-    analyticsDesc: "帮助我们了解使用情况（扫码、推荐、停留时间），不会与第三方共享个人数据。",
-    alwaysOn: "始终开启",
-    save: "保存设置",
-  },
-};
-
-function getMsg(lang: string) {
-  if (lang in messages) return messages[lang];
-  if (lang.startsWith("fr")) return messages.fr;
-  if (lang.startsWith("zh")) return messages.zh;
-  return messages.en;
-}
+// Cookie consent messages now served from getDictionary
 
 interface Props {
   lang: LanguageCode;
@@ -109,7 +46,7 @@ export function ClocheCookieConsent({ lang }: Props) {
     setShowSettings(false);
   }
 
-  const msg = getMsg(lang);
+  const msg = getDictionary(lang);
 
   return (
     <AnimatePresence>
@@ -147,10 +84,10 @@ export function ClocheCookieConsent({ lang }: Props) {
             {!showSettings ? (
               <>
                 <p className="text-sm leading-relaxed" style={{ color: "var(--carte-text)" }}>
-                  {msg.text}
+                  {msg.cookieText}
                 </p>
                 <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--carte-text-muted)" }}>
-                  {msg.detail}
+                  {msg.cookieDetail}
                 </p>
 
                 {/* Accept / Reject — same prominence */}
@@ -161,7 +98,7 @@ export function ClocheCookieConsent({ lang }: Props) {
                     className="flex-1 rounded-xl py-2 text-sm font-semibold text-white transition-colors"
                     style={{ backgroundColor: "#10b981" }}
                   >
-                    {msg.accept}
+                    {msg.cookieAccept}
                   </button>
                   <button
                     type="button"
@@ -173,7 +110,7 @@ export function ClocheCookieConsent({ lang }: Props) {
                       backgroundColor: "var(--carte-surface)",
                     }}
                   >
-                    {msg.reject}
+                    {msg.cookieReject}
                   </button>
                 </div>
 
@@ -184,22 +121,22 @@ export function ClocheCookieConsent({ lang }: Props) {
                   className="mt-2 w-full text-center text-xs underline underline-offset-2 transition-colors"
                   style={{ color: "var(--carte-text-dim)" }}
                 >
-                  {msg.settings}
+                  {msg.cookieSettings}
                 </button>
               </>
             ) : (
               <>
                 <p className="text-sm font-semibold" style={{ color: "var(--carte-text)" }}>
-                  {msg.settingsTitle}
+                  {msg.cookieSettingsTitle}
                 </p>
 
                 {/* Essential — always on */}
                 <div className="mt-3 flex items-start gap-3 rounded-lg border p-3" style={{ borderColor: "var(--carte-border)" }}>
                   <div className="mt-0.5 h-5 w-9 shrink-0 rounded-full bg-emerald-500 opacity-60" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium" style={{ color: "var(--carte-text)" }}>{msg.essential}</p>
-                    <p className="mt-0.5 text-[11px]" style={{ color: "var(--carte-text-dim)" }}>{msg.essentialDesc}</p>
-                    <span className="mt-1 inline-block text-[10px] font-medium" style={{ color: "var(--carte-text-dim)" }}>{msg.alwaysOn}</span>
+                    <p className="text-xs font-medium" style={{ color: "var(--carte-text)" }}>{msg.cookieEssential}</p>
+                    <p className="mt-0.5 text-[11px]" style={{ color: "var(--carte-text-dim)" }}>{msg.cookieEssentialDesc}</p>
+                    <span className="mt-1 inline-block text-[10px] font-medium" style={{ color: "var(--carte-text-dim)" }}>{msg.cookieAlwaysOn}</span>
                   </div>
                 </div>
 
@@ -228,8 +165,8 @@ export function ClocheCookieConsent({ lang }: Props) {
                     </div>
                   </label>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium" style={{ color: "var(--carte-text)" }}>{msg.analytics}</p>
-                    <p className="mt-0.5 text-[11px]" style={{ color: "var(--carte-text-dim)" }}>{msg.analyticsDesc}</p>
+                    <p className="text-xs font-medium" style={{ color: "var(--carte-text)" }}>{msg.cookieAnalytics}</p>
+                    <p className="mt-0.5 text-[11px]" style={{ color: "var(--carte-text-dim)" }}>{msg.cookieAnalyticsDesc}</p>
                   </div>
                 </div>
 
@@ -240,7 +177,7 @@ export function ClocheCookieConsent({ lang }: Props) {
                     className="flex-1 rounded-xl py-2 text-sm font-semibold text-white transition-colors"
                     style={{ backgroundColor: "#10b981" }}
                   >
-                    {msg.save}
+                    {msg.cookieSave}
                   </button>
                   <button
                     type="button"

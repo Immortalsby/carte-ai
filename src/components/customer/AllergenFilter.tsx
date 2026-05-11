@@ -3,22 +3,22 @@
 import type { Allergen, LanguageCode } from "@/types/menu";
 import { getDictionary } from "@/lib/i18n";
 
-const allergenList: { key: Allergen; emoji: string; labels: Record<string, string> }[] = [
-  { key: "gluten", emoji: "🌾", labels: { en: "Gluten", fr: "Gluten", zh: "麸质" } },
-  { key: "crustaceans", emoji: "🦐", labels: { en: "Crustaceans", fr: "Crustacés", zh: "甲壳类" } },
-  { key: "eggs", emoji: "🥚", labels: { en: "Eggs", fr: "Œufs", zh: "鸡蛋" } },
-  { key: "fish", emoji: "🐟", labels: { en: "Fish", fr: "Poisson", zh: "鱼类" } },
-  { key: "peanuts", emoji: "🥜", labels: { en: "Peanuts", fr: "Arachides", zh: "花生" } },
-  { key: "soy", emoji: "🫘", labels: { en: "Soy", fr: "Soja", zh: "大豆" } },
-  { key: "milk", emoji: "🥛", labels: { en: "Milk", fr: "Lait", zh: "牛奶" } },
-  { key: "nuts", emoji: "🌰", labels: { en: "Tree nuts", fr: "Fruits à coque", zh: "坚果" } },
-  { key: "celery", emoji: "🥬", labels: { en: "Celery", fr: "Céleri", zh: "芹菜" } },
-  { key: "mustard", emoji: "🟡", labels: { en: "Mustard", fr: "Moutarde", zh: "芥末" } },
-  { key: "sesame", emoji: "⚪", labels: { en: "Sesame", fr: "Sésame", zh: "芝麻" } },
-  { key: "sulphites", emoji: "🧪", labels: { en: "Sulphites", fr: "Sulfites", zh: "亚硫酸盐" } },
-  { key: "lupin", emoji: "🌸", labels: { en: "Lupin", fr: "Lupin", zh: "羽扇豆" } },
-  { key: "molluscs", emoji: "🐚", labels: { en: "Molluscs", fr: "Mollusques", zh: "软体动物" } },
-  { key: "alcohol", emoji: "🍷", labels: { en: "Alcohol", fr: "Alcool", zh: "酒精" } },
+const allergenList: { key: Allergen; emoji: string; dictKey: string }[] = [
+  { key: "gluten", emoji: "🌾", dictKey: "allergenGluten" },
+  { key: "crustaceans", emoji: "🦐", dictKey: "allergenCrustaceans" },
+  { key: "eggs", emoji: "🥚", dictKey: "allergenEggs" },
+  { key: "fish", emoji: "🐟", dictKey: "allergenFish" },
+  { key: "peanuts", emoji: "🥜", dictKey: "allergenPeanuts" },
+  { key: "soy", emoji: "🫘", dictKey: "allergenSoy" },
+  { key: "milk", emoji: "🥛", dictKey: "allergenMilk" },
+  { key: "nuts", emoji: "🌰", dictKey: "allergenNuts" },
+  { key: "celery", emoji: "🥬", dictKey: "allergenCelery" },
+  { key: "mustard", emoji: "🟡", dictKey: "allergenMustard" },
+  { key: "sesame", emoji: "⚪", dictKey: "allergenSesame" },
+  { key: "sulphites", emoji: "🧪", dictKey: "allergenSulphites" },
+  { key: "lupin", emoji: "🌸", dictKey: "allergenLupin" },
+  { key: "molluscs", emoji: "🐚", dictKey: "allergenMolluscs" },
+  { key: "alcohol", emoji: "🍷", dictKey: "allergenAlcohol" },
 ];
 
 interface AllergenFilterProps {
@@ -44,7 +44,7 @@ export function AllergenFilter({ excluded, onChange, lang }: AllergenFilterProps
         {dict.allergens}
       </h3>
       <div className="mt-1.5 flex flex-wrap gap-1.5">
-        {allergenList.map(({ key, emoji, labels }) => {
+        {allergenList.map(({ key, emoji, dictKey }) => {
           const active = excluded.includes(key);
           return (
             <button
@@ -66,7 +66,7 @@ export function AllergenFilter({ excluded, onChange, lang }: AllergenFilterProps
               }
             >
               <span>{emoji}</span>
-              <span>{labels[lang] || labels.en}</span>
+              <span>{dict[dictKey as keyof typeof dict]}</span>
               {active && <span className="ml-0.5">{"\u2715"}</span>}
             </button>
           );

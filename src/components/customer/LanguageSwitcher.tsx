@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LanguageCode } from "@/types/menu";
+import { getDictionary } from "@/lib/i18n";
 import { GlobeIcon } from "@phosphor-icons/react";
 
 const languageNames: Partial<Record<LanguageCode, string>> = {
@@ -93,7 +94,7 @@ export function LanguageSwitcher({ current, onChange, detectedLang }: LanguageSw
             >
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-sm font-medium text-carte-text">
-                  {current === "zh" ? "选择语言" : current === "fr" ? "Choisir la langue" : "Choose language"}
+                  {getDictionary(current).chooseLanguage}
                 </h3>
                 <button
                   type="button"

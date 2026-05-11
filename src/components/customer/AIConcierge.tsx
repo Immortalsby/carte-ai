@@ -25,27 +25,12 @@ export type ConciergeStep = "occasion" | "mode" | "preferences" | "loading" | "r
 const occasionOptions: Array<{
   occasion: DiningOccasion;
   icon: ReactNode;
-  label: { en: string; fr: string; zh: string };
-  desc: { en: string; fr: string; zh: string };
+  labelKey: string;
+  descKey: string;
 }> = [
-  {
-    occasion: "drinks",
-    icon: <BeerStein weight="duotone" />,
-    label: { en: "Just drinks", fr: "Juste un verre", zh: "\u559d\u4e00\u676f" },
-    desc: { en: "Drinks + a few bites to share", fr: "Boissons + quelques bouchées à partager", zh: "\u996e\u54c1\u4e3a\u4e3b\uff0c\u70b9\u51e0\u4e2a\u5c0f\u98df\u5206\u4eab" },
-  },
-  {
-    occasion: "meal",
-    icon: <ForkKnife weight="duotone" />,
-    label: { en: "A proper meal", fr: "Un vrai repas", zh: "\u6b63\u7ecf\u5403\u996d" },
-    desc: { en: "One dish per person + drinks", fr: "Un plat par personne + boissons", zh: "\u6bcf\u4eba\u4e00\u4efd\u4e3b\u83dc + \u996e\u54c1" },
-  },
-  {
-    occasion: "feast",
-    icon: <BowlFood weight="duotone" />,
-    label: { en: "Sharing feast", fr: "Festin à partager", zh: "\u5927\u5feb\u6735\u9890" },
-    desc: { en: "Order many dishes to share family-style", fr: "Plein de plats à partager entre tous", zh: "\u591a\u70b9\u51e0\u4e2a\u83dc\u5927\u5bb6\u4e00\u8d77\u5403" },
-  },
+  { occasion: "drinks", icon: <BeerStein weight="duotone" />, labelKey: "occasionDrinks", descKey: "occasionDrinksDesc" },
+  { occasion: "meal", icon: <ForkKnife weight="duotone" />, labelKey: "occasionMeal", descKey: "occasionMealDesc" },
+  { occasion: "feast", icon: <BowlFood weight="duotone" />, labelKey: "occasionFeast", descKey: "occasionFeastDesc" },
 ];
 
 type ModeEntry = {
@@ -97,10 +82,10 @@ function getModesForOccasion(occasion: DiningOccasion | null): ModeEntry[] {
 }
 
 const spiceLevels = [
-  { value: 0 as const, label: { en: "No spice", fr: "Non \u00e9pic\u00e9", zh: "\u4e0d\u8fa3" }, icon: <Snowflake weight="duotone" /> },
-  { value: 1 as const, label: { en: "Mild", fr: "L\u00e9ger", zh: "\u5fae\u8fa3" }, icon: <Pepper weight="duotone" /> },
-  { value: 2 as const, label: { en: "Medium", fr: "Moyen", zh: "\u4e2d\u8fa3" }, icon: <><Pepper weight="duotone" /><Pepper weight="duotone" /></> },
-  { value: 3 as const, label: { en: "Hot", fr: "Fort", zh: "\u91cd\u8fa3" }, icon: <><Pepper weight="duotone" /><Pepper weight="duotone" /><Pepper weight="duotone" /></> },
+  { value: 0 as const, dictKey: "spiceNone" as const, icon: <Snowflake weight="duotone" /> },
+  { value: 1 as const, dictKey: "spiceMild" as const, icon: <Pepper weight="duotone" /> },
+  { value: 2 as const, dictKey: "spiceMedium" as const, icon: <><Pepper weight="duotone" /><Pepper weight="duotone" /></> },
+  { value: 3 as const, dictKey: "spiceHot" as const, icon: <><Pepper weight="duotone" /><Pepper weight="duotone" /><Pepper weight="duotone" /></> },
 ];
 
 const budgetPresets = [
@@ -110,15 +95,7 @@ const budgetPresets = [
   { cents: 0, label: "30\u20ac+" },
 ];
 
-const prefLabels = {
-  budget: { en: "Budget (optional)", fr: "Budget (facultatif)", zh: "\u9884\u7b97\uff08\u53ef\u9009\uff09" },
-  spice: { en: "Max spice level (optional)", fr: "Piquant max (facultatif)", zh: "\u8fa3\u5ea6\u4e0a\u9650\uff08\u53ef\u9009\uff09" },
-  freeText: { en: "Anything else? (optional)", fr: "Autre chose ? (facultatif)", zh: "\u8fd8\u6709\u5176\u4ed6\u8981\u6c42\u5417\uff1f\uff08\u53ef\u9009\uff09" },
-  next: { en: "Get recommendations", fr: "Obtenir les recommandations", zh: "\u83b7\u53d6\u63a8\u8350" },
-  back: { en: "Back", fr: "Retour", zh: "\u8fd4\u56de" },
-  noLimit: { en: "Any", fr: "Tous", zh: "\u4e0d\u9650" },
-  pickHint: { en: "Here are your options \u2014 pick your favorite!", fr: "Voici vos options \u2014 choisissez votre pr\u00e9f\u00e9r\u00e9 !", zh: "\u4e3a\u4f60\u7cbe\u9009\u4e86\u51e0\u4e2a\u65b9\u6848\uff0c\u6311\u4e00\u4e2a\u559c\u6b22\u7684\u5427~" },
-};
+// prefLabels now served from getDictionary: prefBudget, prefSpice, prefFreeText, prefNext, prefBack, prefNoLimit, prefPickHint
 
 export interface ConciergePanelProps {
   lang: LanguageCode;
@@ -201,9 +178,6 @@ export function ConciergePanel({
       setExplainLoading(null);
     }
   }
-
-  const pl = (key: keyof typeof prefLabels) =>
-    prefLabels[key][lang as "en" | "fr" | "zh"] || prefLabels[key].en;
 
   // Notify parent on step change
   function changeStep(newStep: ConciergeStep, hasAllergenWarning?: boolean, fallbackUsed?: boolean) {
@@ -371,9 +345,7 @@ export function ConciergePanel({
       {/* ── Step 0: Dining occasion ── */}
       {step === "occasion" && (
         <div className="mt-3 space-y-2">
-          {occasionOptions.filter((opt) => opt.occasion !== "drinks" || allowDrinksOnly).map((opt) => {
-            const l = (lang as string).startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en";
-            return (
+          {occasionOptions.filter((opt) => opt.occasion !== "drinks" || allowDrinksOnly).map((opt) => (
               <button
                 key={opt.occasion}
                 type="button"
@@ -385,12 +357,11 @@ export function ConciergePanel({
               >
                 <span className="flex shrink-0 items-center text-carte-primary [&>svg]:h-6 [&>svg]:w-6">{opt.icon}</span>
                 <div className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-carte-text">{opt.label[l]}</span>
-                  <span className="block text-xs text-carte-text-muted">{opt.desc[l]}</span>
+                  <span className="block text-sm font-semibold text-carte-text">{dict[opt.labelKey as keyof typeof dict]}</span>
+                  <span className="block text-xs text-carte-text-muted">{dict[opt.descKey as keyof typeof dict]}</span>
                 </div>
               </button>
-            );
-          })}
+            ))}
         </div>
       )}
 
@@ -403,9 +374,7 @@ export function ConciergePanel({
             >
               <span className="flex items-center text-carte-primary [&>svg]:h-4 [&>svg]:w-4">{occasionOptions.find((o) => o.occasion === occasion)?.icon}</span>
               <span className="text-xs font-medium text-carte-primary">
-                {occasionOptions.find((o) => o.occasion === occasion)?.label[
-                  (lang as string).startsWith("zh") ? "zh" : lang === "fr" ? "fr" : "en"
-                ]}
+                {dict[occasionOptions.find((o) => o.occasion === occasion)?.labelKey as keyof typeof dict]}
               </span>
               <button
                 type="button"
@@ -446,7 +415,7 @@ export function ConciergePanel({
 
           <div>
             <label className="block text-xs font-medium text-carte-text-dim">
-              {pl("budget")}
+              {dict.prefBudget}
             </label>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {budgetPresets.map((bp) => (
@@ -464,7 +433,7 @@ export function ConciergePanel({
 
           <div>
             <label className="block text-xs font-medium text-carte-text-dim">
-              {pl("spice")}
+              {dict.prefSpice}
             </label>
             <div className="mt-1.5 flex gap-1.5">
               {spiceLevels.map((sl) => (
@@ -491,7 +460,7 @@ export function ConciergePanel({
                 >
                   <span className="inline-flex items-center [&>svg]:h-3 [&>svg]:w-3">{sl.icon}</span>
                   <span className="hidden sm:inline">
-                    {sl.label[lang as "en" | "fr" | "zh"] || sl.label.en}
+                    {dict[sl.dictKey]}
                   </span>
                 </button>
               ))}
@@ -500,7 +469,7 @@ export function ConciergePanel({
 
           <div>
             <label className="block text-xs font-medium text-carte-text-dim">
-              {pl("freeText")}
+              {dict.prefFreeText}
             </label>
             <div className="relative mt-1.5">
               <textarea
@@ -559,7 +528,7 @@ export function ConciergePanel({
               }}
               className="min-h-[44px] flex-shrink-0 rounded-lg border border-carte-border px-3 py-2 text-xs font-medium text-carte-text-muted hover:bg-carte-surface-hover"
             >
-              {pl("back")}
+              {dict.prefBack}
             </button>
             <button
               type="button"
@@ -567,7 +536,7 @@ export function ConciergePanel({
               className="min-h-[44px] flex-1 rounded-lg px-4 py-2 text-xs font-semibold text-carte-bg transition-transform active:scale-[0.98]"
               style={{ backgroundColor: "var(--carte-primary)" }}
             >
-              {pl("next")}
+              {dict.prefNext}
             </button>
           </div>
         </div>
@@ -584,7 +553,7 @@ export function ConciergePanel({
       {/* ── Results ── */}
       {step === "results" && results && (
         <div className="mt-3 space-y-3">
-          <p className="text-center text-[11px] text-carte-text-muted">{pl("pickHint")}</p>
+          <p className="text-center text-[11px] text-carte-text-muted">{dict.prefPickHint}</p>
           {results.recommendations.map((item, i) => (
             <motion.div
               key={item.id}
@@ -608,7 +577,7 @@ export function ConciergePanel({
                   </div>
                   <div className="rounded-2xl rounded-bl-sm border border-carte-border px-2.5 py-1.5 text-[11px] text-carte-text-dim"
                     style={{ backgroundColor: "var(--carte-surface)" }}>
-                    {recExplainLabels.loading[lang as "en" | "fr" | "zh"] || recExplainLabels.loading.en}
+                    {dict.explainDishThinking}
                   </div>
                 </div>
               )}
@@ -631,7 +600,7 @@ export function ConciergePanel({
                     <CSSMascot state="sad" className="w-8 h-8" />
                   </div>
                   <p className="text-[11px] text-carte-text-dim">
-                    {recExplainLabels.error[lang as "en" | "fr" | "zh"] || recExplainLabels.error.en}
+                    {dict.explainDishUnavailable}
                   </p>
                 </div>
               )}
@@ -706,11 +675,7 @@ function PillButton({
 
 /* ─── Recommendation Card ─── */
 
-const recExplainLabels = {
-  button: { en: "Explain this dish", fr: "Expliquer ce plat", zh: "解释这道菜" },
-  loading: { en: "Thinking...", fr: "Réflexion...", zh: "思考中..." },
-  error: { en: "Couldn't explain right now", fr: "Impossible d'expliquer pour le moment", zh: "暂时无法解释" },
-};
+// recExplainLabels now served from getDictionary: explainDish, explainDishThinking, explainDishUnavailable
 
 function RecommendationCard({
   item,
@@ -794,7 +759,7 @@ function RecommendationCard({
           className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-carte-primary hover:underline"
         >
           <ForkKnife weight="duotone" className="h-3.5 w-3.5" />
-          {recExplainLabels.button[lang as "en" | "fr" | "zh"] || recExplainLabels.button.en}
+          {dict.explainDish}
         </button>
       )}
     </article>

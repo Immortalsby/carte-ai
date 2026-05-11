@@ -6,13 +6,7 @@ import { getDictionary } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics-client";
 import { useToast } from "@/components/ui/Toast";
 
-const shareLabels: Record<string, Record<string, string>> = {
-  title: {
-    en: "Share with friends",
-    fr: "Partager avec vos amis",
-    zh: "\u5206\u4eab\u7ed9\u670b\u53cb",
-  },
-};
+// shareLabels now served from getDictionary: shareTitle
 
 interface SharePanelProps {
   visible: boolean;
@@ -33,17 +27,8 @@ export function SharePanel({
 }: SharePanelProps) {
   const { toast } = useToast();
   const t = getDictionary(lang);
-  const l = (key: string) =>
-    shareLabels[key]?.[lang] || shareLabels[key]?.en || key;
-
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/r/${slug}`;
-
-  const shareText =
-    lang === "zh"
-      ? `\u5728 ${restaurantName} \u8ba9 AI \u5e2e\u6211\u70b9\u83dc\uff0c\u63a8\u8350\u592a\u51c6\u4e86\uff01`
-      : lang === "fr"
-        ? `J'ai laissé l'IA choisir mes plats chez ${restaurantName}, recommandations au top !`
-        : `Let AI pick my dishes at ${restaurantName} — spot-on recommendations!`;
+  const shareText = t.shareTextTemplate.replace("{name}", restaurantName);
 
   async function handleNativeShare() {
     if (navigator.share) {
@@ -70,14 +55,7 @@ export function SharePanel({
     // WeChat doesn't support direct URL sharing from web — copy link for user to paste
     navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
     trackEvent(tenantId, "share", { method: "wechat" }, lang);
-    toast(
-      lang === "zh"
-        ? "链接已复制，请打开微信粘贴发送给好友"
-        : lang === "fr"
-          ? "Lien copié ! Ouvrez WeChat et collez-le."
-          : "Link copied! Open WeChat and paste to share.",
-      "success",
-    );
+    toast(t.wechatCopied, "success");
   }
 
   function handleTelegram() {
@@ -143,7 +121,7 @@ export function SharePanel({
             <div className="mx-auto mb-4 h-1 w-10 cursor-grab rounded-full bg-carte-border active:cursor-grabbing" />
 
             <h3 className="text-center text-sm font-bold text-carte-text">
-              {l("title")}
+              {t.shareTitle}
             </h3>
 
             <div className="mt-4 grid grid-cols-4 gap-3">

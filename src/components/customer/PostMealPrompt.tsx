@@ -6,25 +6,7 @@ import type { LanguageCode } from "@/types/menu";
 import { getDictionary } from "@/lib/i18n";
 import { trackEvent } from "@/lib/analytics-client";
 
-const labels: Record<string, Record<string, string>> = {
-  question: {
-    en: "Did you order a recommended dish?",
-    fr: "Avez-vous commandé un plat recommandé ?",
-    zh: "\u4f60\u70b9\u4e86\u63a8\u8350\u83dc\u5417\uff1f",
-  },
-  yes: { en: "Yes!", fr: "Oui !", zh: "\u662f\u7684\uff01" },
-  no: { en: "Not this time", fr: "Pas cette fois", zh: "\u8fd9\u6b21\u6ca1\u6709" },
-  thanks: {
-    en: "Thanks for the feedback!",
-    fr: "Merci pour le retour !",
-    zh: "\u8c22\u8c22\u53cd\u9988\uff01",
-  },
-  reviewNudge: {
-    en: "Enjoyed your meal? Leave a review!",
-    fr: "Vous avez aimé ? Laissez un avis !",
-    zh: "\u559c\u6b22\u8fd9\u987f\u996d\u5417\uff1f\u7559\u4e2a\u597d\u8bc4\u5427\uff01",
-  },
-};
+// labels now served from getDictionary: postMealQuestion, postMealYes, postMealNo, postMealThanks, postMealReview
 
 interface PostMealPromptProps {
   lang: LanguageCode;
@@ -68,8 +50,7 @@ export function PostMealPrompt({
     onDismiss();
   }
 
-  const l = (key: string) =>
-    labels[key]?.[lang] || labels[key]?.en || key;
+  const t = getDictionary(lang);
 
   return (
     <AnimatePresence>
@@ -85,7 +66,7 @@ export function PostMealPrompt({
             {!answered ? (
               <>
                 <p className="text-center text-sm font-medium text-carte-text">
-                  {l("question")}
+                  {t.postMealQuestion}
                 </p>
                 <div className="mt-3 flex gap-2">
                   <button
@@ -94,21 +75,21 @@ export function PostMealPrompt({
                     className="min-h-[44px] flex-1 rounded-lg py-2 text-sm font-semibold text-carte-bg"
                     style={{ backgroundColor: "var(--carte-primary)" }}
                   >
-                    {l("yes")}
+                    {t.postMealYes}
                   </button>
                   <button
                     type="button"
                     onClick={() => answer(false)}
                     className="min-h-[44px] flex-1 rounded-lg border border-carte-border py-2 text-sm font-medium text-carte-text-muted hover:bg-carte-surface-hover"
                   >
-                    {l("no")}
+                    {t.postMealNo}
                   </button>
                 </div>
               </>
             ) : showReview && googlePlaceId ? (
               <>
                 <p className="text-center text-sm font-medium text-carte-text">
-                  {l("reviewNudge")}
+                  {t.postMealReview}
                 </p>
                 <div className="mt-3 flex gap-2">
                   <a
@@ -136,7 +117,7 @@ export function PostMealPrompt({
               </>
             ) : (
               <p className="text-center text-sm text-carte-text-muted">
-                {l("thanks")}
+                {t.postMealThanks}
               </p>
             )}
           </div>

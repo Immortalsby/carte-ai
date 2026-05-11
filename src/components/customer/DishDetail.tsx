@@ -7,30 +7,18 @@ import { getDictionary } from "@/lib/i18n";
 import { CSSMascot } from "./CSSMascot";
 import { ForkKnife, ShieldCheck, Fire } from "@phosphor-icons/react";
 
-const allergenLabels: Record<Allergen, Record<string, string>> = {
-  gluten: { fr: "Gluten", en: "Gluten", zh: "麸质" },
-  crustaceans: { fr: "Crustacés", en: "Crustaceans", zh: "甲壳类" },
-  eggs: { fr: "Œufs", en: "Eggs", zh: "鸡蛋" },
-  fish: { fr: "Poisson", en: "Fish", zh: "鱼类" },
-  peanuts: { fr: "Arachides", en: "Peanuts", zh: "花生" },
-  soy: { fr: "Soja", en: "Soy", zh: "大豆" },
-  milk: { fr: "Lait", en: "Milk", zh: "牛奶" },
-  nuts: { fr: "Fruits à coque", en: "Tree nuts", zh: "坚果" },
-  celery: { fr: "Céleri", en: "Celery", zh: "芹菜" },
-  mustard: { fr: "Moutarde", en: "Mustard", zh: "芥末" },
-  sesame: { fr: "Sésame", en: "Sesame", zh: "芝麻" },
-  sulphites: { fr: "Sulfites", en: "Sulphites", zh: "亚硫酸盐" },
-  lupin: { fr: "Lupin", en: "Lupin", zh: "羽扇豆" },
-  molluscs: { fr: "Mollusques", en: "Molluscs", zh: "软体动物" },
-  alcohol: { fr: "Alcool", en: "Alcohol", zh: "酒精" },
-  unknown: { fr: "Inconnu", en: "Unknown", zh: "未知" },
+const allergenDictKey: Record<Allergen, string> = {
+  gluten: "allergenGluten", crustaceans: "allergenCrustaceans", eggs: "allergenEggs",
+  fish: "allergenFish", peanuts: "allergenPeanuts", soy: "allergenSoy",
+  milk: "allergenMilk", nuts: "allergenNuts", celery: "allergenCelery",
+  mustard: "allergenMustard", sesame: "allergenSesame", sulphites: "allergenSulphites",
+  lupin: "allergenLupin", molluscs: "allergenMolluscs", alcohol: "allergenAlcohol",
+  unknown: "allergenUnknown",
 };
 
-const explainLabels = {
-  button: { en: "Ask Cloché to explain", fr: "Demander à Cloché", zh: "让 Cloché 解释" },
-  loading: { en: "Cloché is thinking...", fr: "Cloché réfléchit...", zh: "Cloché 正在思考..." },
-  error: { en: "Couldn't get an explanation right now", fr: "Impossible d'obtenir une explication", zh: "暂时无法获取解释" },
-};
+function getAllergenLabel(t: Record<string, string>, allergen: Allergen): string {
+  return t[allergenDictKey[allergen]] || allergen;
+}
 
 interface DishDetailProps {
   dish: Dish;
@@ -62,9 +50,6 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
   const [aiCalories, setAiCalories] = useState<{ kcal: number; range: string } | null>(null);
   const [calorieLoading, setCalorieLoading] = useState(false);
   const [calorieError, setCalorieError] = useState(false);
-
-  const l = (key: keyof typeof explainLabels) =>
-    explainLabels[key][lang as "en" | "fr" | "zh"] || explainLabels[key].en;
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -156,11 +141,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
     }
   }
 
-  const aiDisclaimer = lang === "zh"
-    ? "AI 预估，仅供参考，不代表实际数据"
-    : lang === "fr"
-      ? "Estimation IA, à titre indicatif uniquement"
-      : "AI estimate, for reference only";
+  const aiDisclaimer = t.aiDisclaimer;
 
   return (
     <motion.div
@@ -255,7 +236,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
                       color: "var(--carte-text-muted)",
                     }}
                   >
-                    {allergenLabels[a][lang] || allergenLabels[a].en}
+                    {getAllergenLabel(t, a)}
                   </span>
                 ))}
             </div>
@@ -272,11 +253,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck weight="duotone" className="h-3.5 w-3.5 text-emerald-500" />
                     <span className="text-xs text-carte-text-muted">
-                      {lang === "zh"
-                        ? "经 Cloché 分析，可能不含常见过敏原"
-                        : lang === "fr"
-                          ? "Selon Cloché, probablement sans allergènes courants"
-                          : "According to Cloché, likely free of common allergens"}
+                      {t.allergenFreeAnalysis}
                     </span>
                   </div>
                 ) : (
@@ -290,7 +267,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
                           color: "var(--carte-warning)",
                         }}
                       >
-                        {allergenLabels[a as Allergen]?.[lang] || allergenLabels[a as Allergen]?.en || a}
+                        {getAllergenLabel(t, a as Allergen)}
                       </span>
                     ))}
                   </div>
@@ -375,7 +352,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-carte-border py-2.5 text-xs font-medium text-carte-text-muted transition-colors hover:bg-carte-surface hover:border-carte-primary/30"
             >
               <ForkKnife weight="duotone" className="h-4 w-4 text-carte-primary" />
-              {l("button")}
+              {t.askClocheExplain}
             </button>
           )}
           {explainLoading && (
@@ -385,7 +362,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
               </div>
               <div className="rounded-2xl rounded-bl-sm border border-carte-border px-3 py-2 text-xs text-carte-text-dim"
                 style={{ backgroundColor: "var(--carte-surface)" }}>
-                {l("loading")}
+                {t.clocheThinking}
               </div>
             </div>
           )}
@@ -407,7 +384,7 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
               <div className="shrink-0 w-10 h-10">
                 <CSSMascot state="sad" className="w-10 h-10" />
               </div>
-              <p className="text-xs text-carte-text-dim">{l("error")}</p>
+              <p className="text-xs text-carte-text-dim">{t.explainUnavailable}</p>
             </div>
           )}
         </div>
