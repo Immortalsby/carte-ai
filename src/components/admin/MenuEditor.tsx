@@ -47,6 +47,12 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
   function getCategoryLabel(cat: string): string {
     return builtinCategoryLabels[cat] || cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, " ");
   }
+  /** Pick dish name matching admin locale, with fallback chain */
+  const langOrder: ("fr" | "en" | "zh")[] =
+    locale === "zh" ? ["zh", "en", "fr"] : locale === "fr" ? ["fr", "en", "zh"] : ["en", "fr", "zh"];
+  function getLocalizedName(name: { fr: string; en: string; zh: string }): string {
+    return name[langOrder[0]] || name[langOrder[1]] || name[langOrder[2]] || "";
+  }
   const [menu, setMenu] = useState<RestaurantMenu>(initialMenu);
   const [customCategories, setCustomCategories] = useState<string[]>(() => {
     // Extract custom categories from existing dishes
@@ -477,7 +483,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                         {dish.imageUrl ? (
                           <img
                             src={dish.imageUrl}
-                            alt={dish.name.fr || dish.name.en || ""}
+                            alt={getLocalizedName(dish.name)}
                             className="mr-3 h-12 w-12 shrink-0 rounded-lg object-cover"
                           />
                         ) : (
@@ -495,7 +501,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                           className="min-w-0 flex-1 text-left"
                         >
                           <p className="font-medium">
-                            {dish.name.fr || dish.name.en || "(untitled)"}
+                            {getLocalizedName(dish.name) || "(untitled)"}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             &euro;{(dish.priceCents / 100).toFixed(2)} &middot;{" "}
@@ -603,7 +609,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
 
         {/* Drag overlay — ghost card following cursor */}
         <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
-          {activeDish && <DishCardOverlay dish={activeDish} />}
+          {activeDish && <DishCardOverlay dish={activeDish} locale={locale} />}
         </DragOverlay>
       </DndContext>
 
@@ -772,14 +778,17 @@ function DraggableDishCard({
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      style={{ touchAction: "none" }}
+      style={{ touchAction: "auto" }}
     >
       {children}
     </div>
   );
 }
 
-function DishCardOverlay({ dish }: { dish: Dish }) {
+function DishCardOverlay({ dish, locale = "en" }: { dish: Dish; locale?: AdminLocale }) {
+  const lo: ("fr" | "en" | "zh")[] =
+    locale === "zh" ? ["zh", "en", "fr"] : locale === "fr" ? ["fr", "en", "zh"] : ["en", "fr", "zh"];
+  const displayName = dish.name[lo[0]] || dish.name[lo[1]] || dish.name[lo[2]] || "(untitled)";
   return (
     <div className="w-80 rounded-lg border bg-card/80 p-4 shadow-xl ring-2 ring-primary/30 backdrop-blur-sm opacity-70">
       <div className="flex items-center gap-3">
@@ -798,7 +807,7 @@ function DishCardOverlay({ dish }: { dish: Dish }) {
         )}
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium">
-            {dish.name.fr || dish.name.en || "(untitled)"}
+            {displayName}
           </p>
           <p className="text-sm text-muted-foreground">
             &euro;{(dish.priceCents / 100).toFixed(2)}
@@ -851,7 +860,12 @@ function DishEditor({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const primaryName = dish.name.fr || dish.name.en || dish.name.zh || "";
+  const dishLangOrder: ("fr" | "en" | "zh")[] =
+    locale === "zh" ? ["zh", "en", "fr"] : locale === "fr" ? ["fr", "en", "zh"] : ["en", "fr", "zh"];
+  function getDishLocalizedName(name: { fr: string; en: string; zh: string }): string {
+    return name[dishLangOrder[0]] || name[dishLangOrder[1]] || name[dishLangOrder[2]] || "";
+  }
+  const primaryName = getDishLocalizedName(dish.name);
   const hasName = primaryName.trim().length > 0;
 
   async function aiTranslate() {
@@ -980,15 +994,16 @@ function DishEditor({
         <div className="mt-1 flex gap-2">
           <input
             type="text"
-            value={dish.name.fr || dish.name.en || dish.name.zh}
+            value={getDishLocalizedName(dish.name)}
             onChange={(e) => {
-              const lang = dish.name.fr
-                ? "fr"
-                : dish.name.en
-                  ? "en"
-                  : dish.name.zh
-                    ? "zh"
-                    : "fr";
+              // Determine which language field to edit: the first non-empty one in locale order, or default to locale
+              const lang = dish.name[dishLangOrder[0]]
+                ? dishLangOrder[0]
+                : dish.name[dishLangOrder[1]]
+                  ? dishLangOrder[1]
+                  : dish.name[dishLangOrder[2]]
+                    ? dishLangOrder[2]
+                    : dishLangOrder[0];
               onUpdate({ name: { ...dish.name, [lang]: e.target.value } });
             }}
             placeholder="e.g. Kung Pao Chicken"
@@ -1007,41 +1022,23 @@ function DishEditor({
         </div>
       </div>
 
-      {/* Translated names */}
+      {/* Translated names — ordered by admin locale */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <div>
-          <label className="text-xs text-muted-foreground">{t.nameFr}</label>
-          <input
-            type="text"
-            value={dish.name.fr}
-            onChange={(e) =>
-              onUpdate({ name: { ...dish.name, fr: e.target.value } })
-            }
-            className="w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground">{t.nameEn}</label>
-          <input
-            type="text"
-            value={dish.name.en}
-            onChange={(e) =>
-              onUpdate({ name: { ...dish.name, en: e.target.value } })
-            }
-            className="w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground">{t.nameZh}</label>
-          <input
-            type="text"
-            value={dish.name.zh}
-            onChange={(e) =>
-              onUpdate({ name: { ...dish.name, zh: e.target.value } })
-            }
-            className="w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground"
-          />
-        </div>
+        {dishLangOrder.map((lang) => (
+          <div key={lang}>
+            <label className="text-xs text-muted-foreground">
+              {tAny[`name${lang.charAt(0).toUpperCase()}${lang.slice(1)}`]}
+            </label>
+            <input
+              type="text"
+              value={dish.name[lang]}
+              onChange={(e) =>
+                onUpdate({ name: { ...dish.name, [lang]: e.target.value } })
+              }
+              className="w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground"
+            />
+          </div>
+        ))}
       </div>
 
       {/* Category + Price */}
@@ -1088,45 +1085,23 @@ function DishEditor({
           )}
         </div>
         <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <div>
-            <label className="text-[10px] text-muted-foreground">{t.descFr}</label>
-            <textarea
-              value={dish.description.fr}
-              onChange={(e) =>
-                onUpdate({
-                  description: { ...dish.description, fr: e.target.value },
-                })
-              }
-              rows={2}
-              className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
-            />
-          </div>
-          <div>
-            <label className="text-[10px] text-muted-foreground">{t.descEn}</label>
-            <textarea
-              value={dish.description.en}
-              onChange={(e) =>
-                onUpdate({
-                  description: { ...dish.description, en: e.target.value },
-                })
-              }
-              rows={2}
-              className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
-            />
-          </div>
-          <div>
-            <label className="text-[10px] text-muted-foreground">{t.descZh}</label>
-            <textarea
-              value={dish.description.zh}
-              onChange={(e) =>
-                onUpdate({
-                  description: { ...dish.description, zh: e.target.value },
-                })
-              }
-              rows={2}
-              className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
-            />
-          </div>
+          {dishLangOrder.map((lang) => (
+            <div key={lang}>
+              <label className="text-[10px] text-muted-foreground">
+                {tAny[`desc${lang.charAt(0).toUpperCase()}${lang.slice(1)}`]}
+              </label>
+              <textarea
+                value={dish.description[lang]}
+                onChange={(e) =>
+                  onUpdate({
+                    description: { ...dish.description, [lang]: e.target.value },
+                  })
+                }
+                rows={2}
+                className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
+              />
+            </div>
+          ))}
         </div>
       </div>
 
