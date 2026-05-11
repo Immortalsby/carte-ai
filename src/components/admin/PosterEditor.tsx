@@ -669,10 +669,29 @@ export function PosterEditor({
           style={{
             borderColor: hexToRgba(activeAccent, 0.2),
             background: bgImage
-              ? `linear-gradient(to bottom, ${hexToRgba(activeBg, 0.7)}, ${hexToRgba(activeBg, 0.85)}), url(${bgImage}) center/cover no-repeat`
+              ? undefined
               : `linear-gradient(to bottom, ${hexToRgba(activeAccent, 0.12)}, ${hexToRgba(activeBg, 0.03)}, ${hexToRgba(activeAccent, 0.1)})`,
           }}
         >
+          {/* Background image as real <img> for reliable PDF export on mobile */}
+          {bgImage && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={bgImage}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+                style={{ zIndex: 0 }}
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  zIndex: 1,
+                  background: `linear-gradient(to bottom, ${hexToRgba(activeBg, 0.7)}, ${hexToRgba(activeBg, 0.85)})`,
+                }}
+              />
+            </>
+          )}
           {/* Glow effects — only without bg image */}
           {!bgImage && (
             <>
@@ -689,7 +708,7 @@ export function PosterEditor({
 
           {isLandscape ? (
             /* ===== LANDSCAPE LAYOUT ===== */
-            <div className="relative flex h-full gap-8">
+            <div className="relative z-10 flex h-full gap-8">
               {/* Left side: info */}
               <div className="flex flex-1 flex-col justify-between">
                 <div>
@@ -788,7 +807,7 @@ export function PosterEditor({
           ) : (
             /* ===== PORTRAIT LAYOUT (original) ===== */
             <>
-              <header className="relative">
+              <header className="relative z-10">
                 <div className="flex items-center gap-3">
                   <PosterMascot size={48} accent={activeAccent} />
                   <p
@@ -812,7 +831,7 @@ export function PosterEditor({
                 </p>
               </header>
 
-              <div className="relative grid grid-cols-[1fr_1.1fr] items-end gap-8">
+              <div className="relative z-10 grid grid-cols-[1fr_1.1fr] items-end gap-8">
                 <div>
                   {showBadgeBudget && (
                     <div
