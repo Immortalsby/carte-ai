@@ -291,21 +291,27 @@ export function PosterEditor({
     if (!posterRef.current) return;
     setDownloadingPdf(true);
     try {
-      const { toJpeg } = await import("html-to-image");
+      const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
 
       const el = posterRef.current;
-      const dataUrl = await toJpeg(el, {
-        quality: 0.95,
-        pixelRatio: 2,
+
+      // html2canvas renders directly to canvas — no SVG intermediary,
+      // so large data-URL images (background, QR) are captured reliably.
+      const canvas = await html2canvas(el, {
+        scale: 2,
         backgroundColor: activeBg,
         width: el.scrollWidth,
         height: el.scrollHeight,
-        style: {
-          margin: "0",
-          transform: "none",
+        useCORS: true,
+        allowTaint: true,
+        // Reset transform so we capture at full resolution
+        onclone: (_doc: Document, cloned: HTMLElement) => {
+          cloned.style.transform = "none";
         },
       });
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
 
       // PDF with correct orientation
       const pdfOrientation = isLandscape ? "landscape" : "portrait";
