@@ -110,11 +110,12 @@ export function PosterEditor({
   const [generatingBg, setGeneratingBg] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [customTexts, setCustomTexts] = useState<string[]>([]);
+  const [customElement, setCustomElement] = useState("");
   const [uploadedBgImage, setUploadedBgImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Character limits per poster language
-  const charLimit = posterLocale === "zh" ? 8 : 20;
+  // Character limit for custom text on poster
+  const charLimit = 50;
 
   function toggleElement(key: string) {
     setSelectedElements((prev) =>
@@ -363,6 +364,43 @@ export function PosterEditor({
                 </button>
               );
             })}
+            {/* Custom elements added by user */}
+            {selectedElements
+              .filter((e) => !bgElements.some((el) => el.key === e))
+              .map((custom) => (
+                <button
+                  key={custom}
+                  type="button"
+                  onClick={() => setSelectedElements((prev) => prev.filter((k) => k !== custom))}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
+                  style={{
+                    backgroundColor: hexToRgba(activeAccent, 0.15),
+                    color: activeAccent,
+                    boxShadow: `inset 0 0 0 1px ${hexToRgba(activeAccent, 0.4)}`,
+                  }}
+                >
+                  <span>{custom}</span>
+                  <span className="ml-0.5 opacity-60">×</span>
+                </button>
+              ))}
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              type="text"
+              value={customElement}
+              onChange={(e) => setCustomElement(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && customElement.trim()) {
+                  const val = customElement.trim();
+                  if (!selectedElements.includes(val)) {
+                    setSelectedElements((prev) => [...prev, val]);
+                  }
+                  setCustomElement("");
+                }
+              }}
+              placeholder={tAny.customBgElementPlaceholder}
+              className="w-56 rounded-lg border border-dashed border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50"
+            />
           </div>
         </div>
 
@@ -526,7 +564,7 @@ export function PosterEditor({
             </p>
           </header>
 
-          <div className="relative grid gap-8 md:grid-cols-[1fr_1.1fr] md:items-end">
+          <div className="relative grid grid-cols-[1fr_1.1fr] items-end gap-8">
             <div>
               <div
                 className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"

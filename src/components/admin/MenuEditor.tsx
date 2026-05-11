@@ -7,7 +7,7 @@ import {
   DragOverlay,
   useDraggable,
   useDroppable,
-  PointerSensor,
+  MouseSensor,
   useSensor,
   useSensors,
   type DragStartEvent,
@@ -73,9 +73,9 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
     ...customCategories.filter((c) => !builtinCategoryOrder.includes(c)),
   ];
 
-  // dnd-kit sensors: pointer only (touch drag disabled to prevent accidental moves on mobile)
+  // dnd-kit sensors: mouse only (no touch) to prevent accidental drags on mobile
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
   );
 
   function handleDragStart(event: DragStartEvent) {
