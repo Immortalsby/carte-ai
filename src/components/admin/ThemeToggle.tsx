@@ -40,7 +40,7 @@ export function ThemeToggle({ labels }: { labels: { light: string; dark: string;
           key={mode}
           type="button"
           onClick={() => setTheme(mode)}
-          className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${
+          className={`flex items-center gap-1.5 rounded-md px-2.5 py-2 text-[11px] font-medium transition-colors ${
             theme === mode
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"

@@ -14,6 +14,7 @@ import { TzCookie } from "@/components/admin/TzCookie";
 import { Link as LinkIcon, SignOut as SignOutIcon } from "@phosphor-icons/react/dist/ssr";
 import { TrialBanner } from "@/components/admin/TrialBanner";
 import { ExpiredGate } from "@/components/admin/ExpiredGate";
+import { OnboardingHelpButton } from "@/components/admin/OnboardingGuide";
 
 export default async function AdminLayout({
   children,
@@ -44,6 +45,7 @@ export default async function AdminLayout({
   const acceptLang = headerStore.get("accept-language");
   const locale = detectAdminLocale(localeCookie, acceptLang);
   const t = getAdminDict(locale);
+  const tAny = t as unknown as Record<string, string>;
 
   const expired = !founder && isTrialExpired(tenant);
 
@@ -96,6 +98,7 @@ export default async function AdminLayout({
             <LinkIcon weight="duotone" className="h-4 w-4 shrink-0" />
             {t.previewCustomerPage}
           </Link>
+          <OnboardingHelpButton label={tAny.helpTutorial} />
           <div className="px-3 py-2">
             <p className="text-[10px] text-muted-foreground truncate">{session.user.email}</p>
           </div>
@@ -119,6 +122,8 @@ export default async function AdminLayout({
           email={session.user.email ?? ""}
           navItems={navItems}
           themeLabels={themeLabels}
+          customerPageLabel={t.previewCustomerPage}
+          helpLabel={tAny.helpTutorial}
         />
       </div>
 

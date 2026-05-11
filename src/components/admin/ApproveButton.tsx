@@ -40,7 +40,7 @@ export function ApproveButton({
     <button
       onClick={handleToggle}
       disabled={loading}
-      className={`rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-50 ${
+      className={`rounded-lg px-3 py-2.5 text-xs font-medium disabled:opacity-50 ${
         approved
           ? "border border-red-500/30 text-red-600 hover:bg-red-500/10 dark:text-red-400"
           : "bg-emerald-600 text-white hover:bg-emerald-700"

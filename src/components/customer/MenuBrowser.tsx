@@ -7,7 +7,7 @@ import { getDictionary } from "@/lib/i18n";
 import { DishCard } from "./DishCard";
 import { DishDetail } from "./DishDetail";
 
-const categoryDictKey: Record<MenuCategory, string> = {
+const categoryDictKey: Record<string, string> = {
   starter: "catStarter",
   main: "catMain",
   side: "catSide",
@@ -21,6 +21,22 @@ const categoryDictKey: Record<MenuCategory, string> = {
   cocktail: "catCocktail",
   brunch: "catBrunch",
 };
+
+function getCatLabel(
+  t: Record<string, unknown>,
+  cat: string,
+  lang: string,
+  menuLabels?: Record<string, Partial<Record<string, string>>>,
+): string {
+  // Built-in categories — use i18n dictionary
+  const key = categoryDictKey[cat];
+  if (key && t[key]) return t[key] as string;
+  // Custom categories — check menu-level translated labels
+  const translated = menuLabels?.[cat]?.[lang];
+  if (translated) return translated;
+  // Fallback: capitalize the category slug
+  return cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, " ");
+}
 
 const defaultCategoryOrder: MenuCategory[] = [
   "combo",
@@ -59,6 +75,8 @@ interface MenuBrowserProps {
   cuisine?: string;
   tenantId?: string;
   tenantSlug?: string;
+  /** Translated labels for custom categories from menu data */
+  categoryLabels?: Record<string, Partial<Record<string, string>>>;
   drinksMode?: boolean;
   openDishId?: string | null;
   onOpenDishIdHandled?: () => void;
@@ -66,13 +84,18 @@ interface MenuBrowserProps {
   onToggleSave?: (dishId: string) => void;
 }
 
-export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, tenantSlug, drinksMode, openDishId, onOpenDishIdHandled, isSaved, onToggleSave }: MenuBrowserProps) {
+export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, tenantSlug, categoryLabels: menuCategoryLabels, drinksMode, openDishId, onOpenDishIdHandled, isSaved, onToggleSave }: MenuBrowserProps) {
   const t = getDictionary(lang);
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const dishCardRefs = useRef<Record<string, HTMLElement | null>>({});
 
-  const categoryOrder = drinksMode ? drinksCategoryOrder : defaultCategoryOrder;
+  const builtinOrder = drinksMode ? drinksCategoryOrder : defaultCategoryOrder;
+  // Append any custom categories found in dishes (not in built-in list)
+  const customCats = [...new Set(dishes.map((d) => d.category))].filter(
+    (c) => !builtinOrder.includes(c),
+  );
+  const categoryOrder = [...builtinOrder, ...customCats];
 
   // Group dishes by category
   const grouped = categoryOrder
@@ -120,7 +143,7 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, t
               onClick={() => scrollTo(category)}
               className="shrink-0 rounded-full border border-carte-border px-3 py-1 text-xs font-medium text-carte-text-muted transition-colors hover:bg-carte-surface hover:text-carte-primary"
             >
-              {t[categoryDictKey[category] as keyof typeof t]}
+              {getCatLabel(t as unknown as Record<string, unknown>, category, lang, menuCategoryLabels)}
             </button>
           ))}
         </div>
@@ -134,7 +157,7 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, t
             ref={(el) => { sectionRefs.current[category] = el; }}
           >
             <h2 className="mb-2 text-sm font-bold uppercase tracking-wider text-carte-text-dim">
-              {t[categoryDictKey[category] as keyof typeof t]}
+              {getCatLabel(t as unknown as Record<string, unknown>, category, lang, menuCategoryLabels)}
             </h2>
             <div className="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
               {items.map((dish) => (

@@ -2,7 +2,8 @@
 export type { LanguageCode } from "@/lib/languages";
 import type { LanguageCode } from "@/lib/languages";
 
-export type MenuCategory =
+/** Built-in categories — always available */
+export type BuiltinCategory =
   | "starter"
   | "main"
   | "side"
@@ -15,6 +16,9 @@ export type MenuCategory =
   | "wine"
   | "cocktail"
   | "brunch";
+
+/** Restaurants can also add custom categories (e.g. "beef", "lamb", "chicken") */
+export type MenuCategory = BuiltinCategory | (string & {});
 
 export type Allergen =
   | "gluten"
@@ -87,5 +91,7 @@ export interface RestaurantMenu {
     welcome: LocalizedText;
   };
   dishes: Dish[];
+  /** Translated labels for custom categories — key is category slug, value is localized text */
+  categoryLabels?: Record<string, Partial<Record<LanguageCode, string>>>;
   updatedAt: string;
 }

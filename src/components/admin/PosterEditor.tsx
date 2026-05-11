@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
+import { buildPosterBgUrl, fetchPollinationsImage } from "@/lib/pollinations-client";
 
 const posterLocaleOptions: { value: AdminLocale; label: string }[] = [
   { value: "fr", label: "Français" },
@@ -195,17 +196,9 @@ export function PosterEditor({
   async function generateBackground() {
     setGeneratingBg(true);
     try {
-      const res = await fetch("/api/images/poster-bg", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cuisineType, elements: selectedElements }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `Server returned ${res.status}`);
-      }
+      const pollinationsUrl = buildPosterBgUrl(cuisineType, selectedElements);
+      const blob = await fetchPollinationsImage(pollinationsUrl);
 
-      const blob = await res.blob();
       const dataUrl = await new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -478,12 +471,14 @@ export function PosterEditor({
         </div>
       </div>
 
-      {/* Poster Preview (A4 ratio) — fixed dimensions for reliable PDF capture */}
-      <div
-        ref={posterRef}
-        className="poster-content mx-auto overflow-hidden rounded-[2rem] shadow-2xl print:rounded-none print:shadow-none"
-        style={{ backgroundColor: activeBg, width: 760, height: Math.round(760 * 1.414), padding: 40 }}
-      >
+      {/* Poster Preview (A4 ratio) — fixed dimensions for PDF capture, scrollable on mobile */}
+      <div className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:px-0">
+        <div className="mx-auto w-fit">
+          <div
+            ref={posterRef}
+            className="poster-content overflow-hidden rounded-[2rem] shadow-2xl print:rounded-none print:shadow-none"
+            style={{ backgroundColor: activeBg, width: 760, height: Math.round(760 * 1.414), padding: 40 }}
+          >
         <div
           className="relative flex h-full flex-col justify-between overflow-hidden rounded-[1.5rem] border p-9"
           style={{
@@ -605,6 +600,8 @@ export function PosterEditor({
               </div>
             </div>
           </div>
+        </div>
+      </div>
         </div>
       </div>
     </div>

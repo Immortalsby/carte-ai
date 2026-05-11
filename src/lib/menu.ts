@@ -1,10 +1,10 @@
 import defaultMenuData from "../../data/menu.json";
 import type { RestaurantMenu } from "@/types/menu";
-import { restaurantMenuSchema, allergenSchema, dietaryTagSchema, categorySchema } from "./validation";
+import { restaurantMenuSchema, allergenSchema, dietaryTagSchema, builtinCategories } from "./validation";
 
 const VALID_ALLERGENS = new Set(allergenSchema.options);
 const VALID_DIETARY_TAGS = new Set(dietaryTagSchema.options);
-const VALID_CATEGORIES = new Set(categorySchema.options);
+const BUILTIN_CATEGORIES = new Set<string>(builtinCategories);
 
 /** Ensure zh/fr/en are non-empty, using fallbacks if needed */
 function sanitizeLocalizedText(
@@ -80,9 +80,9 @@ export function sanitizeRawMenu(raw: Record<string, unknown>): Record<string, un
               { zh: "-", fr: "-", en: "-" },
             )
           : { zh: "-", fr: "-", en: "-" },
-        // Filter invalid category → default to "main"
-        category: typeof dish.category === "string" && VALID_CATEGORIES.has(dish.category as never)
-          ? dish.category
+        // Accept any non-empty string as category (supports custom categories like "beef", "lamb")
+        category: typeof dish.category === "string" && dish.category.trim()
+          ? dish.category.trim().toLowerCase()
           : "main",
         // Filter invalid allergens, keep only valid ones
         allergens: Array.isArray(dish.allergens)

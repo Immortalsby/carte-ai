@@ -4,6 +4,7 @@ import { getPublishedMenu, patchMenuTranslations } from "@/lib/db/queries/menus"
 import type { RestaurantMenu, Dish } from "@/types/menu";
 import type { LanguageCode } from "@/lib/languages";
 import { isSupportedLanguage, supportedLanguages } from "@/lib/languages";
+import { builtinCategories } from "@/lib/validation";
 
 /**
  * POST /api/translate-menu
@@ -128,6 +129,59 @@ Return a JSON array with exactly this structure — same order, same IDs:
       if (tr) {
         (dish.name as Record<string, string>)[targetLang] = tr.name;
         (dish.description as Record<string, string>)[targetLang] = tr.description;
+      }
+    }
+
+    // Translate custom category names (non-builtin categories used in dishes)
+    const builtinSet = new Set<string>(builtinCategories);
+    const customCats = [...new Set(menuData.dishes.map((d) => d.category))].filter(
+      (c) => !builtinSet.has(c),
+    );
+    const existingLabels = menuData.categoryLabels ?? {};
+    const catsNeedingTranslation = customCats.filter(
+      (c) => !existingLabels[c]?.[targetLang],
+    );
+
+    if (catsNeedingTranslation.length > 0) {
+      const catPrompt = `Translate these restaurant menu category names into ${langLabel} (${targetLang}).
+These are section headers on a restaurant menu. Translate naturally and concisely.
+
+Categories: ${JSON.stringify(catsNeedingTranslation)}
+
+Return a JSON object mapping each category to its translation:
+{ "beef": "translated", "lamb": "translated", ... }`;
+
+      try {
+        const catRes = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: "You are a professional restaurant menu translator." }],
+            },
+            contents: [{ parts: [{ text: catPrompt }] }],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 2000,
+              responseMimeType: "application/json",
+            },
+          }),
+        });
+        if (catRes.ok) {
+          const catData = await catRes.json();
+          const catText = catData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (catText) {
+            const catTranslations = JSON.parse(catText) as Record<string, string>;
+            for (const [cat, label] of Object.entries(catTranslations)) {
+              if (!existingLabels[cat]) existingLabels[cat] = {};
+              existingLabels[cat][targetLang] = label;
+            }
+            menuData.categoryLabels = existingLabels;
+          }
+        }
+      } catch (e) {
+        console.error("[translate-menu] category translation failed:", e);
+        // Non-fatal — dish translations still saved
       }
     }
 

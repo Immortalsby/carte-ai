@@ -61,7 +61,7 @@ export function AssignOwnerButton({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-amber-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-amber-700"
+        className="rounded-lg bg-amber-600 px-3 py-2 text-xs font-medium text-white hover:bg-amber-700"
       >
         Assign Owner
       </button>
@@ -85,13 +85,13 @@ export function AssignOwnerButton({
       <button
         onClick={handleAssign}
         disabled={loading || !selectedUserId}
-        className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+        className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
       >
         {loading ? "..." : "Confirm"}
       </button>
       <button
         onClick={() => { setOpen(false); setSelectedUserId(""); }}
-        className="text-xs text-muted-foreground hover:text-foreground"
+        className="rounded-lg px-2 py-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
       >
         Cancel
       </button>

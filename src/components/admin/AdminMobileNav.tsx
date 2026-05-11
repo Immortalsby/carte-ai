@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { signOut } from "@/lib/auth-client";
 import { ThemeToggle } from "./ThemeToggle";
-import { ChartBar, ListBullets, ChartLineUp, Image, Gear, CreditCard, SignOut } from "@phosphor-icons/react";
+import { ChartBar, ListBullets, ChartLineUp, Image, Gear, CreditCard, SignOut, LinkSimple, Question } from "@phosphor-icons/react";
 
 const navIcons: Record<string, ReactNode> = {
   "📊": <ChartBar weight="duotone" className="h-[18px] w-[18px]" />,
@@ -27,9 +27,11 @@ interface AdminMobileNavProps {
   email: string;
   navItems: NavItem[];
   themeLabels?: { light: string; dark: string; system: string };
+  customerPageLabel?: string;
+  helpLabel?: string;
 }
 
-export function AdminMobileNav({ slug, email, navItems, themeLabels }: AdminMobileNavProps) {
+export function AdminMobileNav({ slug, email, navItems, themeLabels, customerPageLabel, helpLabel }: AdminMobileNavProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -68,6 +70,33 @@ export function AdminMobileNav({ slug, email, navItems, themeLabels }: AdminMobi
             ))}
           </ul>
           <div className="border-t border-border p-3 space-y-2">
+            {customerPageLabel && (
+              <a
+                href={`/r/${slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-primary/10"
+              >
+                <LinkSimple weight="duotone" className="h-[18px] w-[18px]" />
+                {customerPageLabel}
+              </a>
+            )}
+            {helpLabel && (
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem("carte_onboarding_dismissed");
+                  window.dispatchEvent(new CustomEvent("carte:reopen-onboarding"));
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  setOpen(false);
+                }}
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <Question weight="duotone" className="h-[18px] w-[18px]" />
+                {helpLabel}
+              </button>
+            )}
             {themeLabels && (
               <div className="px-3">
                 <ThemeToggle labels={themeLabels} />

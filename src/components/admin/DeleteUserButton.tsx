@@ -60,7 +60,7 @@ export function DeleteUserButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded p-1 text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
+        className="rounded p-2.5 text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
         title={`Delete ${userName}`}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

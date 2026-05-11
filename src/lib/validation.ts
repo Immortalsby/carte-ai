@@ -2,7 +2,8 @@ import { z } from "zod";
 import { supportedLanguageCodes } from "./languages";
 
 export const languageSchema = z.enum(supportedLanguageCodes);
-export const categorySchema = z.enum([
+/** Built-in categories */
+export const builtinCategories = [
   "starter",
   "main",
   "side",
@@ -15,7 +16,10 @@ export const categorySchema = z.enum([
   "wine",
   "cocktail",
   "brunch",
-]);
+] as const;
+
+/** Accepts built-in + custom categories (any non-empty string) */
+export const categorySchema = z.string().min(1);
 export const allergenSchema = z.enum([
   "gluten",
   "crustaceans",
@@ -88,6 +92,7 @@ export const restaurantMenuSchema = z.object({
     welcome: localizedTextSchema,
   }),
   dishes: z.array(dishSchema).min(1),
+  categoryLabels: z.record(z.string(), z.record(z.string(), z.string())).optional(),
   updatedAt: z.string().min(1),
 });
 

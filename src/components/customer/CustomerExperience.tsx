@@ -295,6 +295,7 @@ export function CustomerExperience({ menu: initialMenu, tenantId, tenantName, cu
         cuisine={cuisineType ?? undefined}
         tenantId={tenantId}
         tenantSlug={menu.restaurant.slug}
+        categoryLabels={menu.categoryLabels}
         openDishId={highlightDishId}
         onOpenDishIdHandled={useCallback(() => setHighlightDishId(null), [])}
         isSaved={(id) => wishlist.isSaved(id)}

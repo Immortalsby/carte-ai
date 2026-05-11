@@ -257,7 +257,7 @@ const dict = {
     social_4: "Zéro app, zéro compte client",
 
     pain_section: "Le problème",
-    pain_title: "3 problèmes que vous connaissez",
+    pain_title: "3 problèmes que vous rencontrez",
     pain1_title: "Vos touristes ne comprennent pas le menu",
     pain1_desc: "60% des touristes en France ne parlent pas français. Ils pointent au hasard ou demandent au serveur \u2014 qui est déjà débordé.",
     pain2_title: "Les allergènes sont un cauchemar légal",
@@ -293,7 +293,7 @@ const dict = {
     feat2_b4: "Le mode intelligent s\u2019adapte aux clients locaux ou touristes",
     feat3_tag: "Conformité allergènes",
     feat3_title: "14 allergènes EU, zéro improvisation",
-    feat3_desc: "Conforme EU 1169/2011. Le client filtre ses allergies, l\u2019IA ne recommande que les plats sûrs. L\u2019IA ne devine jamais les allergènes \u2014 si l\u2019information manque, elle le dit.",
+    feat3_desc: "Conformément au règlement EU 1169/2011. Le client renseigne ses éventuelles allergies, l\u2019IA ne recommande que les plats sûrs. L\u2019IA ne devine jamais les allergènes \u2014 si l\u2019information manque, elle le dit.",
     feat3_b1: "14 allergènes européens pris en charge",
     feat3_b2: "Filtre en temps réel dans les recommandations",
     feat3_b3: "Mention systématique : \u00ab confirmer avec le personnel \u00bb",
@@ -430,7 +430,7 @@ const dict = {
     nav_cta: "免费试用",
 
     hero_badge: "面向欧洲餐厅的 AI 点餐顾问",
-    hero_title_1: "你的顾客不知道点什么。",
+    hero_title_1: "你的顾客不知道点什么？",
     hero_title_2: "AI 知道。",
     hero_desc: `一个智能 QR 菜单，根据预算、过敏原和口味偏好推荐合适的菜品——支持 ${N} 种语言。帮每位顾客找到最满意的那道菜。`,
     hero_cta_primary: "免费开始",

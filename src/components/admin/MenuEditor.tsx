@@ -18,9 +18,11 @@ import type { Dish, RestaurantMenu, MenuCategory, Allergen } from "@/types/menu"
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
+import { buildDishImageUrl, fetchPollinationsImage } from "@/lib/pollinations-client";
+import { generateCanonicalTag } from "@/lib/canonical-tag";
 import { MenuImporter } from "./MenuImporter";
 
-const categoryOrder: MenuCategory[] = [
+const builtinCategoryOrder: MenuCategory[] = [
   "combo", "brunch", "sharing", "starter", "soup", "main", "pasta",
   "side", "dessert", "drink", "wine", "cocktail",
 ];
@@ -37,13 +39,24 @@ interface MenuEditorProps {
 export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale = "en", onReImport }: MenuEditorProps) {
   const t = getAdminDict(locale);
   const tAny = t as unknown as Record<string, string>;
-  const categoryLabels: Record<MenuCategory, string> = {
+  const builtinCategoryLabels: Record<string, string> = {
     starter: t.catStarter, main: t.catMain, side: t.catSide,
     dessert: t.catDessert, drink: t.catDrink, combo: t.catCombo,
     sharing: tAny.catSharing, soup: tAny.catSoup, pasta: tAny.catPasta,
     wine: tAny.catWine, cocktail: tAny.catCocktail, brunch: tAny.catBrunch,
   };
+  function getCategoryLabel(cat: string): string {
+    return builtinCategoryLabels[cat] || cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, " ");
+  }
   const [menu, setMenu] = useState<RestaurantMenu>(initialMenu);
+  const [customCategories, setCustomCategories] = useState<string[]>(() => {
+    // Extract custom categories from existing dishes
+    const customs = new Set<string>();
+    for (const d of initialMenu.dishes) {
+      if (!builtinCategoryOrder.includes(d.category)) customs.add(d.category);
+    }
+    return [...customs];
+  });
   const [editingDish, setEditingDish] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(true);
@@ -55,10 +68,16 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
   const [showMergeImport, setShowMergeImport] = useState(false);
   const { toast } = useToast();
 
-  // dnd-kit sensors: pointer needs 8px movement to start (so clicks work), touch needs 250ms hold
+  // Dynamic category list: built-in first, then custom
+  const categoryOrder: string[] = [
+    ...builtinCategoryOrder,
+    ...customCategories.filter((c) => !builtinCategoryOrder.includes(c)),
+  ];
+
+  // dnd-kit sensors: pointer needs 8px movement to start (so clicks work), touch needs 2s hold
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 2000, tolerance: 8 } }),
   );
 
   function handleDragStart(event: DragStartEvent) {
@@ -80,7 +99,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
     const dish = menu.dishes.find((d) => d.id === dishId);
     if (dish && dish.category !== targetCategory) {
       updateDish(dishId, { category: targetCategory });
-      toast(`${tAny.movedTo || "Moved to"} ${categoryLabels[targetCategory]}`, "success");
+      toast(`${tAny.movedTo || "Moved to"} ${getCategoryLabel(targetCategory)}`, "success");
     }
   }
 
@@ -180,25 +199,32 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
       setImageGenProgress({ current: i + 1, total: dishesWithoutImages.length, failed });
 
       try {
-        const res = await fetch("/api/images/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: dish.name,
-            description: dish.description.en || dish.description.fr || undefined,
-            cuisine,
-            ingredients: dish.ingredients,
-            source: "auto",
-            slug,
-            dishId: dish.id,
-          }),
+        // Build prompt and fetch image directly from Pollinations (browser-side)
+        const pollinationsUrl = buildDishImageUrl({
+          name: dish.name,
+          description: dish.description.en || dish.description.fr || undefined,
+          cuisine,
         });
-        if (res.ok) {
-          const data = await res.json();
+        const imageBlob = await fetchPollinationsImage(pollinationsUrl);
+
+        // Upload blob to server for Vercel Blob storage + DB caching
+        const canonicalTag = generateCanonicalTag(dish.name, cuisine);
+        const formData = new FormData();
+        formData.append("file", imageBlob, `${canonicalTag}.jpg`);
+        formData.append("canonicalTag", canonicalTag);
+        formData.append("slug", slug);
+        formData.append("dishId", dish.id);
+
+        const uploadRes = await fetch("/api/images/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (uploadRes.ok) {
+          const data = await uploadRes.json();
           setMenu((prev) => ({
             ...prev,
             dishes: prev.dishes.map((d) =>
-              d.id === dish.id ? { ...d, imageUrl: data.imageUrl } : d,
+              d.id === dish.id ? { ...d, imageUrl: data.url } : d,
             ),
           }));
         } else {
@@ -221,12 +247,22 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
 
   async function save() {
     setSaving(true);
+    // Build categoryLabels for custom categories
+    const catLabels: Record<string, Record<string, string>> = { ...(menu.categoryLabels ?? {}) };
+    for (const cat of customCategories) {
+      if (!catLabels[cat]) {
+        // Use capitalized slug as base label for en/fr/zh
+        const label = cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, " ");
+        catLabels[cat] = { en: label, fr: label, zh: label };
+      }
+    }
     try {
       const res = await fetch(`/api/menus/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...menu,
+          categoryLabels: Object.keys(catLabels).length > 0 ? catLabels : undefined,
           updatedAt: new Date().toISOString(),
         }),
       });
@@ -310,14 +346,14 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t.menuManagement}</h1>
           <p className="text-sm text-muted-foreground">
             {t.version} {version} &middot; {menu.dishes.length} {t.dishes}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setShowMergeImport(!showMergeImport)}
@@ -378,7 +414,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
               const isCurrent = draggedDish?.category === cat;
               return (
                 <DroppablePill key={cat} id={`pill-${cat}`} category={cat} isCurrent={isCurrent}>
-                  {categoryLabels[cat]}
+                  {getCategoryLabel(cat)}
                 </DroppablePill>
               );
             })}
@@ -398,7 +434,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                 {/* Category header with inline + button */}
                 <div className="mb-2 flex items-center justify-between">
                   <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                    {categoryLabels[category]} ({items.length})
+                    {getCategoryLabel(category)} ({items.length})
                   </h2>
                   <button
                     type="button"
@@ -451,17 +487,18 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                           {/* Move to category dropdown */}
                           <MoveToDropdown
                             dish={dish}
-                            categoryLabels={categoryLabels}
+                            categoryOrder={categoryOrder}
+                            locale={locale}
                             onMove={(targetCategory) => {
                               updateDish(dish.id, { category: targetCategory });
-                              toast(`${tAny.movedTo || "Moved to"} ${categoryLabels[targetCategory]}`, "success");
+                              toast(`${tAny.movedTo || "Moved to"} ${getCategoryLabel(targetCategory)}`, "success");
                             }}
                             label={tAny.moveToCategory || "Move to…"}
                           />
                           <button
                             type="button"
                             onClick={() => toggleAvailability(dish.id)}
-                            className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            className={`rounded-full px-3 py-2 text-xs font-medium ${
                               dish.available
                                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                                 : "bg-red-500/15 text-red-600 dark:text-red-400"
@@ -473,7 +510,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                             type="button"
                             onClick={() => deleteDish(dish.id)}
                             onBlur={() => confirmingDelete === dish.id && setConfirmingDelete(null)}
-                            className={`rounded-full px-2 py-1 text-xs ${confirmingDelete === dish.id ? "bg-red-500 text-white" : "text-red-400 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"}`}
+                            className={`rounded-full px-3 py-2 text-xs ${confirmingDelete === dish.id ? "bg-red-500 text-white" : "text-red-400 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"}`}
                             title={t.deleteDish}
                           >
                             {confirmingDelete === dish.id ? t.deleteConfirm : "×"}
@@ -488,6 +525,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                           cuisine={cuisine}
                           slug={slug}
                           locale={locale}
+                          categoryOrder={categoryOrder}
                           onUpdate={(updates) => updateDish(dish.id, updates)}
                         />
                       )}
@@ -512,7 +550,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
                         {tAny.addNewDish || "Add Dish"}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {categoryLabels[category]}
+                        {getCategoryLabel(category)}
                       </p>
                     </div>
                   </button>
@@ -521,6 +559,28 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
             );
           })}
         </div>
+
+        {/* Add custom category */}
+        {!activeDragId && (
+          <div className="mt-4 flex items-center gap-2">
+            <input
+              type="text"
+              placeholder={t.addCategoryPlaceholder}
+              className="w-48 rounded-lg border border-dashed border-border bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/50"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const val = (e.target as HTMLInputElement).value.trim().toLowerCase().replace(/\s+/g, "_");
+                  if (val && !categoryOrder.includes(val)) {
+                    setCustomCategories((prev) => [...prev, val]);
+                    setSaved(false);
+                  }
+                  (e.target as HTMLInputElement).value = "";
+                }
+              }}
+            />
+            <span className="text-xs text-muted-foreground">{t.addCategory} (Enter)</span>
+          </div>
+        )}
 
         {/* Drag overlay — ghost card following cursor */}
         <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
@@ -583,15 +643,28 @@ function DroppablePill({
 
 function MoveToDropdown({
   dish,
-  categoryLabels,
+  categoryOrder,
+  locale = "en",
   onMove,
   label,
 }: {
   dish: Dish;
-  categoryLabels: Record<MenuCategory, string>;
+  categoryOrder: string[];
+  locale?: AdminLocale;
   onMove: (category: MenuCategory) => void;
   label: string;
 }) {
+  const mt = getAdminDict(locale);
+  const mtAny = mt as unknown as Record<string, string>;
+  const builtinLabels: Record<string, string> = {
+    starter: mt.catStarter, main: mt.catMain, side: mt.catSide,
+    dessert: mt.catDessert, drink: mt.catDrink, combo: mt.catCombo,
+    sharing: mtAny.catSharing, soup: mtAny.catSoup, pasta: mtAny.catPasta,
+    wine: mtAny.catWine, cocktail: mtAny.catCocktail, brunch: mtAny.catBrunch,
+  };
+  function getCategoryLabel(cat: string): string {
+    return builtinLabels[cat] || cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, " ");
+  }
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -609,7 +682,7 @@ function MoveToDropdown({
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className="rounded-full px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="rounded-full p-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
         title={label}
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -632,7 +705,7 @@ function MoveToDropdown({
               }}
               className="block w-full px-3 py-1.5 text-left text-xs hover:bg-muted"
             >
-              {categoryLabels[cat]}
+              {getCategoryLabel(cat)}
             </button>
           ))}
         </div>
@@ -730,22 +803,27 @@ function DishEditor({
   cuisine,
   slug,
   locale = "en",
+  categoryOrder,
   onUpdate,
 }: {
   dish: Dish;
   cuisine?: string;
   slug?: string;
   locale?: AdminLocale;
+  categoryOrder: string[];
   onUpdate: (updates: Partial<Dish>) => void;
 }) {
   const t = getAdminDict(locale);
   const tAny = t as unknown as Record<string, string>;
-  const categoryLabels: Record<MenuCategory, string> = {
+  const builtinCatLabels: Record<string, string> = {
     starter: t.catStarter, main: t.catMain, side: t.catSide,
     dessert: t.catDessert, drink: t.catDrink, combo: t.catCombo,
     sharing: tAny.catSharing, soup: tAny.catSoup, pasta: tAny.catPasta,
     wine: tAny.catWine, cocktail: tAny.catCocktail, brunch: tAny.catBrunch,
   };
+  function getCategoryLabel(cat: string): string {
+    return builtinCatLabels[cat] || cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, " ");
+  }
   const { toast } = useToast();
   const [flagging, setFlagging] = useState(false);
   const [translating, setTranslating] = useState(false);
@@ -911,7 +989,7 @@ function DishEditor({
       </div>
 
       {/* Translated names */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <div>
           <label className="text-xs text-muted-foreground">{t.nameFr}</label>
           <input
@@ -957,7 +1035,7 @@ function DishEditor({
             className="mt-1 w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground"
           >
             {categoryOrder.map((c) => (
-              <option key={c} value={c}>{categoryLabels[c]}</option>
+              <option key={c} value={c}>{getCategoryLabel(c)}</option>
             ))}
           </select>
         </div>
@@ -990,7 +1068,7 @@ function DishEditor({
             </button>
           )}
         </div>
-        <div className="mt-1 grid grid-cols-3 gap-2">
+        <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div>
             <label className="text-[10px] text-muted-foreground">{t.descFr}</label>
             <textarea
@@ -1060,6 +1138,25 @@ function DishEditor({
             );
           })}
         </div>
+      </div>
+
+      {/* Halal toggle */}
+      <div className="flex items-center gap-3">
+        <label className="relative inline-flex cursor-pointer items-center">
+          <input
+            type="checkbox"
+            checked={dish.dietaryTags.includes("halal_possible")}
+            onChange={(e) => {
+              const tags = e.target.checked
+                ? [...dish.dietaryTags.filter((t) => t !== "halal_possible"), "halal_possible" as const]
+                : dish.dietaryTags.filter((t) => t !== "halal_possible");
+              onUpdate({ dietaryTags: tags });
+            }}
+            className="peer sr-only"
+          />
+          <div className="h-5 w-9 rounded-full bg-muted after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-background after:transition-all peer-checked:bg-emerald-500 peer-checked:after:translate-x-full" />
+        </label>
+        <span className="text-xs text-muted-foreground">{t.halal}</span>
       </div>
 
       {/* Spice level */}

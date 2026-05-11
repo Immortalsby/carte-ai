@@ -183,7 +183,7 @@ export function DashboardCharts({
             <ResponsiveContainer width="100%" height={Math.max(220, wishlistHearts.slice(0, 10).length * 32)}>
               <BarChart data={wishlistHearts.slice(0, 10)} layout="vertical">
                 <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
                 <Tooltip />
                 <Bar dataKey="value" fill="#ef4444" radius={[0, 4, 4, 0]} />
               </BarChart>

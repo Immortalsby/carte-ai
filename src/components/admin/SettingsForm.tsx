@@ -385,7 +385,7 @@ export function SettingsForm({
             {/* Inline text AI config — founder only */}
             {isFounder && (
               <div className="mt-2 space-y-2 border-t border-primary/10 pt-2">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <select
                     value={llmProvider}
                     onChange={(e) => { setLlmProvider(e.target.value); setSaved(false); setTouched(true); setTestResult(null); }}
@@ -485,7 +485,7 @@ export function SettingsForm({
             {/* Inline vision config — founder only */}
             {isFounder && (
               <div className="mt-2 space-y-2 border-t border-primary/10 pt-2">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <span className="flex items-center rounded border border-border bg-muted px-2 py-1 text-xs text-muted-foreground">
                     {t.aiVisionProviderGemini}
                   </span>
@@ -573,7 +573,7 @@ export function SettingsForm({
       )}
 
       {/* Sticky save bar */}
-      <div className="sticky bottom-0 -mx-4 mt-6 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+      <div className="sticky bottom-0 -mx-4 mt-6 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-sm lg:-mx-6 lg:px-6">
         <div className="flex items-center gap-3">
           <button
             type="submit"

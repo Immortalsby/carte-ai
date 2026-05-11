@@ -24,6 +24,7 @@ const allergenEmoji: Record<Allergen, string> = {
 };
 
 const dietaryBadge: Partial<Record<DietaryTag, { label: string; cls: string }>> = {
+  halal_possible: { label: "Halal", cls: "bg-emerald-500/20 text-emerald-600" },
   vegetarian: { label: "V", cls: "bg-carte-success/20 text-carte-success" },
   vegan: { label: "VG", cls: "bg-carte-success/30 text-carte-success" },
   spicy: { label: "\ud83c\udf36", cls: "bg-carte-danger/20 text-carte-danger" },

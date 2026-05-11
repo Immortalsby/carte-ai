@@ -206,6 +206,14 @@ export function DishDetail({ dish, lang, cuisine, tenantSlug, onClose, isSaved, 
           <p className="mt-2 text-sm text-carte-text-muted">{desc}</p>
         )}
 
+        {/* Halal badge */}
+        {dish.dietaryTags.includes("halal_possible") && (
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1">
+            <span className="text-sm">&#x262A;</span>
+            <span className="text-xs font-semibold text-emerald-600">Halal</span>
+          </div>
+        )}
+
         {/* Ingredients */}
         {dish.ingredients.length > 0 && (
           <div className="mt-4">
