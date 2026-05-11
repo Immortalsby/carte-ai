@@ -335,6 +335,20 @@ const dict = {
     pdfDownloaded: "PDF downloaded",
     pdfFailed: "PDF failed",
 
+    // Poster orientation & toggles
+    posterOrientation: "Poster Orientation",
+    posterPortrait: "Portrait (A4)",
+    posterLandscape: "Landscape",
+    showUrl: "Show URL",
+    showCuisineType: "Show cuisine type",
+    showBadgeBudget: "Show \"Budget · Taste · Allergens\"",
+    showBadgeAI: `Show "AI Menu · ${N} Languages"`,
+    posterResolution: "Resolution",
+    posterWidth: "Width",
+    posterHeight: "Height",
+    posterLockRatio: "Lock aspect ratio",
+    cuisineRestaurant: (cuisine: string) => `${cuisine} Restaurant`,
+
     // Custom elements & image upload
     customElements: "Custom Text Elements",
     customElementsHint: "Add up to 3 short text elements to display on the poster.",
@@ -837,6 +851,20 @@ const dict = {
     pdfDownloaded: "PDF téléchargé",
     pdfFailed: "Échec du PDF",
 
+    // Poster orientation & toggles
+    posterOrientation: "Orientation de l'affiche",
+    posterPortrait: "Portrait (A4)",
+    posterLandscape: "Paysage",
+    showUrl: "Afficher l'URL",
+    showCuisineType: "Afficher le type de cuisine",
+    showBadgeBudget: "Afficher « Budget · Goût · Allergènes »",
+    showBadgeAI: `Afficher « Menu IA · ${N} langues »`,
+    posterResolution: "Résolution",
+    posterWidth: "Largeur",
+    posterHeight: "Hauteur",
+    posterLockRatio: "Verrouiller le ratio",
+    cuisineRestaurant: (cuisine: string) => `Restaurant ${cuisine}`,
+
     // Custom elements & image upload
     customElements: "Éléments texte personnalisés",
     customElementsHint: "Ajoutez jusqu'à 3 courts textes à afficher sur l'affiche.",
@@ -1329,6 +1357,20 @@ const dict = {
     bgFailed: "背景生成失败，请重试",
     pdfDownloaded: "PDF 已下载",
     pdfFailed: "PDF 生成失败",
+
+    // Poster orientation & toggles
+    posterOrientation: "海报方向",
+    posterPortrait: "竖版 (A4)",
+    posterLandscape: "横版",
+    showUrl: "显示网址",
+    showCuisineType: "显示菜系类型",
+    showBadgeBudget: "显示「预算 · 口味 · 过敏原」",
+    showBadgeAI: `显示「AI 菜单 · ${N} 种语言」`,
+    posterResolution: "分辨率",
+    posterWidth: "宽度",
+    posterHeight: "高度",
+    posterLockRatio: "锁定比例",
+    cuisineRestaurant: (cuisine: string) => `${cuisine}餐厅`,
 
     // Custom elements & image upload
     customElements: "自定义文本元素",

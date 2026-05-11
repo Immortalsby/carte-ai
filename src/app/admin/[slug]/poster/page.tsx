@@ -37,6 +37,7 @@ export default async function PosterPage({
     <PosterEditor
       restaurantName={tenant.name}
       cuisineType={tenant.cuisine_type || ""}
+      address={tenant.address || ""}
       slug={slug}
       qrCodeDataUrl={qrCode}
       qrUrl={url}

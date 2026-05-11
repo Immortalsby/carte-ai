@@ -13,13 +13,52 @@ const posterLocaleOptions: { value: AdminLocale; label: string }[] = [
   { value: "zh", label: "中文" },
 ];
 
+type PosterOrientation = "portrait" | "landscape";
+
 interface PosterEditorProps {
   restaurantName: string;
   cuisineType: string;
+  address: string;
   slug: string;
   qrCodeDataUrl: string;
   qrUrl: string;
   locale?: AdminLocale;
+}
+
+/** Map cuisine_type DB value → localized display label */
+const cuisineDisplayMap: Record<string, Record<AdminLocale, string>> = {
+  french: { en: "French Restaurant", fr: "Restaurant Français", zh: "法餐厅" },
+  italian: { en: "Italian Restaurant", fr: "Restaurant Italien", zh: "意大利餐厅" },
+  chinese: { en: "Chinese Restaurant", fr: "Restaurant Chinois", zh: "中餐厅" },
+  japanese: { en: "Japanese Restaurant", fr: "Restaurant Japonais", zh: "日本料理" },
+  japanese_fusion: { en: "Japanese Fusion", fr: "Fusion Japonaise", zh: "日式融合料理" },
+  korean: { en: "Korean Restaurant", fr: "Restaurant Coréen", zh: "韩国料理" },
+  thai: { en: "Thai Restaurant", fr: "Restaurant Thaïlandais", zh: "泰国料理" },
+  vietnamese: { en: "Vietnamese Restaurant", fr: "Restaurant Vietnamien", zh: "越南餐厅" },
+  indian: { en: "Indian Restaurant", fr: "Restaurant Indien", zh: "印度餐厅" },
+  lebanese: { en: "Lebanese Restaurant", fr: "Restaurant Libanais", zh: "黎巴嫩餐厅" },
+  moroccan: { en: "Moroccan Restaurant", fr: "Restaurant Marocain", zh: "摩洛哥餐厅" },
+  turkish: { en: "Turkish Restaurant", fr: "Restaurant Turc", zh: "土耳其餐厅" },
+  greek: { en: "Greek Restaurant", fr: "Restaurant Grec", zh: "希腊餐厅" },
+  spanish: { en: "Spanish Restaurant", fr: "Restaurant Espagnol", zh: "西班牙餐厅" },
+  mexican: { en: "Mexican Restaurant", fr: "Restaurant Mexicain", zh: "墨西哥餐厅" },
+  brazilian: { en: "Brazilian Restaurant", fr: "Restaurant Brésilien", zh: "巴西餐厅" },
+  peruvian: { en: "Peruvian Restaurant", fr: "Restaurant Péruvien", zh: "秘鲁餐厅" },
+  caribbean: { en: "Caribbean Restaurant", fr: "Restaurant Caribéen", zh: "加勒比餐厅" },
+  african: { en: "African Restaurant", fr: "Restaurant Africain", zh: "非洲餐厅" },
+  mediterranean: { en: "Mediterranean Restaurant", fr: "Restaurant Méditerranéen", zh: "地中海餐厅" },
+  american: { en: "American Restaurant", fr: "Restaurant Américain", zh: "美式餐厅" },
+  fusion: { en: "Fusion Restaurant", fr: "Restaurant Fusion", zh: "融合料理" },
+  other: { en: "Restaurant", fr: "Restaurant", zh: "餐厅" },
+};
+
+function getLocalizedCuisine(cuisineType: string, locale: AdminLocale): string {
+  const key = cuisineType.toLowerCase().replace(/\s+/g, "_");
+  const entry = cuisineDisplayMap[key];
+  if (entry) return entry[locale];
+  // Fallback: capitalize and use generic template
+  const name = cuisineType.replace(/_/g, " ");
+  return locale === "zh" ? `${name}餐厅` : locale === "fr" ? `Restaurant ${name}` : `${name} Restaurant`;
 }
 
 const bgElements = [
@@ -91,6 +130,7 @@ function PosterMascot({ size = 48, accent = "#10b981" }: { size?: number; accent
 export function PosterEditor({
   restaurantName,
   cuisineType,
+  address,
   slug,
   qrCodeDataUrl,
   qrUrl,
@@ -103,14 +143,29 @@ export function PosterEditor({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [posterScale, setPosterScale] = useState(1);
 
-  const POSTER_W = 760;
-  const POSTER_H = Math.round(POSTER_W * 1.414);
+  // Orientation & visibility toggles
+  const [orientation, setOrientation] = useState<PosterOrientation>("portrait");
+  const [showUrl, setShowUrl] = useState(true);
+  const [showCuisineType, setShowCuisineType] = useState(true);
+  const [showBadgeBudget, setShowBadgeBudget] = useState(true);
+  const [showBadgeAI, setShowBadgeAI] = useState(true);
+
+  // Custom resolution (default A4 ratio)
+  const PORTRAIT_W = 760;
+  const PORTRAIT_RATIO = 1.414; // A4
+  const LANDSCAPE_RATIO = 1 / PORTRAIT_RATIO;
+  const [customWidth, setCustomWidth] = useState(PORTRAIT_W);
+
+  const isLandscape = orientation === "landscape";
+  const aspectRatio = isLandscape ? LANDSCAPE_RATIO : PORTRAIT_RATIO;
+  const POSTER_W = customWidth;
+  const POSTER_H = Math.round(POSTER_W * aspectRatio);
 
   const recalcScale = useCallback(() => {
     if (!wrapperRef.current) return;
     const available = wrapperRef.current.clientWidth;
     setPosterScale(Math.min(1, available / POSTER_W));
-  }, []);
+  }, [POSTER_W]);
 
   useEffect(() => {
     recalcScale();
@@ -253,9 +308,12 @@ export function PosterEditor({
         },
       });
 
-      // A4 ratio poster
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      pdf.addImage(dataUrl, "JPEG", 0, 0, 210, 297);
+      // PDF with correct orientation
+      const pdfOrientation = isLandscape ? "landscape" : "portrait";
+      const pdf = new jsPDF({ orientation: pdfOrientation as "portrait" | "landscape", unit: "mm", format: "a4" });
+      const pdfW = isLandscape ? 297 : 210;
+      const pdfH = isLandscape ? 210 : 297;
+      pdf.addImage(dataUrl, "JPEG", 0, 0, pdfW, pdfH);
       pdf.save(`${slug}-poster.pdf`);
       toast(t.pdfDownloaded, "success");
     } catch (err) {
@@ -288,6 +346,77 @@ export function PosterEditor({
                 {opt.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Orientation toggle */}
+        <div>
+          <label className="text-sm font-medium text-foreground">{tAny.posterOrientation}</label>
+          <div className="mt-2 flex gap-2">
+            {(["portrait", "landscape"] as const).map((o) => (
+              <button
+                key={o}
+                type="button"
+                onClick={() => setOrientation(o)}
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                  orientation === o
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {o === "portrait" ? tAny.posterPortrait : tAny.posterLandscape}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Visibility toggles */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {([
+            ["showUrl", showUrl, setShowUrl, tAny.showUrl],
+            ["showCuisineType", showCuisineType, setShowCuisineType, tAny.showCuisineType],
+            ["showBadgeBudget", showBadgeBudget, setShowBadgeBudget, tAny.showBadgeBudget],
+            ["showBadgeAI", showBadgeAI, setShowBadgeAI, tAny.showBadgeAI],
+          ] as [string, boolean, (v: boolean) => void, string][]).map(([key, val, setter, label]) => (
+            <label key={key} className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={val}
+                onChange={(e) => setter(e.target.checked)}
+                className="h-4 w-4 rounded border-border accent-primary"
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+
+        {/* Custom resolution */}
+        <div>
+          <label className="text-sm font-medium text-foreground">{tAny.posterResolution}</label>
+          <div className="mt-2 flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">{tAny.posterWidth}</span>
+              <input
+                type="number"
+                value={customWidth}
+                min={400}
+                max={2000}
+                step={10}
+                onChange={(e) => {
+                  const w = Math.max(400, Math.min(2000, Number(e.target.value) || 400));
+                  setCustomWidth(w);
+                }}
+                className="w-20 rounded-lg border border-border bg-card px-2 py-1 text-xs text-foreground"
+              />
+            </div>
+            <span className="text-xs text-muted-foreground">×</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">{tAny.posterHeight}</span>
+              <span className="w-20 rounded-lg border border-border bg-muted/50 px-2 py-1 text-xs text-muted-foreground text-center">
+                {POSTER_H}
+              </span>
+            </div>
+            <span className="text-xs text-muted-foreground">🔒 {tAny.posterLockRatio}</span>
           </div>
         </div>
 
@@ -558,104 +687,205 @@ export function PosterEditor({
             </>
           )}
 
-          <header className="relative">
-            <div className="flex items-center gap-3">
-              <PosterMascot size={48} accent={activeAccent} />
-              <p
-                className="text-sm uppercase tracking-[0.36em]"
-                style={{ color: hexToRgba(activeAccent, 0.7) }}
-              >
-                CarteAI
-              </p>
-            </div>
-            <h1
-              className="mt-5 max-w-xl text-6xl font-semibold leading-[0.95]"
-              style={{ color: activeText }}
-            >
-              {pt.posterHeadline}
-            </h1>
-            <p
-              className="mt-5 max-w-md text-xl leading-8"
-              style={{ color: hexToRgba(activeText, 0.68) }}
-            >
-              {(pt.posterSubtitle as unknown as (name: string) => string)(restaurantName)}
-            </p>
-          </header>
-
-          <div className="relative grid grid-cols-[1fr_1.1fr] items-end gap-8">
-            <div>
-              <div
-                className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
-                style={{
-                  borderColor: hexToRgba(activeAccent, 0.2),
-                  backgroundColor: hexToRgba(activeAccent, 0.1),
-                  color: isLightBg ? activeAccent : hexToRgba(activeText, 0.9),
-                }}
-              >
-                {pt.posterBadge1}
-              </div>
-              <div
-                className="mt-2 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
-                style={{
-                  borderColor: hexToRgba(activeAccent, 0.15),
-                  backgroundColor: hexToRgba(activeAccent, 0.06),
-                  color: isLightBg ? activeAccent : hexToRgba(activeText, 0.85),
-                }}
-              >
-                {pt.posterBadge2}
-              </div>
-              <p
-                className="mt-5 text-3xl font-semibold"
-                style={{ color: activeText }}
-              >
-                {restaurantName}
-              </p>
-              <p
-                className="mt-2 capitalize"
-                style={{ color: hexToRgba(activeText, 0.55) }}
-              >
-                {cuisineType?.replace(/_/g, " ")}
-              </p>
-              {/* Custom text elements */}
-              {customTexts.filter(Boolean).length > 0 && (
-                <div className="mt-4 space-y-1.5">
-                  {customTexts.filter(Boolean).map((text, idx) => (
+          {isLandscape ? (
+            /* ===== LANDSCAPE LAYOUT ===== */
+            <div className="relative flex h-full gap-8">
+              {/* Left side: info */}
+              <div className="flex flex-1 flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <PosterMascot size={48} accent={activeAccent} />
                     <p
-                      key={idx}
-                      className="text-sm font-medium"
-                      style={{ color: hexToRgba(activeText, 0.75) }}
+                      className="text-sm uppercase tracking-[0.36em]"
+                      style={{ color: hexToRgba(activeAccent, 0.7) }}
                     >
-                      {text}
+                      CarteAI
                     </p>
-                  ))}
+                  </div>
+                  {showUrl && (
+                    <p className="mt-3 font-mono text-sm" style={{ color: activeAccent }}>
+                      carte-ai.link
+                    </p>
+                  )}
                 </div>
-              )}
-              <p
-                className="mt-6 font-mono text-sm"
-                style={{ color: activeAccent }}
-              >
-                {qrUrl}
-              </p>
-            </div>
 
-            <div
-              className="rounded-[2rem] border bg-white p-5 text-black"
-              style={{ borderColor: hexToRgba(activeText, 0.15) }}
-            >
-              <Image
-                src={qrCodeDataUrl}
-                alt={`QR code for ${qrUrl}`}
-                width={640}
-                height={640}
-                unoptimized
-                className="aspect-square w-full rounded-2xl"
-              />
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold">
-                <PosterMascot size={20} accent={activeAccent} />
-                {pt.posterScanLabel}
+                <div>
+                  <p className="text-3xl font-semibold" style={{ color: activeText }}>
+                    {restaurantName}
+                  </p>
+                  {showCuisineType && cuisineType && (
+                    <p className="mt-2 text-lg" style={{ color: hexToRgba(activeText, 0.6) }}>
+                      {getLocalizedCuisine(cuisineType, posterLocale)}
+                    </p>
+                  )}
+                  {address && (
+                    <p className="mt-3 text-sm" style={{ color: hexToRgba(activeText, 0.5) }}>
+                      {address}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  {showBadgeBudget && (
+                    <div
+                      className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
+                      style={{
+                        borderColor: hexToRgba(activeAccent, 0.2),
+                        backgroundColor: hexToRgba(activeAccent, 0.1),
+                        color: isLightBg ? activeAccent : hexToRgba(activeText, 0.9),
+                      }}
+                    >
+                      {pt.posterBadge1}
+                    </div>
+                  )}
+                  {showBadgeAI && (
+                    <div
+                      className={`${showBadgeBudget ? "mt-2 " : ""}inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm`}
+                      style={{
+                        borderColor: hexToRgba(activeAccent, 0.15),
+                        backgroundColor: hexToRgba(activeAccent, 0.06),
+                        color: isLightBg ? activeAccent : hexToRgba(activeText, 0.85),
+                      }}
+                    >
+                      {pt.posterBadge2}
+                    </div>
+                  )}
+                  {/* Custom text elements */}
+                  {customTexts.filter(Boolean).length > 0 && (
+                    <div className="mt-4 space-y-1.5">
+                      {customTexts.filter(Boolean).map((text, idx) => (
+                        <p key={idx} className="text-sm font-medium" style={{ color: hexToRgba(activeText, 0.75) }}>
+                          {text}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right side: QR code */}
+              <div className="flex flex-1 items-center justify-center">
+                <div
+                  className="rounded-[2rem] border bg-white p-5 text-black"
+                  style={{ borderColor: hexToRgba(activeText, 0.15), width: "85%" }}
+                >
+                  <Image
+                    src={qrCodeDataUrl}
+                    alt={`QR code for ${qrUrl}`}
+                    width={640}
+                    height={640}
+                    unoptimized
+                    className="aspect-square w-full rounded-2xl"
+                  />
+                  {showUrl && (
+                    <p className="mt-3 text-center font-mono text-xs" style={{ color: "#333" }}>
+                      {qrUrl}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            /* ===== PORTRAIT LAYOUT (original) ===== */
+            <>
+              <header className="relative">
+                <div className="flex items-center gap-3">
+                  <PosterMascot size={48} accent={activeAccent} />
+                  <p
+                    className="text-sm uppercase tracking-[0.36em]"
+                    style={{ color: hexToRgba(activeAccent, 0.7) }}
+                  >
+                    CarteAI
+                  </p>
+                </div>
+                <h1
+                  className="mt-5 max-w-xl text-6xl font-semibold leading-[0.95]"
+                  style={{ color: activeText }}
+                >
+                  {pt.posterHeadline}
+                </h1>
+                <p
+                  className="mt-5 max-w-md text-xl leading-8"
+                  style={{ color: hexToRgba(activeText, 0.68) }}
+                >
+                  {(pt.posterSubtitle as unknown as (name: string) => string)(restaurantName)}
+                </p>
+              </header>
+
+              <div className="relative grid grid-cols-[1fr_1.1fr] items-end gap-8">
+                <div>
+                  {showBadgeBudget && (
+                    <div
+                      className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
+                      style={{
+                        borderColor: hexToRgba(activeAccent, 0.2),
+                        backgroundColor: hexToRgba(activeAccent, 0.1),
+                        color: isLightBg ? activeAccent : hexToRgba(activeText, 0.9),
+                      }}
+                    >
+                      {pt.posterBadge1}
+                    </div>
+                  )}
+                  {showBadgeAI && (
+                    <div
+                      className={`${showBadgeBudget ? "mt-2 " : ""}inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm`}
+                      style={{
+                        borderColor: hexToRgba(activeAccent, 0.15),
+                        backgroundColor: hexToRgba(activeAccent, 0.06),
+                        color: isLightBg ? activeAccent : hexToRgba(activeText, 0.85),
+                      }}
+                    >
+                      {pt.posterBadge2}
+                    </div>
+                  )}
+                  <p
+                    className="mt-5 text-3xl font-semibold"
+                    style={{ color: activeText }}
+                  >
+                    {restaurantName}
+                  </p>
+                  {showCuisineType && cuisineType && (
+                    <p className="mt-2" style={{ color: hexToRgba(activeText, 0.55) }}>
+                      {getLocalizedCuisine(cuisineType, posterLocale)}
+                    </p>
+                  )}
+                  {/* Custom text elements */}
+                  {customTexts.filter(Boolean).length > 0 && (
+                    <div className="mt-4 space-y-1.5">
+                      {customTexts.filter(Boolean).map((text, idx) => (
+                        <p key={idx} className="text-sm font-medium" style={{ color: hexToRgba(activeText, 0.75) }}>
+                          {text}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  {showUrl && (
+                    <p className="mt-6 font-mono text-sm" style={{ color: activeAccent }}>
+                      {qrUrl}
+                    </p>
+                  )}
+                </div>
+
+                <div
+                  className="rounded-[2rem] border bg-white p-5 text-black"
+                  style={{ borderColor: hexToRgba(activeText, 0.15) }}
+                >
+                  <Image
+                    src={qrCodeDataUrl}
+                    alt={`QR code for ${qrUrl}`}
+                    width={640}
+                    height={640}
+                    unoptimized
+                    className="aspect-square w-full rounded-2xl"
+                  />
+                  <div className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold">
+                    <PosterMascot size={20} accent={activeAccent} />
+                    {pt.posterScanLabel}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
         </div>
