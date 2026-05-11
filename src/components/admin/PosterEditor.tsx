@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import Image from "next/image";
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
@@ -787,12 +786,10 @@ export function PosterEditor({
                   className="rounded-[2rem] border bg-white p-5 text-black"
                   style={{ borderColor: hexToRgba(activeText, 0.15), width: "85%" }}
                 >
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={qrCodeDataUrl}
                     alt={`QR code for ${qrUrl}`}
-                    width={640}
-                    height={640}
-                    unoptimized
                     className="aspect-square w-full rounded-2xl"
                   />
                   {showUrl && (
@@ -888,12 +885,10 @@ export function PosterEditor({
                   className="rounded-[2rem] border bg-white p-5 text-black"
                   style={{ borderColor: hexToRgba(activeText, 0.15) }}
                 >
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={qrCodeDataUrl}
                     alt={`QR code for ${qrUrl}`}
-                    width={640}
-                    height={640}
-                    unoptimized
                     className="aspect-square w-full rounded-2xl"
                   />
                   <div className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold">
