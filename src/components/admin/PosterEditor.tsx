@@ -305,9 +305,19 @@ export function PosterEditor({
         height: el.scrollHeight,
         useCORS: true,
         allowTaint: true,
-        // Reset transform so we capture at full resolution
         onclone: (_doc: Document, cloned: HTMLElement) => {
           cloned.style.transform = "none";
+          // html2canvas v1 cannot parse modern CSS color functions (oklch, oklab, lab, lch).
+          // Replace them with a safe hex fallback in the cloned document's stylesheets.
+          // This does not affect the poster's visual output — it uses inline hex styles.
+          _doc.querySelectorAll("style").forEach((style) => {
+            if (style.textContent) {
+              style.textContent = style.textContent.replace(
+                /oklch\([^)]+\)|oklab\([^)]+\)|lab\([^)]+\)|lch\([^)]+\)/g,
+                "#808080",
+              );
+            }
+          });
         },
       });
 
