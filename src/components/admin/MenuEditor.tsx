@@ -8,7 +8,6 @@ import {
   useDraggable,
   useDroppable,
   PointerSensor,
-  TouchSensor,
   useSensor,
   useSensors,
   type DragStartEvent,
@@ -74,10 +73,9 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
     ...customCategories.filter((c) => !builtinCategoryOrder.includes(c)),
   ];
 
-  // dnd-kit sensors: pointer needs 8px movement to start (so clicks work), touch needs 2s hold
+  // dnd-kit sensors: pointer only (touch drag disabled to prevent accidental moves on mobile)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 2000, tolerance: 8 } }),
   );
 
   function handleDragStart(event: DragStartEvent) {
