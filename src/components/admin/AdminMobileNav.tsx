@@ -5,11 +5,12 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { signOut } from "@/lib/auth-client";
 import { ThemeToggle } from "./ThemeToggle";
-import { ChartBar, ListBullets, ChartLineUp, Image, Gear, CreditCard, SignOut, LinkSimple, Question } from "@phosphor-icons/react";
+import { ChartBar, ListBullets, ChartLineUp, Image, Gear, CreditCard, Storefront, SignOut, LinkSimple, Question } from "@phosphor-icons/react";
 
 const navIcons: Record<string, ReactNode> = {
   "📊": <ChartBar weight="duotone" className="h-[18px] w-[18px]" />,
   "📋": <ListBullets weight="duotone" className="h-[18px] w-[18px]" />,
+  "🏠": <Storefront weight="duotone" className="h-[18px] w-[18px]" />,
   "📈": <ChartLineUp weight="duotone" className="h-[18px] w-[18px]" />,
   "🖼️": <Image weight="duotone" className="h-[18px] w-[18px]" />,
   "💳": <CreditCard weight="duotone" className="h-[18px] w-[18px]" />,
