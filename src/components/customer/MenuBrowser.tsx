@@ -141,7 +141,7 @@ export function MenuBrowser({ dishes, lang, restaurantName, cuisine, tenantId, t
               key={category}
               type="button"
               onClick={() => scrollTo(category)}
-              className="shrink-0 rounded-full border border-carte-border px-3 py-1 text-xs font-medium text-carte-text-muted transition-colors hover:bg-carte-surface hover:text-carte-primary"
+              className="shrink-0 rounded-full border border-carte-border px-4 py-2 text-sm font-semibold text-carte-text-muted transition-colors hover:bg-carte-surface hover:text-carte-primary"
             >
               {getCatLabel(t as unknown as Record<string, unknown>, category, lang, menuCategoryLabels)}
             </button>
