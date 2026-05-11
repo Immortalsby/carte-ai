@@ -335,6 +335,22 @@ const dict = {
     pdfDownloaded: "PDF downloaded",
     pdfFailed: "PDF failed",
 
+    // Restaurant management
+    restaurantManagement: "Restaurant",
+    reviewPromo: "Review Incentive Banner",
+    reviewPromoHint: "Display a promotional banner on the customer page to encourage Google reviews.",
+    reviewPromoEnabled: "Enable banner",
+    reviewPromoClickable: "Banner links to Google Reviews",
+    reviewPromoText: "Banner text",
+    reviewPromoPlaceholder: "e.g. Leave a 5-star review and get a free drink!",
+    reviewPromoTranslate: "AI Translate to all languages",
+    reviewPromoTranslating: "Translating...",
+    reviewPromoTranslated: "Translated to all languages",
+    reviewPromoTranslateFailed: "Translation failed — please try again",
+    reviewPromoPreview: "Translation preview",
+    reviewPromoNoGoogleMaps: "Please add a Google Maps link first to enable the review link.",
+    reviewPromoCharLimit: "120 characters max",
+
     // Poster orientation & toggles
     posterOrientation: "Poster Orientation",
     posterPortrait: "Portrait (A4)",
@@ -851,6 +867,22 @@ const dict = {
     pdfDownloaded: "PDF téléchargé",
     pdfFailed: "Échec du PDF",
 
+    // Restaurant management
+    restaurantManagement: "Restaurant",
+    reviewPromo: "Bannière d'avis",
+    reviewPromoHint: "Affichez une bannière promotionnelle sur la page client pour encourager les avis Google.",
+    reviewPromoEnabled: "Activer la bannière",
+    reviewPromoClickable: "La bannière renvoie vers les avis Google",
+    reviewPromoText: "Texte de la bannière",
+    reviewPromoPlaceholder: "ex. Laissez un avis 5 étoiles et recevez une boisson offerte !",
+    reviewPromoTranslate: "Traduire par IA dans toutes les langues",
+    reviewPromoTranslating: "Traduction en cours...",
+    reviewPromoTranslated: "Traduit dans toutes les langues",
+    reviewPromoTranslateFailed: "Échec de la traduction — veuillez réessayer",
+    reviewPromoPreview: "Aperçu des traductions",
+    reviewPromoNoGoogleMaps: "Veuillez d'abord ajouter un lien Google Maps pour activer le lien d'avis.",
+    reviewPromoCharLimit: "120 caractères max",
+
     // Poster orientation & toggles
     posterOrientation: "Orientation de l'affiche",
     posterPortrait: "Portrait (A4)",
@@ -1357,6 +1389,22 @@ const dict = {
     bgFailed: "背景生成失败，请重试",
     pdfDownloaded: "PDF 已下载",
     pdfFailed: "PDF 生成失败",
+
+    // Restaurant management
+    restaurantManagement: "餐厅管理",
+    reviewPromo: "评价激励标语",
+    reviewPromoHint: "在顾客页面顶部展示一条促销标语，鼓励顾客留下 Google 好评。",
+    reviewPromoEnabled: "启用标语",
+    reviewPromoClickable: "标语可跳转至 Google 评价",
+    reviewPromoText: "标语内容",
+    reviewPromoPlaceholder: "例如：五星好评赠送一杯饮料！",
+    reviewPromoTranslate: "AI 翻译为所有语言",
+    reviewPromoTranslating: "翻译中...",
+    reviewPromoTranslated: "已翻译为所有语言",
+    reviewPromoTranslateFailed: "翻译失败，请重试",
+    reviewPromoPreview: "翻译预览",
+    reviewPromoNoGoogleMaps: "请先添加 Google Maps 链接以启用评价跳转。",
+    reviewPromoCharLimit: "最多 120 个字符",
 
     // Poster orientation & toggles
     posterOrientation: "海报方向",

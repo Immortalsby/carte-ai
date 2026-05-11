@@ -65,6 +65,18 @@ export default async function CustomerPage({
           addressCountry={
             ((tenant.settings as Record<string, unknown> | null)?.address_country as string) || undefined
           }
+          reviewPromo={(() => {
+            const s = (tenant.settings as Record<string, unknown> | null) ?? {};
+            if (!s.review_promo_enabled) return undefined;
+            const promo = s.review_promo as Record<string, unknown> | undefined;
+            if (!promo?.translations) return undefined;
+            return {
+              enabled: true,
+              clickable: (s.review_promo_clickable as boolean) ?? true,
+              translations: promo.translations as Record<string, string>,
+              googleMapsUrl: (s.google_maps_url as string) || undefined,
+            };
+          })()}
         />
       ) : (
         <>

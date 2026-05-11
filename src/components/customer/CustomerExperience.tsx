@@ -48,6 +48,13 @@ const Turnstile = dynamic(
   { ssr: false },
 );
 
+interface ReviewPromoProps {
+  enabled: boolean;
+  clickable: boolean;
+  translations: Record<string, string>;
+  googleMapsUrl?: string;
+}
+
 interface CustomerExperienceProps {
   menu: RestaurantMenu;
   tenantId: string;
@@ -60,9 +67,10 @@ interface CustomerExperienceProps {
   googleMapsUrl?: string;
   enableReviewNudge?: boolean;
   addressCountry?: string;
+  reviewPromo?: ReviewPromoProps;
 }
 
-export function CustomerExperience({ menu: initialMenu, tenantId, tenantName, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false, addressCountry }: CustomerExperienceProps) {
+export function CustomerExperience({ menu: initialMenu, tenantId, tenantName, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false, addressCountry, reviewPromo }: CustomerExperienceProps) {
   const [menu, setMenu] = useState(initialMenu);
   const [lang, setLang] = useState<LanguageCode>("fr");
   const [excludedAllergens, setExcludedAllergens] = useState<Allergen[]>([]);
@@ -197,6 +205,34 @@ export function CustomerExperience({ menu: initialMenu, tenantId, tenantName, cu
         />
       )}
       {/* Restaurant header with cuisine theming + language switcher */}
+      {/* Review promo banner */}
+      {reviewPromo?.enabled && (() => {
+        const promoText = reviewPromo.translations[lang] || reviewPromo.translations.en || reviewPromo.translations.fr || "";
+        if (!promoText) return null;
+        const isClickable = reviewPromo.clickable && reviewPromo.googleMapsUrl;
+        const inner = (
+          <div
+            className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-center text-sm font-medium"
+            style={{
+              background: "linear-gradient(135deg, color-mix(in srgb, var(--carte-accent) 15%, transparent), color-mix(in srgb, var(--carte-accent) 8%, transparent))",
+              color: "var(--carte-accent)",
+              border: "1px solid color-mix(in srgb, var(--carte-accent) 20%, transparent)",
+            }}
+          >
+            <span>⭐</span>
+            <span>{promoText}</span>
+            {isClickable && <span className="ml-1 opacity-60">↗</span>}
+          </div>
+        );
+        return isClickable ? (
+          <a href={reviewPromo.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="mb-3 block">
+            {inner}
+          </a>
+        ) : (
+          <div className="mb-3">{inner}</div>
+        );
+      })()}
+
       <RestaurantHeader
         name={tenantName}
         cuisineType={cuisineType}

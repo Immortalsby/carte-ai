@@ -52,6 +52,7 @@ export default async function AdminLayout({
   const navItems = [
     { href: "", label: t.dashboard, icon: "📊" },
     { href: "/menu", label: t.menu, icon: "📋" },
+    { href: "/restaurant", label: (t as unknown as Record<string, string>).restaurantManagement, icon: "🏠" },
     { href: "/analytics", label: t.analytics, icon: "📈" },
     { href: "/poster", label: t.qrPoster, icon: "🖼️" },
     { href: "/billing", label: t.billing, icon: "💳" },

@@ -28,11 +28,9 @@ export default async function SettingsPage({
   const acceptLang = headerStore.get("accept-language");
   const locale = detectAdminLocale(localeCookie, acceptLang);
   const t = getAdminDict(locale);
-  const customerUrl = `https://carte-ai.link/r/${slug}`;
 
   // Build AI models info for display
   const tenantSettings = (tenant.settings as Record<string, unknown> | null) ?? {};
-  const textProvider = (tenantSettings.llm_provider as string) || "auto";
   const textModel = (tenantSettings.llm_model as string) || "";
   const visionModel = (tenantSettings.vision_model as string) || "";
   const aiModels = {
@@ -53,22 +51,8 @@ export default async function SettingsPage({
       <h1 className="text-2xl font-bold">{t.settingsTitle}</h1>
 
       <div className="mt-6 max-w-2xl">
-        {/* Customer link */}
-        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
-          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t.customerMenuLink}</p>
-          <p className="mt-1 font-mono text-sm text-emerald-600 dark:text-emerald-400">{customerUrl}</p>
-          <a
-            href={`/r/${slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-block text-sm text-emerald-700 underline dark:text-emerald-300"
-          >
-            {t.preview} &rarr;
-          </a>
-        </div>
-
         {/* Display language */}
-        <div className="mt-6">
+        <div>
           <AdminLocaleSelector
             current={locale}
             label={t.displayLanguage}
@@ -78,26 +62,6 @@ export default async function SettingsPage({
 
         <SettingsForm
           slug={slug}
-          initialName={tenant.name}
-          initialCuisineType={tenant.cuisine_type ?? ""}
-          initialAddress={tenant.address ?? ""}
-          initialStructuredAddress={
-            tenantSettings.address_country ? {
-              street: (tenantSettings.address_street as string) ?? "",
-              city: (tenantSettings.address_city as string) ?? "",
-              postal: (tenantSettings.address_postal as string) ?? "",
-              country: (tenantSettings.address_country as string) ?? "FR",
-            } : undefined
-          }
-          initialAllowDrinksOnly={
-            ((tenant.settings as Record<string, unknown> | null)?.allow_drinks_only as boolean) ?? true
-          }
-          initialGoogleMapsLink={
-            ((tenant.settings as Record<string, unknown> | null)?.google_maps_url as string) ?? ""
-          }
-          initialEnableReviewNudge={
-            ((tenant.settings as Record<string, unknown> | null)?.enable_review_nudge as boolean) ?? false
-          }
           initialLlmQuotaCalls={
             founder
               ? ((tenant.settings as Record<string, unknown> | null)?.llm_quota_calls as number) || 5000
