@@ -14,8 +14,12 @@ const posterLocaleOptions: { value: AdminLocale; label: string }[] = [
 
 type PosterOrientation = "portrait" | "landscape";
 
+type PosterNameDisplay = "primary" | "secondary" | "both";
+type PosterNameOrder = "primary-first" | "secondary-first";
+
 interface PosterEditorProps {
   restaurantName: string;
+  restaurantNameSecondary?: string;
   cuisineType: string;
   address: string;
   slug: string;
@@ -128,6 +132,7 @@ function PosterMascot({ size = 48, accent = "#10b981" }: { size?: number; accent
 
 export function PosterEditor({
   restaurantName,
+  restaurantNameSecondary = "",
   cuisineType,
   address,
   slug,
@@ -144,6 +149,8 @@ export function PosterEditor({
 
   // Orientation & visibility toggles
   const [orientation, setOrientation] = useState<PosterOrientation>("portrait");
+  const [nameDisplay, setNameDisplay] = useState<PosterNameDisplay>(restaurantNameSecondary ? "both" : "primary");
+  const [nameOrder, setNameOrder] = useState<PosterNameOrder>("primary-first");
   const [showUrl, setShowUrl] = useState(true);
   const [showCuisineType, setShowCuisineType] = useState(true);
   const [showBadgeBudget, setShowBadgeBudget] = useState(true);
@@ -154,6 +161,16 @@ export function PosterEditor({
   const PORTRAIT_RATIO = 1.414; // A4
   const LANDSCAPE_RATIO = 1 / PORTRAIT_RATIO;
   const [customWidth, setCustomWidth] = useState(PORTRAIT_W);
+
+  // Compute displayed names based on settings
+  const posterNames: string[] = (() => {
+    const primary = restaurantName;
+    const secondary = restaurantNameSecondary;
+    if (!secondary || nameDisplay === "primary") return [primary];
+    if (nameDisplay === "secondary") return [secondary];
+    // "both"
+    return nameOrder === "primary-first" ? [primary, secondary] : [secondary, primary];
+  })();
 
   const isLandscape = orientation === "landscape";
   const aspectRatio = isLandscape ? LANDSCAPE_RATIO : PORTRAIT_RATIO;
@@ -373,6 +390,52 @@ export function PosterEditor({
             ))}
           </div>
         </div>
+
+        {/* Name display (only show if secondary name exists) */}
+        {restaurantNameSecondary && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-sm font-medium text-foreground">{tAny.posterNameDisplay}</label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(["primary", "secondary", "both"] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setNameDisplay(opt)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                      nameDisplay === opt
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border bg-card text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {opt === "primary" ? tAny.posterNamePrimaryOnly : opt === "secondary" ? tAny.posterNameSecondaryOnly : tAny.posterNameBoth}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {nameDisplay === "both" && (
+              <div>
+                <label className="text-sm font-medium text-foreground">{tAny.posterNameOrder}</label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(["primary-first", "secondary-first"] as const).map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setNameOrder(opt)}
+                      className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                        nameOrder === opt
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border bg-card text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {opt === "primary-first" ? tAny.posterNamePrimaryFirst : tAny.posterNameSecondaryFirst}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Visibility toggles */}
         <div className="grid gap-3 sm:grid-cols-2">
@@ -757,9 +820,11 @@ export function PosterEditor({
                       carte-ai.link
                     </p>
                   )}
-                  <p className="text-3xl font-semibold" style={{ color: activeText }}>
-                    {restaurantName}
-                  </p>
+                  {posterNames.map((n, i) => (
+                    <p key={i} className={`${i > 0 ? "mt-1 " : ""}text-3xl font-semibold`} style={{ color: activeText }}>
+                      {n}
+                    </p>
+                  ))}
                   {showCuisineType && cuisineType && (
                     <p className="mt-2 text-lg" style={{ color: hexToRgba(activeText, 0.6) }}>
                       {getLocalizedCuisine(cuisineType, posterLocale)}
@@ -858,12 +923,15 @@ export function PosterEditor({
 
               <div className="relative z-10 grid grid-cols-[1fr_1.1fr] items-end gap-8">
                 <div>
-                  <p
-                    className="text-3xl font-semibold"
-                    style={{ color: activeText }}
-                  >
-                    {restaurantName}
-                  </p>
+                  {posterNames.map((n, i) => (
+                    <p
+                      key={i}
+                      className={`${i > 0 ? "mt-1 " : ""}text-3xl font-semibold`}
+                      style={{ color: activeText }}
+                    >
+                      {n}
+                    </p>
+                  ))}
                   {showCuisineType && cuisineType && (
                     <p className="mt-2" style={{ color: hexToRgba(activeText, 0.55) }}>
                       {getLocalizedCuisine(cuisineType, posterLocale)}

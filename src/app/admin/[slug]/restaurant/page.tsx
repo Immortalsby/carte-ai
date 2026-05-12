@@ -54,6 +54,7 @@ export default async function RestaurantPage({
         <RestaurantForm
           slug={slug}
           initialName={tenant.name}
+          initialNameSecondary={(tenantSettings.name_secondary as string) ?? ""}
           initialCuisineType={tenant.cuisine_type ?? ""}
           initialAddress={tenant.address ?? ""}
           initialStructuredAddress={

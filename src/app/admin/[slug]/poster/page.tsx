@@ -33,9 +33,12 @@ export default async function PosterPage({
     color: { dark: "#050507", light: "#ffffff" },
   });
 
+  const tenantSettings = (tenant.settings as Record<string, unknown> | null) ?? {};
+
   return (
     <PosterEditor
       restaurantName={tenant.name}
+      restaurantNameSecondary={(tenantSettings.name_secondary as string) || ""}
       cuisineType={tenant.cuisine_type || ""}
       address={tenant.address || ""}
       slug={slug}

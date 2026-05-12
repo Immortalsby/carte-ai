@@ -23,6 +23,7 @@ interface ReviewPromoData {
 interface RestaurantFormProps {
   slug: string;
   initialName: string;
+  initialNameSecondary?: string;
   initialCuisineType: string;
   initialAddress: string;
   initialStructuredAddress?: StructuredAddress;
@@ -91,6 +92,7 @@ const cuisineLabelKeys: Record<string, string> = {
 export function RestaurantForm({
   slug,
   initialName,
+  initialNameSecondary = "",
   initialCuisineType,
   initialAddress,
   initialStructuredAddress,
@@ -105,6 +107,7 @@ export function RestaurantForm({
   const { toast } = useToast();
 
   const [name, setName] = useState(initialName);
+  const [nameSecondary, setNameSecondary] = useState(initialNameSecondary);
   const [cuisineType, setCuisineType] = useState(initialCuisineType);
   const [addressStreet, setAddressStreet] = useState(initialStructuredAddress?.street ?? initialAddress);
   const [addressCity, setAddressCity] = useState(initialStructuredAddress?.city ?? "");
@@ -186,6 +189,7 @@ export function RestaurantForm({
           cuisine_type: cuisineType,
           address: [addressStreet, addressPostal, addressCity, countryOptions.find((c) => c.code === addressCountry)?.label ?? addressCountry].filter(Boolean).join(", "),
           settings: {
+            name_secondary: nameSecondary.trim() || undefined,
             address_street: addressStreet,
             address_city: addressCity,
             address_postal: addressPostal,
@@ -218,14 +222,26 @@ export function RestaurantForm({
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-      {/* Restaurant name */}
+      {/* Restaurant name (primary) */}
       <div>
-        <label className="text-sm font-medium text-foreground">{t.restaurantName}</label>
+        <label className="text-sm font-medium text-foreground">{tAny.restaurantNamePrimary}</label>
         <input
           type="text"
           value={name}
           onChange={(e) => { setName(e.target.value); markDirty(); }}
           required
+          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+        />
+      </div>
+
+      {/* Restaurant name (secondary) */}
+      <div>
+        <label className="text-sm font-medium text-foreground">{tAny.restaurantNameSecondary}</label>
+        <p className="mt-0.5 text-xs text-muted-foreground">{tAny.restaurantNameSecondaryHint}</p>
+        <input
+          type="text"
+          value={nameSecondary}
+          onChange={(e) => { setNameSecondary(e.target.value); markDirty(); }}
           className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
         />
       </div>
