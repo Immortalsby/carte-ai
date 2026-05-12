@@ -39,6 +39,8 @@ export default async function PosterPage({
     <PosterEditor
       restaurantName={tenant.name}
       restaurantNameSecondary={(tenantSettings.name_secondary as string) || ""}
+      phone={(tenantSettings.phone as string) || ""}
+      businessHours={(tenantSettings.business_hours as string) || ""}
       cuisineType={tenant.cuisine_type || ""}
       address={tenant.address || ""}
       slug={slug}

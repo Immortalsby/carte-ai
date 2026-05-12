@@ -27,6 +27,8 @@ interface RestaurantFormProps {
   initialCuisineType: string;
   initialAddress: string;
   initialStructuredAddress?: StructuredAddress;
+  initialPhone?: string;
+  initialBusinessHours?: string;
   initialAllowDrinksOnly?: boolean;
   initialGoogleMapsLink?: string;
   initialEnableReviewNudge?: boolean;
@@ -96,6 +98,8 @@ export function RestaurantForm({
   initialCuisineType,
   initialAddress,
   initialStructuredAddress,
+  initialPhone = "",
+  initialBusinessHours = "",
   initialAllowDrinksOnly = true,
   initialGoogleMapsLink = "",
   initialEnableReviewNudge = false,
@@ -113,6 +117,8 @@ export function RestaurantForm({
   const [addressCity, setAddressCity] = useState(initialStructuredAddress?.city ?? "");
   const [addressPostal, setAddressPostal] = useState(initialStructuredAddress?.postal ?? "");
   const [addressCountry, setAddressCountry] = useState(initialStructuredAddress?.country ?? "FR");
+  const [phone, setPhone] = useState(initialPhone);
+  const [businessHours, setBusinessHours] = useState(initialBusinessHours);
   const [allowDrinksOnly, setAllowDrinksOnly] = useState(initialAllowDrinksOnly);
   const [googleMapsLink, setGoogleMapsLink] = useState(initialGoogleMapsLink);
   const [enableReviewNudge, setEnableReviewNudge] = useState(initialEnableReviewNudge);
@@ -190,6 +196,8 @@ export function RestaurantForm({
           address: [addressStreet, addressPostal, addressCity, countryOptions.find((c) => c.code === addressCountry)?.label ?? addressCountry].filter(Boolean).join(", "),
           settings: {
             name_secondary: nameSecondary.trim() || undefined,
+            phone: phone.trim() || undefined,
+            business_hours: businessHours.trim() || undefined,
             address_street: addressStreet,
             address_city: addressCity,
             address_postal: addressPostal,
@@ -325,6 +333,31 @@ export function RestaurantForm({
           </div>
         </div>
       </fieldset>
+
+      {/* Phone */}
+      <div>
+        <label className="text-sm font-medium text-foreground">{tAny.restaurantPhone}</label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => { setPhone(e.target.value); markDirty(); }}
+          placeholder={tAny.restaurantPhonePlaceholder}
+          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+        />
+      </div>
+
+      {/* Business hours */}
+      <div>
+        <label className="text-sm font-medium text-foreground">{tAny.restaurantHours}</label>
+        <p className="mt-0.5 text-xs text-muted-foreground">{tAny.restaurantHoursHint}</p>
+        <input
+          type="text"
+          value={businessHours}
+          onChange={(e) => { setBusinessHours(e.target.value); markDirty(); }}
+          placeholder={tAny.restaurantHoursPlaceholder}
+          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+        />
+      </div>
 
       {/* Allow drinks only toggle */}
       <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/50 p-4">

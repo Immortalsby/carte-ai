@@ -20,6 +20,8 @@ type PosterNameOrder = "primary-first" | "secondary-first";
 interface PosterEditorProps {
   restaurantName: string;
   restaurantNameSecondary?: string;
+  phone?: string;
+  businessHours?: string;
   cuisineType: string;
   address: string;
   slug: string;
@@ -133,6 +135,8 @@ function PosterMascot({ size = 48, accent = "#10b981" }: { size?: number; accent
 export function PosterEditor({
   restaurantName,
   restaurantNameSecondary = "",
+  phone = "",
+  businessHours = "",
   cuisineType,
   address,
   slug,
@@ -155,6 +159,8 @@ export function PosterEditor({
   const [showCuisineType, setShowCuisineType] = useState(true);
   const [showBadgeBudget, setShowBadgeBudget] = useState(true);
   const [showBadgeAI, setShowBadgeAI] = useState(true);
+  const [showPhone, setShowPhone] = useState(!!phone);
+  const [showHours, setShowHours] = useState(!!businessHours);
 
   // Custom resolution (default A4 ratio)
   const PORTRAIT_W = 760;
@@ -444,6 +450,8 @@ export function PosterEditor({
             ["showCuisineType", showCuisineType, setShowCuisineType, tAny.showCuisineType],
             ["showBadgeBudget", showBadgeBudget, setShowBadgeBudget, tAny.showBadgeBudget],
             ["showBadgeAI", showBadgeAI, setShowBadgeAI, tAny.showBadgeAI],
+            ...(phone ? [["showPhone", showPhone, setShowPhone, tAny.showPhone] as [string, boolean, (v: boolean) => void, string]] : []),
+            ...(businessHours ? [["showHours", showHours, setShowHours, tAny.showHours] as [string, boolean, (v: boolean) => void, string]] : []),
           ] as [string, boolean, (v: boolean) => void, string][]).map(([key, val, setter, label]) => (
             <label key={key} className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
               <input
@@ -835,6 +843,16 @@ export function PosterEditor({
                       {address}
                     </p>
                   )}
+                  {showPhone && phone && (
+                    <p className="mt-2 text-sm font-medium" style={{ color: hexToRgba(activeText, 0.7) }}>
+                      {phone}
+                    </p>
+                  )}
+                  {showHours && businessHours && (
+                    <p className="mt-1 text-sm" style={{ color: hexToRgba(activeText, 0.5) }}>
+                      {businessHours}
+                    </p>
+                  )}
                   {/* Custom text elements */}
                   {customTexts.filter(Boolean).length > 0 && (
                     <div className="mt-4 space-y-1.5">
@@ -935,6 +953,16 @@ export function PosterEditor({
                   {showCuisineType && cuisineType && (
                     <p className="mt-2" style={{ color: hexToRgba(activeText, 0.55) }}>
                       {getLocalizedCuisine(cuisineType, posterLocale)}
+                    </p>
+                  )}
+                  {showPhone && phone && (
+                    <p className="mt-2 text-sm font-medium" style={{ color: hexToRgba(activeText, 0.7) }}>
+                      {phone}
+                    </p>
+                  )}
+                  {showHours && businessHours && (
+                    <p className="mt-1 text-sm" style={{ color: hexToRgba(activeText, 0.5) }}>
+                      {businessHours}
                     </p>
                   )}
                   {/* Custom text elements */}

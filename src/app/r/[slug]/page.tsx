@@ -49,6 +49,9 @@ export default async function CustomerPage({
           menu={menuData}
           tenantId={tenant.id}
           tenantName={tenant.name}
+          tenantNameSecondary={
+            ((tenant.settings as Record<string, unknown> | null)?.name_secondary as string) || undefined
+          }
           cuisineType={tenant.cuisine_type}
           rating={tenant.rating}
           address={tenant.address}

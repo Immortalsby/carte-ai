@@ -65,6 +65,8 @@ export default async function RestaurantPage({
               country: (tenantSettings.address_country as string) ?? "FR",
             } : undefined
           }
+          initialPhone={(tenantSettings.phone as string) ?? ""}
+          initialBusinessHours={(tenantSettings.business_hours as string) ?? ""}
           initialAllowDrinksOnly={
             (tenantSettings.allow_drinks_only as boolean) ?? true
           }

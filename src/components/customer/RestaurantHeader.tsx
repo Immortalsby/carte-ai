@@ -2,6 +2,7 @@ import type { LanguageCode } from "@/types/menu";
 
 interface RestaurantHeaderProps {
   name: string;
+  nameSecondary?: string;
   cuisineType?: string | null;
   rating?: string | null;
   address?: string | null;
@@ -72,6 +73,7 @@ function getCuisineLabel(cuisineType: string, lang: LanguageCode): string {
 
 export function RestaurantHeader({
   name,
+  nameSecondary,
   cuisineType,
   rating,
   address,
@@ -95,6 +97,11 @@ export function RestaurantHeader({
       <h1 className="relative text-[1.75rem] font-bold leading-tight text-carte-text">
         {name}
       </h1>
+      {nameSecondary && (
+        <p className="relative mt-1 text-lg font-semibold text-carte-text-muted">
+          {nameSecondary}
+        </p>
+      )}
 
       {/* Layer 2: Cuisine + Rating */}
       {(cuisineType || showRating) && (

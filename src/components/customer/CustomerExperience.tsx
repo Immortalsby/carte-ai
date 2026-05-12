@@ -59,6 +59,7 @@ interface CustomerExperienceProps {
   menu: RestaurantMenu;
   tenantId: string;
   tenantName: string;
+  tenantNameSecondary?: string;
   cuisineType?: string | null;
   rating?: string | null;
   address?: string | null;
@@ -70,7 +71,7 @@ interface CustomerExperienceProps {
   reviewPromo?: ReviewPromoProps;
 }
 
-export function CustomerExperience({ menu: initialMenu, tenantId, tenantName, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false, addressCountry, reviewPromo }: CustomerExperienceProps) {
+export function CustomerExperience({ menu: initialMenu, tenantId, tenantName, tenantNameSecondary, cuisineType, rating, address, planStatus, allowDrinksOnly = true, googleMapsUrl, enableReviewNudge = false, addressCountry, reviewPromo }: CustomerExperienceProps) {
   const [menu, setMenu] = useState(initialMenu);
   const [lang, setLang] = useState<LanguageCode>("fr");
   const [excludedAllergens, setExcludedAllergens] = useState<Allergen[]>([]);
@@ -235,6 +236,7 @@ export function CustomerExperience({ menu: initialMenu, tenantId, tenantName, cu
 
       <RestaurantHeader
         name={tenantName}
+        nameSecondary={tenantNameSecondary}
         cuisineType={cuisineType}
         rating={rating}
         address={address}
