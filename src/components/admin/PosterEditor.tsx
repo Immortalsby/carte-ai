@@ -22,6 +22,7 @@ interface PosterEditorProps {
   restaurantNameSecondary?: string;
   phone?: string;
   businessHours?: string;
+  initialCustomTexts?: string[];
   cuisineType: string;
   address: string;
   slug: string;
@@ -137,6 +138,7 @@ export function PosterEditor({
   restaurantNameSecondary = "",
   phone = "",
   businessHours = "",
+  initialCustomTexts = [],
   cuisineType,
   address,
   slug,
@@ -204,13 +206,28 @@ export function PosterEditor({
   const [selectedElements, setSelectedElements] = useState<string[]>([]);
   const [generatingBg, setGeneratingBg] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [customTexts, setCustomTexts] = useState<string[]>([]);
+  const [customTexts, setCustomTexts] = useState<string[]>(initialCustomTexts);
   const [customElement, setCustomElement] = useState("");
   const [uploadedBgImage, setUploadedBgImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Character limit for custom text on poster
   const charLimit = 50;
+
+  // Auto-save custom texts to tenant.settings (debounced)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const saveCustomTexts = useCallback((texts: string[]) => {
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await fetch(`/api/tenants/${slug}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ settings: { poster_custom_texts: texts.filter(Boolean) } }),
+        });
+      } catch { /* silent */ }
+    }, 800);
+  }, [slug]);
 
   function toggleElement(key: string) {
     setSelectedElements((prev) =>
@@ -220,16 +237,22 @@ export function PosterEditor({
 
   function addCustomText() {
     if (customTexts.length >= 3) return;
-    setCustomTexts((prev) => [...prev, ""]);
+    const next = [...customTexts, ""];
+    setCustomTexts(next);
+    saveCustomTexts(next);
   }
 
   function updateCustomText(index: number, value: string) {
     if (value.length > charLimit) return;
-    setCustomTexts((prev) => prev.map((t2, i) => (i === index ? value : t2)));
+    const next = customTexts.map((t2, i) => (i === index ? value : t2));
+    setCustomTexts(next);
+    saveCustomTexts(next);
   }
 
   function removeCustomText(index: number) {
-    setCustomTexts((prev) => prev.filter((_, i) => i !== index));
+    const next = customTexts.filter((_, i) => i !== index);
+    setCustomTexts(next);
+    saveCustomTexts(next);
   }
 
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {

@@ -41,6 +41,7 @@ export default async function PosterPage({
       restaurantNameSecondary={(tenantSettings.name_secondary as string) || ""}
       phone={(tenantSettings.phone as string) || ""}
       businessHours={(tenantSettings.business_hours as string) || ""}
+      initialCustomTexts={(tenantSettings.poster_custom_texts as string[]) || []}
       cuisineType={tenant.cuisine_type || ""}
       address={tenant.address || ""}
       slug={slug}
