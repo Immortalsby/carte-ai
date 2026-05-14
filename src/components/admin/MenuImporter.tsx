@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { RestaurantMenu } from "@/types/menu";
 import { useToast } from "@/components/ui/Toast";
 import type { AdminLocale } from "@/lib/admin-i18n";
@@ -52,6 +52,17 @@ export function MenuImporter({ slug, restaurantName, locale = "en", onImported }
     message: string;
     fileCount: number;
   } | null>(null);
+  const [remainingUploads, setRemainingUploads] = useState<number | null>(null);
+
+  // Fetch remaining uploads on mount
+  useEffect(() => {
+    fetch(`/api/ingest/limit?slug=${encodeURIComponent(slug)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.remaining === "number") setRemainingUploads(data.remaining);
+      })
+      .catch(() => {});
+  }, [slug]);
 
   const fetchWithTimeout = useCallback(async (url: string, init: RequestInit) => {
     const controller = new AbortController();
@@ -460,6 +471,13 @@ export function MenuImporter({ slug, restaurantName, locale = "en", onImported }
         <p className="text-sm font-medium text-foreground">{t.dragDropHint}</p>
         <p className="mt-1 text-xs text-muted-foreground">{t.supportedFormats}</p>
         <p className="mt-1 text-xs text-muted-foreground">{tAny.maxFilesHint}</p>
+        {remainingUploads !== null && (
+          <p className={`mt-2 text-xs font-medium ${remainingUploads > 0 ? "text-muted-foreground" : "text-red-500"}`}>
+            {tAny.uploadsRemaining
+              ? tAny.uploadsRemaining.replace("{n}", String(remainingUploads))
+              : `${remainingUploads} uploads remaining today`}
+          </p>
+        )}
 
         {state === "error" && (
           <p className="mt-3 text-sm text-red-600">{t.importFailed}</p>

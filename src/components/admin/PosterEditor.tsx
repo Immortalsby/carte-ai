@@ -376,8 +376,28 @@ export function PosterEditor({
 
   return (
     <div className="mx-auto max-w-6xl">
-      {/* Controls */}
-      <div className="mb-6 space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm print:hidden">
+      {/* Quick download — one-click, no customization needed */}
+      <div className="mb-4 flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 p-4 print:hidden">
+        <div>
+          <p className="text-sm font-semibold text-foreground">{tAny.quickDownloadTitle || "Quick Download"}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{tAny.quickDownloadDesc || "Download a ready-to-print poster with default settings"}</p>
+        </div>
+        <button
+          type="button"
+          onClick={downloadPdf}
+          disabled={downloadingPdf}
+          className="shrink-0 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+        >
+          {downloadingPdf ? t.generatingPdf : (tAny.quickDownloadBtn || "Download PDF")}
+        </button>
+      </div>
+
+      {/* Controls — advanced customization */}
+      <details className="mb-6 rounded-2xl border border-border bg-card shadow-sm print:hidden">
+        <summary className="cursor-pointer list-none p-5 text-sm font-medium text-foreground [&::-webkit-details-marker]:hidden">
+          {tAny.advancedCustomization || "Customize Poster"} ▾
+        </summary>
+        <div className="space-y-4 px-5 pb-5">
         {/* Poster language selector */}
         <div>
           <label className="text-sm font-medium text-foreground">{t.posterLanguage}</label>
@@ -753,6 +773,7 @@ export function PosterEditor({
           </button>
         </div>
       </div>
+      </details>
 
       {/* Poster Preview (A4 ratio) — fixed dimensions for PDF capture, scaled to fit on mobile */}
       <div ref={wrapperRef} className="mx-auto w-full" style={{ maxWidth: POSTER_W }}>

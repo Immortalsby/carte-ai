@@ -378,14 +378,22 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
               {t.reImportMenu}
             </button>
           )}
-          <button
-            type="button"
-            onClick={save}
-            disabled={saving || saved}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            {saving ? t.publishing : saved ? t.published : t.publishChanges}
-          </button>
+          <div className="relative group">
+            <button
+              type="button"
+              onClick={save}
+              disabled={saving || saved}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {saving ? t.publishing : saved ? t.published : t.publishChanges}
+            </button>
+            {/* Tooltip explaining what publish does */}
+            {!saved && (
+              <div className="absolute right-0 top-full z-50 mt-1 hidden w-56 rounded-lg border border-border bg-card p-2 text-xs text-muted-foreground shadow-lg group-hover:block">
+                {tAny.publishHint}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

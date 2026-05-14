@@ -42,7 +42,7 @@ export function TrialBanner({ plan, daysLeft, slug, isFounder, isExpired, labels
           {labels.trialExpired}
         </p>
         <a
-          href={`/admin/${slug}/settings#billing`}
+          href={`/admin/${slug}/billing`}
           className="mt-3 inline-block rounded-md bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700"
         >
           {labels.upgradeNow}
@@ -64,7 +64,7 @@ export function TrialBanner({ plan, daysLeft, slug, isFounder, isExpired, labels
         {daysLeft !== null ? labels.trialDaysLeft : labels.trialActive}
       </span>
       <a
-        href={`/admin/${slug}/settings#billing`}
+        href={`/admin/${slug}/billing`}
         className="shrink-0 rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700"
       >
         {labels.upgradeNow}

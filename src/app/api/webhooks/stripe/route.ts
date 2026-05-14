@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe, planFromPriceId } from "@/lib/stripe";
 import { getTenantByStripeCustomerId, updateTenant } from "@/lib/db/queries/tenants";
+import { isUserPermanentFree } from "@/lib/db/queries/referrals";
 import type Stripe from "stripe";
 
 /**
@@ -110,6 +111,18 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   const tenant = await getTenantByStripeCustomerId(customerId);
   if (!tenant) return;
+
+  // Check if owner has permanent free access (earned via referrals)
+  const hasPermanentFree = await isUserPermanentFree(tenant.owner_id);
+
+  if (hasPermanentFree) {
+    // Keep alacarte plan, just clear the subscription ID
+    await updateTenant(tenant.id, {
+      stripe_subscription_id: null,
+    });
+    console.log(`[Stripe Webhook] Subscription cancelled but owner has permanent_free: tenant=${tenant.id}`);
+    return;
+  }
 
   await updateTenant(tenant.id, {
     plan: "free",

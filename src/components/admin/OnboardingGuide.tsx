@@ -9,6 +9,7 @@ const ONBOARDING_KEY = "carte_onboarding_dismissed";
 
 interface OnboardingGuideProps {
   locale?: AdminLocale;
+  slug?: string;
 }
 
 const stepIcons = [
@@ -19,7 +20,7 @@ const stepIcons = [
   <Megaphone key="5" weight="duotone" className="h-6 w-6 text-primary" />,
 ];
 
-export function OnboardingGuide({ locale = "en" }: OnboardingGuideProps) {
+export function OnboardingGuide({ locale = "en", slug }: OnboardingGuideProps) {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
 
@@ -49,12 +50,13 @@ export function OnboardingGuide({ locale = "en" }: OnboardingGuideProps) {
 
   if (!visible) return null;
 
+  const base = slug ? `/admin/${slug}` : "";
   const steps = [
-    { title: tAny.onboardStep1Title, desc: tAny.onboardStep1Desc },
-    { title: tAny.onboardStep2Title, desc: tAny.onboardStep2Desc },
-    { title: tAny.onboardStep3Title, desc: tAny.onboardStep3Desc },
-    { title: tAny.onboardStep4Title, desc: tAny.onboardStep4Desc },
-    { title: tAny.onboardStep5Title, desc: tAny.onboardStep5Desc },
+    { title: tAny.onboardStep1Title, desc: tAny.onboardStep1Desc, href: `${base}/menu`, btnLabel: tAny.onboardGoToMenu || "Go to Menu" },
+    { title: tAny.onboardStep2Title, desc: tAny.onboardStep2Desc, href: `${base}/menu`, btnLabel: tAny.onboardGoToEditor || "Edit Menu" },
+    { title: tAny.onboardStep3Title, desc: tAny.onboardStep3Desc, href: `${base}/menu`, btnLabel: tAny.onboardGoToImages || "Generate Images" },
+    { title: tAny.onboardStep4Title, desc: tAny.onboardStep4Desc, href: `${base}/poster`, btnLabel: tAny.onboardGoToPoster || "Create Poster" },
+    { title: tAny.onboardStep5Title, desc: tAny.onboardStep5Desc, href: `${base}/analytics`, btnLabel: tAny.onboardGoToAnalytics || "View Analytics" },
   ];
 
   const isLast = step === steps.length - 1;
@@ -87,6 +89,14 @@ export function OnboardingGuide({ locale = "en" }: OnboardingGuideProps) {
             {step + 1}. {steps[step].title}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">{steps[step].desc}</p>
+          {slug && steps[step].href && (
+            <a
+              href={steps[step].href}
+              className="mt-2 inline-block rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+            >
+              {steps[step].btnLabel} &rarr;
+            </a>
+          )}
         </div>
       </div>
 

@@ -63,8 +63,8 @@ export async function POST(request: Request) {
       customer: customerId,
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${origin}/admin/${slug}/settings?billing=success`,
-      cancel_url: `${origin}/admin/${slug}/settings?billing=cancelled`,
+      success_url: `${origin}/admin/${slug}/billing?billing=success`,
+      cancel_url: `${origin}/admin/${slug}/billing?billing=cancelled`,
       subscription_data: {
         metadata: { tenant_id: tenant.id, slug, plan },
       },

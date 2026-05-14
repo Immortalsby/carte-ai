@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import { Gift, CheckCircle, XCircle } from "@phosphor-icons/react";
 import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
 
@@ -77,12 +78,20 @@ function getCuisineKey(cuisine: string): string {
 }
 
 export default function NewRestaurantPage() {
+  return (
+    <Suspense>
+      <NewRestaurantForm />
+    </Suspense>
+  );
+}
+
+function NewRestaurantForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [locale, setLocale] = useState<AdminLocale>("en");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
-  const [slugManual, setSlugManual] = useState(false);
   const [cuisineType, setCuisineType] = useState("");
   const [address, setAddress] = useState("");
   const [structuredAddress, setStructuredAddress] = useState<PlaceStructuredAddress | undefined>(undefined);
@@ -92,30 +101,33 @@ export default function NewRestaurantPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Referral code
+  const [referralCode, setReferralCode] = useState("");
+  const [referralStatus, setReferralStatus] = useState<"idle" | "checking" | "valid" | "invalid" | "self">("idle");
+  const [referrerName, setReferrerName] = useState("");
+
   // Google Places search
   const [placeQuery, setPlaceQuery] = useState("");
   const [placeSearching, setPlaceSearching] = useState(false);
   const [placeCandidates, setPlaceCandidates] = useState<PlaceCandidate[]>([]);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
 
-  // Detect locale from cookie
+  // Detect locale from cookie + pre-fill referral code from URL
   useEffect(() => {
     const match = document.cookie.match(/admin_locale=(en|fr|zh)/);
     if (match) setLocale(match[1] as AdminLocale);
-  }, []);
+    const ref = searchParams.get("ref");
+    if (ref) {
+      setReferralCode(ref);
+      validateReferralCode(ref);
+    }
+  }, [searchParams]);
 
   const t = getAdminDict(locale);
   const tAny = t as unknown as Record<string, string>;
 
   function handleNameChange(value: string) {
     setName(value);
-    if (!slugManual) {
-      setSlug(slugify(value));
-    }
-  }
-
-  function handleSlugChange(value: string) {
-    setSlugManual(true);
     setSlug(slugify(value));
   }
 
@@ -153,14 +165,38 @@ export default function NewRestaurantPage() {
     setSelectedPlaceId(place.id);
     setGooglePlaceId(place.id);
     setName(place.name);
-    if (!slugManual) {
-      setSlug(slugify(place.name));
-    }
+    setSlug(slugify(place.name));
     if (place.address) setAddress(place.address);
     if (place.structuredAddress) setStructuredAddress(place.structuredAddress);
     setGoogleMapsUrl(place.googleMapsUri || buildGoogleMapsUrl(place.name, place.address));
     if (place.rating) setRating(place.rating.toFixed(1));
     toast(tAny.googlePlaceSelected, "success");
+  }
+
+  async function validateReferralCode(code: string) {
+    if (!code || code.length < 4) {
+      setReferralStatus("idle");
+      return;
+    }
+    setReferralStatus("checking");
+    try {
+      const res = await fetch("/api/referral/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setReferralStatus("valid");
+        setReferrerName(data.referrerName || "");
+      } else if (data.reason === "self_referral") {
+        setReferralStatus("self");
+      } else {
+        setReferralStatus("invalid");
+      }
+    } catch {
+      setReferralStatus("idle");
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -179,6 +215,7 @@ export default function NewRestaurantPage() {
           address: address || undefined,
           google_place_id: googlePlaceId || undefined,
           rating: rating || undefined,
+          referral_code: referralStatus === "valid" ? referralCode : undefined,
           settings: (structuredAddress || googleMapsUrl) ? {
             ...(structuredAddress && {
               address_street: structuredAddress.street,
@@ -281,23 +318,8 @@ export default function NewRestaurantPage() {
           />
         </div>
 
-        <div>
-          <label className="text-sm font-medium text-gray-700">
-            {tAny.urlSlug}
-          </label>
-          <div className="mt-1 flex items-center rounded-lg border">
-            <span className="px-3 text-sm text-gray-400">/r/</span>
-            <input
-              type="text"
-              value={slug}
-              onChange={(e) => handleSlugChange(e.target.value)}
-              required
-              pattern="[a-z0-9\-]+"
-              placeholder={tAny.slugPlaceholder}
-              className="w-full rounded-r-lg border-l px-3 py-2 text-sm"
-            />
-          </div>
-        </div>
+        {/* Slug auto-generated from name — hidden from users */}
+        <input type="hidden" name="slug" value={slug} />
 
         <div>
           <label className="text-sm font-medium text-gray-700">
@@ -333,6 +355,44 @@ export default function NewRestaurantPage() {
             <span>Google Rating: {rating}</span>
           </div>
         )}
+
+        {/* Referral code */}
+        <div>
+          <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+            <Gift size={16} className="text-purple-600" />
+            {tAny.referralCodeInput}
+          </label>
+          <input
+            type="text"
+            value={referralCode}
+            onChange={(e) => {
+              setReferralCode(e.target.value);
+              setReferralStatus("idle");
+            }}
+            onBlur={() => validateReferralCode(referralCode)}
+            placeholder={tAny.referralCodePlaceholder}
+            maxLength={16}
+            className="mt-1 w-full rounded-lg border px-3 py-2 font-mono text-sm tracking-wider"
+          />
+          {referralStatus === "valid" && (
+            <p className="mt-1 flex items-center gap-1 text-sm text-green-600">
+              <CheckCircle size={16} weight="fill" />
+              {(t.referralCodeValid as (name: string) => string)(referrerName)}
+            </p>
+          )}
+          {referralStatus === "invalid" && (
+            <p className="mt-1 flex items-center gap-1 text-sm text-red-500">
+              <XCircle size={16} weight="fill" />
+              {tAny.referralCodeInvalid}
+            </p>
+          )}
+          {referralStatus === "self" && (
+            <p className="mt-1 flex items-center gap-1 text-sm text-red-500">
+              <XCircle size={16} weight="fill" />
+              {tAny.referralCodeSelfError}
+            </p>
+          )}
+        </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession, authClient } from "@/lib/auth-client";
 import { type AuthLocale, detectAuthLocale, getAuthDict } from "@/lib/auth-i18n";
-import { Envelope, HourglassMedium, Check } from "@phosphor-icons/react";
+import { Envelope, Check } from "@phosphor-icons/react";
 
 export default function WelcomePage() {
   const { data: session, isPending } = useSession();
@@ -13,22 +13,25 @@ export default function WelcomePage() {
   useEffect(() => { setLocale(detectAuthLocale()); }, []);
   const t = getAuthDict(locale);
 
-  // Fetch approved status from custom endpoint (useSession doesn't include it)
-  const [approved, setApproved] = useState<boolean | null>(null);
-
+  // Auto-approve on email verification — redirect to admin immediately
+  const [approveError, setApproveError] = useState(false);
   useEffect(() => {
-    if (session?.user?.emailVerified) {
-      fetch("/api/admin/users/me")
+    if (!session?.user?.emailVerified) return;
+    let cancelled = false;
+    const check = () => {
+      fetch("/api/admin/users/me", { method: "POST" })
         .then((r) => r.json())
         .then((data) => {
-          if (data.approved) {
+          if (!cancelled && data.approved) {
             window.location.href = "/admin";
-          } else {
-            setApproved(false);
           }
         })
-        .catch(() => setApproved(false));
-    }
+        .catch(() => { if (!cancelled) setApproveError(true); });
+    };
+    check();
+    // Poll every 3s in case email verification hasn't propagated yet
+    const interval = setInterval(check, 3000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [session]);
 
   async function handleResend() {
@@ -85,11 +88,9 @@ export default function WelcomePage() {
         {t.welcome(userName)}
       </h1>
 
-      {/* Step indicators */}
+      {/* Step indicator */}
       <div className="mt-6 flex items-center justify-center gap-2 text-sm">
         <StepDot done={emailVerified} num={1} />
-        <div className={`h-px w-8 ${emailVerified ? "bg-emerald-500" : "bg-border"}`} />
-        <StepDot done={approved === true} num={2} />
       </div>
 
       {/* State 1: Email not verified */}
@@ -124,31 +125,23 @@ export default function WelcomePage() {
         </>
       )}
 
-      {/* State 2: Email verified, pending approval */}
-      {emailVerified && approved === false && (
-        <div className="mt-6 rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
-          <HourglassMedium weight="duotone" className="h-7 w-7 text-blue-500" />
-          <h2 className="mt-2 text-sm font-semibold text-foreground">
-            {t.stepAccountReview}
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t.stepAccountReviewDesc}
-          </p>
-          <p className="mt-3 text-sm text-muted-foreground">
-            {t.notifyByEmail}
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            {t.checkStatus}
-          </button>
+      {/* Email verified — redirecting */}
+      {emailVerified && (
+        <div className="mt-6 text-sm text-muted-foreground">
+          {approveError ? (
+            <>
+              <p className="text-red-500">{"Network error"}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                {t.checkStatus}
+              </button>
+            </>
+          ) : (
+            t.checkingStatus
+          )}
         </div>
-      )}
-
-      {/* Loading state while checking approval */}
-      {emailVerified && approved === null && (
-        <div className="mt-6 text-sm text-muted-foreground">{t.checkingStatus}</div>
       )}
 
       <p className="mt-6 text-xs text-muted-foreground">

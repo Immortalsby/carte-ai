@@ -29,6 +29,20 @@
       "when": 1778267953772,
       "tag": "0003_harsh_cloak",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778774779318,
+      "tag": "0004_fine_jack_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778776108602,
+      "tag": "0005_condemned_dazzler",
+      "breakpoints": true
     }
   ]
 }

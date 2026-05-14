@@ -56,7 +56,9 @@ export default async function AdminLayout({
     { href: "/analytics", label: t.analytics, icon: "📈" },
     { href: "/poster", label: t.qrPoster, icon: "🖼️" },
     { href: "/billing", label: t.billing, icon: "💳" },
-    { href: "/settings", label: t.settings, icon: "⚙️" },
+    // Settings only visible to founders (AI model config etc.)
+    // Non-founders: display language moved to Restaurant Management page
+    ...(founder ? [{ href: "/settings", label: t.settings, icon: "⚙️" }] : []),
   ];
 
   const customerUrl = `/r/${slug}`;
@@ -130,7 +132,7 @@ export default async function AdminLayout({
 
       {/* Main content */}
       <main className="flex-1 p-4 lg:p-6">
-        <OnboardingGuide locale={locale} />
+        <OnboardingGuide locale={locale} slug={slug} />
         <TrialBanner
           plan={tenant.plan}
           daysLeft={

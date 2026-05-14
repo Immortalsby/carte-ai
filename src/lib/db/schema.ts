@@ -4,12 +4,14 @@ import {
   text,
   varchar,
   integer,
+  boolean,
   timestamp,
   jsonb,
   numeric,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
+import { user } from "./auth-schema";
 
 // ─── Tenants ────────────────────────────────────────────
 
@@ -28,6 +30,7 @@ export const tenants = pgTable(
     trial_ends_at: timestamp("trial_ends_at", { withTimezone: true }),
     stripe_customer_id: text("stripe_customer_id"),
     stripe_subscription_id: text("stripe_subscription_id"),
+    referred_by_code: varchar("referred_by_code", { length: 16 }),
     settings: jsonb("settings").default({}),
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -133,6 +136,27 @@ export const ocr_uploads = pgTable(
   },
   (table) => [
     index("idx_ocr_uploads_tenant_date").on(table.tenant_id, table.uploaded_at),
+  ],
+);
+
+// ─── Referrals ─────────────────────────────────────────
+
+export const referrals = pgTable(
+  "referrals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    referrer_user_id: text("referrer_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    referred_tenant_id: uuid("referred_tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    reward_granted: boolean("reward_granted").default(false).notNull(),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_referrals_referrer").on(table.referrer_user_id),
+    uniqueIndex("idx_referrals_referred_tenant").on(table.referred_tenant_id),
   ],
 );
 

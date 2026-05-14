@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { isFounder } from "@/lib/roles";
 import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { RestaurantForm } from "@/components/admin/RestaurantForm";
+import { AdminLocaleSelector } from "@/components/admin/AdminLocaleSelector";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
 
 export default async function RestaurantPage({
@@ -37,9 +38,10 @@ export default async function RestaurantPage({
       <h1 className="text-2xl font-bold">{tAny.restaurantManagement}</h1>
 
       <div className="mt-6 max-w-2xl">
-        {/* Customer link */}
+        {/* Customer link — explain what this is */}
         <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
-          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t.customerMenuLink}</p>
+          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{tAny.qrMenuLink || t.customerMenuLink}</p>
+          <p className="mt-0.5 text-xs text-emerald-600/70 dark:text-emerald-400/70">{tAny.qrMenuLinkHint || "This is the page your customers see when they scan the QR code"}</p>
           <p className="mt-1 font-mono text-sm text-emerald-600 dark:text-emerald-400">{customerUrl}</p>
           <a
             href={`/r/${slug}`}
@@ -49,6 +51,15 @@ export default async function RestaurantPage({
           >
             {t.preview} &rarr;
           </a>
+        </div>
+
+        {/* Display language — moved here from Settings for clarity */}
+        <div className="mt-6">
+          <AdminLocaleSelector
+            current={locale}
+            label={t.displayLanguage}
+            browserDefaultLabel={t.browserDefault}
+          />
         </div>
 
         <RestaurantForm

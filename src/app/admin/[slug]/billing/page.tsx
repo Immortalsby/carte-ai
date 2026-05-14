@@ -6,6 +6,7 @@ import { getTenantBySlug } from "@/lib/db/queries/tenants";
 import { isTrialExpired } from "@/lib/trial";
 import { BillingSection } from "@/components/admin/BillingSection";
 import { BillingFeedback } from "@/components/admin/BillingFeedback";
+import { ReferralSection } from "@/components/admin/ReferralSection";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
 
 export default async function BillingPage({
@@ -50,6 +51,22 @@ export default async function BillingPage({
           locale={locale}
         />
       </div>
+
+      <ReferralSection
+        labels={{
+          referralTitle: t.referralTitle,
+          referralDesc: t.referralDesc,
+          referralYourCode: t.referralYourCode,
+          referralCopyLink: t.referralCopyLink,
+          referralLinkCopied: t.referralLinkCopied,
+          referralStats: t.referralStats,
+          referralTotalInvited: t.referralTotalInvited,
+          referralQualified: t.referralQualified,
+          referralProgress: t.referralProgress,
+          referralPermanentFree: t.referralPermanentFree,
+          referralRewardDesc: t.referralRewardDesc,
+        }}
+      />
     </div>
   );
 }

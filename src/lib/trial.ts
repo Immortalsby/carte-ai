@@ -60,8 +60,9 @@ export function dailyUploadLimit(tenant: Tenant): number {
   const status = getPlanStatus(tenant);
   switch (status) {
     case "trial":
+      return 3;
     case "alacarte":
-      return 1;
+      return 3;
     case "prixfixe":
       return 10;
     case "degustation":

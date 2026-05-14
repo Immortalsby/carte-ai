@@ -6,6 +6,7 @@ import { getPublishedMenu, createMenuVersion } from "@/lib/db/queries/menus";
 import { restaurantMenuSchema } from "@/lib/validation";
 import { sanitizeRawMenu, stripNonCoreTranslations } from "@/lib/menu";
 import { isFounder } from "@/lib/roles";
+import { checkAndGrantReferralReward } from "@/lib/referral";
 
 // GET — public: fetch published menu by slug
 export async function GET(
@@ -65,6 +66,12 @@ export async function PUT(
     // Strip non-core translations so they regenerate on next customer visit
     const cleaned = stripNonCoreTranslations(parsed);
     const menu = await createMenuVersion(tenant.id, cleaned);
+
+    // Check referral reward (fire-and-forget)
+    const dishCount = Array.isArray(cleaned.dishes) ? cleaned.dishes.length : 0;
+    checkAndGrantReferralReward(tenant.id, dishCount).catch((err) =>
+      console.error("[referral] reward check failed:", err),
+    );
 
     return NextResponse.json(menu, { status: 201 });
   } catch (error) {

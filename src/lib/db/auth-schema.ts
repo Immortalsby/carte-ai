@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, varchar, index } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -8,6 +8,8 @@ export const user = pgTable("user", {
   emailVerified: boolean("emailVerified").default(false).notNull(),
   approved: boolean("approved").default(false).notNull(),
   image: text("image"),
+  referralCode: varchar("referral_code", { length: 16 }).unique(),
+  permanentFree: boolean("permanent_free").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt")
     .defaultNow()
