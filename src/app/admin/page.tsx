@@ -17,6 +17,7 @@ import { AssignOwnerButton } from "@/components/admin/AssignOwnerButton";
 import { detectAdminLocale, getAdminDict, type AdminLocale } from "@/lib/admin-i18n";
 import { TzCookie } from "@/components/admin/TzCookie";
 import { SignOutButton } from "@/components/admin/SignOutButton";
+import { RevokeReferralButton } from "@/components/admin/RevokeReferralButton";
 
 async function getLocale(): Promise<AdminLocale> {
   const cookieStore = await cookies();
@@ -407,7 +408,12 @@ async function FounderDashboard({ locale, founderId }: { locale: AdminLocale; fo
                     {u.createdAt.toLocaleDateString()}
                   </td>
                   <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                    {referralStats.get(u.id)?.referredByName ?? "—"}
+                    <div className="flex items-center gap-1.5">
+                      {referralStats.get(u.id)?.referredByName ?? "—"}
+                      {referralStats.get(u.id)?.referredByName && (
+                        <RevokeReferralButton userId={u.id} userName={u.name} />
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-2.5 text-xs">
                     {(() => {

@@ -32,10 +32,11 @@ interface MenuEditorProps {
   version: number;
   cuisine?: string;
   locale?: AdminLocale;
+  isNewImport?: boolean;
   onReImport?: () => void;
 }
 
-export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale = "en", onReImport }: MenuEditorProps) {
+export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale = "en", isNewImport, onReImport }: MenuEditorProps) {
   const t = getAdminDict(locale);
   const tAny = t as unknown as Record<string, string>;
   const builtinCategoryLabels: Record<string, string> = {
@@ -64,7 +65,7 @@ export function MenuEditor({ menu: initialMenu, slug, version, cuisine, locale =
   });
   const [editingDish, setEditingDish] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(true);
+  const [saved, setSaved] = useState(!isNewImport);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [pendingImageGen, setPendingImageGen] = useState<{ count: number; time: number } | null>(null);
   const [imageGenProgress, setImageGenProgress] = useState<{ current: number; total: number; failed: number } | null>(null);

@@ -202,6 +202,55 @@ export async function getAllReferralStats(): Promise<
   return result;
 }
 
+/** Revoke a referral for a user (delete referral record + undo rewards if granted) */
+export async function revokeReferral(
+  referredUserId: string,
+): Promise<{ revoked: boolean; referrerUserId?: string; wasRewarded?: boolean }> {
+  // Find referral via the user's tenants
+  const userTenants = await db
+    .select({ id: tenants.id, referred_by_code: tenants.referred_by_code })
+    .from(tenants)
+    .where(eq(tenants.owner_id, referredUserId));
+
+  const referredTenant = userTenants.find((t) => t.referred_by_code);
+  if (!referredTenant) return { revoked: false };
+
+  // Find the referral record
+  const [ref] = await db
+    .select()
+    .from(referrals)
+    .where(eq(referrals.referred_tenant_id, referredTenant.id));
+
+  if (!ref) return { revoked: false };
+
+  const wasRewarded = ref.reward_granted;
+  const referrerUserId = ref.referrer_user_id;
+
+  // Delete referral record
+  await db.delete(referrals).where(eq(referrals.id, ref.id));
+
+  // Clear referred_by_code on tenant
+  await db
+    .update(tenants)
+    .set({ referred_by_code: null })
+    .where(eq(tenants.id, referredTenant.id));
+
+  // If reward was granted, check if referrer should lose permanent_free
+  if (wasRewarded) {
+    const remaining = await countSuccessfulReferrals(referrerUserId);
+    if (remaining < 10) {
+      await db
+        .update(user)
+        .set({ permanentFree: false })
+        .where(
+          and(eq(user.id, referrerUserId), eq(user.permanentFree, true)),
+        );
+    }
+  }
+
+  return { revoked: true, referrerUserId, wasRewarded };
+}
+
 /** Extend trial for all tenants owned by a user by N days */
 export async function extendUserTrials(
   userId: string,

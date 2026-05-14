@@ -21,9 +21,11 @@ export function MenuPage({ menu: initialMenu, slug, version, cuisine, restaurant
   const t = getAdminDict(locale);
   const [menu, setMenu] = useState<RestaurantMenu | null>(initialMenu);
   const [showImporter, setShowImporter] = useState(!initialMenu);
+  const [isNewImport, setIsNewImport] = useState(false);
 
   function handleImported(draft: RestaurantMenu) {
     setMenu(draft);
+    setIsNewImport(true);
     setShowImporter(false);
   }
 
@@ -80,6 +82,7 @@ export function MenuPage({ menu: initialMenu, slug, version, cuisine, restaurant
           version={version}
           cuisine={cuisine}
           locale={locale}
+          isNewImport={isNewImport}
           onReImport={() => setShowImporter(true)}
         />
       </div>
