@@ -34,13 +34,13 @@ export function ThemeToggle({ labels }: { labels: { light: string; dark: string;
   if (!mounted) return <div className="h-8" />;
 
   return (
-    <div className="flex rounded-lg border border-border bg-muted/50 p-0.5">
+    <div className="inline-flex rounded-lg border border-border bg-muted/50 p-0.5">
       {MODES.map((mode) => (
         <button
           key={mode}
           type="button"
           onClick={() => setTheme(mode)}
-          className={`flex items-center gap-1.5 rounded-md px-2.5 py-2 text-[11px] font-medium transition-colors ${
+          className={`flex items-center gap-1.5 rounded-md px-2 py-2 text-[11px] font-medium whitespace-nowrap transition-colors ${
             theme === mode
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
