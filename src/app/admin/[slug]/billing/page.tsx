@@ -52,21 +52,7 @@ export default async function BillingPage({
         />
       </div>
 
-      <ReferralSection
-        labels={{
-          referralTitle: t.referralTitle,
-          referralDesc: t.referralDesc,
-          referralYourCode: t.referralYourCode,
-          referralCopyLink: t.referralCopyLink,
-          referralLinkCopied: t.referralLinkCopied,
-          referralStats: t.referralStats,
-          referralTotalInvited: t.referralTotalInvited,
-          referralQualified: t.referralQualified,
-          referralProgress: t.referralProgress,
-          referralPermanentFree: t.referralPermanentFree,
-          referralRewardDesc: t.referralRewardDesc,
-        }}
-      />
+      <ReferralSection locale={locale} />
     </div>
   );
 }
