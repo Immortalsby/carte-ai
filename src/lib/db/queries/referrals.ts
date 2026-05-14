@@ -134,6 +134,74 @@ export async function getReferralStats(userId: string) {
   };
 }
 
+/** Get referral overview for all users (founder dashboard) */
+export async function getAllReferralStats(): Promise<
+  Map<string, { totalInvited: number; qualifiedInvited: number; referredByName: string | null; permanentFree: boolean }>
+> {
+  // Count referrals per referrer
+  const referrerStats = await db
+    .select({
+      referrer_user_id: referrals.referrer_user_id,
+      total: sql<number>`count(*)::int`,
+      qualified: sql<number>`count(*) filter (where ${referrals.reward_granted} = true)::int`,
+    })
+    .from(referrals)
+    .groupBy(referrals.referrer_user_id);
+
+  // Get referred_by_code for all tenants that have one
+  const referredTenants = await db
+    .select({
+      owner_id: tenants.owner_id,
+      referred_by_code: tenants.referred_by_code,
+    })
+    .from(tenants)
+    .where(sql`${tenants.referred_by_code} IS NOT NULL`);
+
+  // Map referral codes to user names
+  const codes = [...new Set(referredTenants.map((t) => t.referred_by_code!))];
+  const codeToName = new Map<string, string>();
+  if (codes.length > 0) {
+    const codeUsers = await db
+      .select({ referralCode: user.referralCode, name: user.name })
+      .from(user)
+      .where(sql`${user.referralCode} IN (${sql.join(codes.map((c) => sql`${c}`), sql`, `)})`);
+    for (const cu of codeUsers) {
+      if (cu.referralCode) codeToName.set(cu.referralCode, cu.name);
+    }
+  }
+
+  // Get permanentFree status
+  const allUsers = await db
+    .select({ id: user.id, permanentFree: user.permanentFree })
+    .from(user);
+
+  const result = new Map<string, { totalInvited: number; qualifiedInvited: number; referredByName: string | null; permanentFree: boolean }>();
+
+  // Init all users
+  for (const u of allUsers) {
+    result.set(u.id, { totalInvited: 0, qualifiedInvited: 0, referredByName: null, permanentFree: u.permanentFree });
+  }
+
+  // Fill referrer stats
+  for (const rs of referrerStats) {
+    const existing = result.get(rs.referrer_user_id);
+    if (existing) {
+      existing.totalInvited = rs.total;
+      existing.qualifiedInvited = rs.qualified;
+    }
+  }
+
+  // Fill "referred by" info (use first tenant's referred_by_code per owner)
+  for (const rt of referredTenants) {
+    const existing = result.get(rt.owner_id);
+    if (existing && !existing.referredByName && rt.referred_by_code) {
+      existing.referredByName = codeToName.get(rt.referred_by_code) ?? null;
+    }
+  }
+
+  return result;
+}
+
 /** Extend trial for all tenants owned by a user by N days */
 export async function extendUserTrials(
   userId: string,

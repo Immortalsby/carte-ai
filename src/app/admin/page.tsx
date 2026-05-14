@@ -6,6 +6,7 @@ import { getTenantsByOwnerId, getAllTenants } from "@/lib/db/queries/tenants";
 import { getGlobalStats, getActiveTenantsStats } from "@/lib/db/queries/analytics";
 import { getGlobalLlmUsage } from "@/lib/db/queries/llm-usage";
 import { getAllUsersWithTenants } from "@/lib/db/queries/users";
+import { getAllReferralStats } from "@/lib/db/queries/referrals";
 import { db } from "@/lib/db";
 import { user as userTable } from "@/lib/db/auth-schema";
 import { eq } from "drizzle-orm";
@@ -118,12 +119,13 @@ async function FounderDashboard({ locale, founderId }: { locale: AdminLocale; fo
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const [allTenants, globalStats, activeStats, llmUsage, usersWithTenants] = await Promise.all([
+  const [allTenants, globalStats, activeStats, llmUsage, usersWithTenants, referralStats] = await Promise.all([
     getAllTenants(),
     getGlobalStats(thirtyDaysAgo, now, tz),
     getActiveTenantsStats(thirtyDaysAgo, now),
     getGlobalLlmUsage(),
     getAllUsersWithTenants(),
+    getAllReferralStats(),
   ]);
 
   const dailyData = globalStats.dailyScans.map((d) => ({
@@ -345,6 +347,8 @@ async function FounderDashboard({ locale, founderId }: { locale: AdminLocale; fo
                 <th className="px-4 py-2 font-medium">{t.statusCol}</th>
                 <th className="px-4 py-2 font-medium">{t.restaurantCol}</th>
                 <th className="px-4 py-2 font-medium">{t.registeredCol}</th>
+                <th className="px-4 py-2 font-medium">Referred by</th>
+                <th className="px-4 py-2 font-medium">Invites</th>
                 <th className="px-4 py-2 font-medium">{t.actionCol}</th>
               </tr>
             </thead>
@@ -392,6 +396,26 @@ async function FounderDashboard({ locale, founderId }: { locale: AdminLocale; fo
                   </td>
                   <td className="px-4 py-2.5 text-xs text-muted-foreground">
                     {u.createdAt.toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-2.5 text-xs text-muted-foreground">
+                    {referralStats.get(u.id)?.referredByName ?? "—"}
+                  </td>
+                  <td className="px-4 py-2.5 text-xs">
+                    {(() => {
+                      const rs = referralStats.get(u.id);
+                      if (!rs || rs.totalInvited === 0) return <span className="text-muted-foreground">0</span>;
+                      return (
+                        <span className="text-foreground">
+                          <strong>{rs.qualifiedInvited}</strong>
+                          <span className="text-muted-foreground">/{rs.totalInvited}</span>
+                          {rs.permanentFree && (
+                            <span className="ml-1 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[10px] font-medium text-green-600">
+                              FREE
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2">

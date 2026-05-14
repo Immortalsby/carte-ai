@@ -29,6 +29,18 @@ export default async function BillingPage({
   const locale = detectAdminLocale(localeCookie, acceptLang);
   const t = getAdminDict(locale);
 
+  // Founders don't need billing or referral — they have permanent access
+  if (founder) {
+    return (
+      <div>
+        <h1 className="text-2xl font-bold">{t.billingTitle}</h1>
+        <p className="mt-4 text-sm text-muted-foreground">
+          Founder account — no billing or referral needed.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <BillingFeedback labels={{ billingSuccess: t.billingSuccess, billingCancelled: t.billingCancelled }} />
