@@ -112,10 +112,18 @@ function NewRestaurantForm() {
   const [placeCandidates, setPlaceCandidates] = useState<PlaceCandidate[]>([]);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
 
-  // Detect locale from cookie + pre-fill referral code from URL
+  // Detect locale from cookie → browser language → default en
   useEffect(() => {
     const match = document.cookie.match(/admin_locale=(en|fr|zh)/);
-    if (match) setLocale(match[1] as AdminLocale);
+    if (match) {
+      setLocale(match[1] as AdminLocale);
+    } else {
+      const supported: AdminLocale[] = ["en", "fr", "zh"];
+      const browserLang = navigator.languages
+        .map((l) => l.split("-")[0])
+        .find((l) => supported.includes(l as AdminLocale));
+      if (browserLang) setLocale(browserLang as AdminLocale);
+    }
     const ref = searchParams.get("ref");
     if (ref) {
       setReferralCode(ref);
