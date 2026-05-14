@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import { SignOutButton } from "@/components/admin/SignOutButton";
 import { Gift, CheckCircle, XCircle } from "@phosphor-icons/react";
 import type { AdminLocale } from "@/lib/admin-i18n";
 import { getAdminDict } from "@/lib/admin-i18n";
@@ -264,7 +265,13 @@ function NewRestaurantForm() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-12">
-      <h1 className="text-2xl font-bold">{tAny.createRestaurant}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{tAny.createRestaurant}</h1>
+        <SignOutButton
+          label={t.signOut}
+          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted"
+        />
+      </div>
       <p className="mt-1 text-sm text-gray-500">{tAny.createRestaurantDesc}</p>
 
       {/* Google Places search */}

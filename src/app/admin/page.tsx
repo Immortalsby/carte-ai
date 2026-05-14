@@ -16,6 +16,7 @@ import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
 import { AssignOwnerButton } from "@/components/admin/AssignOwnerButton";
 import { detectAdminLocale, getAdminDict, type AdminLocale } from "@/lib/admin-i18n";
 import { TzCookie } from "@/components/admin/TzCookie";
+import { SignOutButton } from "@/components/admin/SignOutButton";
 
 async function getLocale(): Promise<AdminLocale> {
   const cookieStore = await cookies();
@@ -62,12 +63,20 @@ export default async function AdminIndexPage() {
     <main className="mx-auto max-w-2xl px-4 py-12">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t.myRestaurants}</h1>
-        <Link
-          href="/admin/new"
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          {t.addRestaurant}
-        </Link>
+        <div className="flex items-center gap-2">
+          {restaurants.length > 0 && (
+            <Link
+              href="/admin/new"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              {t.addRestaurant}
+            </Link>
+          )}
+          <SignOutButton
+            label={t.signOut}
+            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted"
+          />
+        </div>
       </div>
 
       {restaurants.length === 0 ? (
