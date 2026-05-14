@@ -9,7 +9,7 @@ import { getLlmUsage, getLlmProviderStats } from "@/lib/db/queries/llm-usage";
 import { getPublishedMenu } from "@/lib/db/queries/menus";
 import type { RestaurantMenu } from "@/types/menu";
 import { detectAdminLocale, getAdminDict } from "@/lib/admin-i18n";
-import { ListBullets, ChartLineUp, Image, LinkSimple } from "@phosphor-icons/react/dist/ssr";
+import { ListBullets, ChartLineUp, Image, LinkSimple, Gift } from "@phosphor-icons/react/dist/ssr";
 
 // LLM quota caps per tier (Phase 1: all POC)
 const LLM_QUOTA_CALLS = 5000;
@@ -127,6 +127,21 @@ export default async function AdminDashboard({
           />
         </div>
       </div>
+
+      {/* Referral banner */}
+      <Link
+        href={`/admin/${slug}/billing`}
+        className="mt-6 flex items-center gap-4 rounded-xl border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 transition-colors hover:border-purple-300 dark:border-purple-800 dark:from-purple-900/20 dark:to-pink-900/20"
+      >
+        <Gift weight="duotone" className="h-8 w-8 shrink-0 text-purple-600" />
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-purple-900 dark:text-purple-100">{tAny.referralBanner}</p>
+          <p className="mt-0.5 text-xs text-purple-700 dark:text-purple-300">{tAny.referralBannerDesc}</p>
+        </div>
+        <span className="shrink-0 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-medium text-white">
+          {tAny.referralBannerCta}
+        </span>
+      </Link>
 
       {/* Compact 30-day stats */}
       {hasActivity ? (
