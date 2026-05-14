@@ -28,7 +28,9 @@ export function middleware(request: NextRequest) {
 
   if (!sessionCookie?.value) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackURL", pathname);
+    // Preserve full path + query so ?ref= survives the auth redirect
+    const fullPath = pathname + request.nextUrl.search;
+    loginUrl.searchParams.set("callbackURL", fullPath);
     return NextResponse.redirect(loginUrl);
   }
 

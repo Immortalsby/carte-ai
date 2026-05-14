@@ -1,12 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { signIn } from "@/lib/auth-client";
 import { type AuthLocale, detectAuthLocale, getAuthDict } from "@/lib/auth-i18n";
 
 export default function LoginPage() {
+  return <Suspense><LoginForm /></Suspense>;
+}
+
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const callbackURL = searchParams.get("callbackURL") || "/admin";
   const [locale, setLocale] = useState<AuthLocale>("en");
-  useEffect(() => { setLocale(detectAuthLocale()); }, []);
+  useEffect(() => {
+    setLocale(detectAuthLocale());
+    // Persist referral code from callbackURL so it survives the auth flow
+    try {
+      const match = callbackURL.match(/[?&]ref=([A-Za-z0-9]+)/);
+      if (match) localStorage.setItem("carte_ref", match[1]);
+    } catch {}
+  }, [callbackURL]);
   const t = getAuthDict(locale);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,7 +40,7 @@ export default function LoginPage() {
         { email, password },
         {
           onSuccess: () => {
-            window.location.href = "/admin";
+            window.location.href = callbackURL;
           },
           onError: () => {
             setError(t.invalidCredentials);
@@ -40,7 +55,7 @@ export default function LoginPage() {
 
   async function handleGoogleLogin() {
     setGoogleLoading(true);
-    await signIn.social({ provider: "google", callbackURL: "/admin" });
+    await signIn.social({ provider: "google", callbackURL });
   }
 
   return (
@@ -107,7 +122,7 @@ export default function LoginPage() {
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
         {t.noAccount}{" "}
-        <a href="/register" className="text-foreground underline">
+        <a href={callbackURL !== "/admin" ? `/register?callbackURL=${encodeURIComponent(callbackURL)}` : "/register"} className="text-foreground underline">
           {t.signUp}
         </a>
       </p>

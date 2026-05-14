@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { signUp, signIn } from "@/lib/auth-client";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { type AuthLocale, detectAuthLocale, getAuthDict } from "@/lib/auth-i18n";
@@ -8,8 +9,21 @@ import { type AuthLocale, detectAuthLocale, getAuthDict } from "@/lib/auth-i18n"
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 export default function RegisterPage() {
+  return <Suspense><RegisterForm /></Suspense>;
+}
+
+function RegisterForm() {
+  const searchParams = useSearchParams();
+  const callbackURL = searchParams.get("callbackURL") || "/admin";
   const [locale, setLocale] = useState<AuthLocale>("en");
-  useEffect(() => { setLocale(detectAuthLocale()); }, []);
+  useEffect(() => {
+    setLocale(detectAuthLocale());
+    // Persist referral code from callbackURL so it survives the auth flow
+    try {
+      const match = callbackURL.match(/[?&]ref=([A-Za-z0-9]+)/);
+      if (match) localStorage.setItem("carte_ref", match[1]);
+    } catch {}
+  }, [callbackURL]);
   const t = getAuthDict(locale);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -80,7 +94,7 @@ export default function RegisterPage() {
 
   async function handleGoogleLogin() {
     setGoogleLoading(true);
-    await signIn.social({ provider: "google", callbackURL: "/admin" });
+    await signIn.social({ provider: "google", callbackURL });
   }
 
   if (registered) {
@@ -95,7 +109,7 @@ export default function RegisterPage() {
         />
         <p className="mt-2 text-xs text-muted-foreground">{t.verifyEmailNote}</p>
         <a
-          href="/login"
+          href={callbackURL !== "/admin" ? `/login?callbackURL=${encodeURIComponent(callbackURL)}` : "/login"}
           className="mt-6 inline-block text-sm text-foreground underline"
         >
           {t.backToSignIn}
@@ -231,7 +245,7 @@ export default function RegisterPage() {
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
         {t.alreadyHaveAccount}{" "}
-        <a href="/login" className="text-foreground underline">
+        <a href={callbackURL !== "/admin" ? `/login?callbackURL=${encodeURIComponent(callbackURL)}` : "/login"} className="text-foreground underline">
           {t.signIn}
         </a>
       </p>

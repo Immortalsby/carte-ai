@@ -124,10 +124,20 @@ function NewRestaurantForm() {
         .find((l) => supported.includes(l as AdminLocale));
       if (browserLang) setLocale(browserLang as AdminLocale);
     }
+    // Read referral code from URL param or localStorage (survives auth redirects)
     const ref = searchParams.get("ref");
     if (ref) {
       setReferralCode(ref);
       validateReferralCode(ref);
+      try { localStorage.setItem("carte_ref", ref); } catch {}
+    } else {
+      try {
+        const saved = localStorage.getItem("carte_ref");
+        if (saved) {
+          setReferralCode(saved);
+          validateReferralCode(saved);
+        }
+      } catch {}
     }
   }, [searchParams]);
 
@@ -243,6 +253,7 @@ function NewRestaurantForm() {
       }
 
       const tenant = await res.json();
+      try { localStorage.removeItem("carte_ref"); } catch {}
       router.push(`/admin/${tenant.slug}`);
     } catch {
       setError(tAny.networkError2);
