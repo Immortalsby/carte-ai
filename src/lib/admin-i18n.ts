@@ -483,6 +483,11 @@ const dict = {
     startImport: "Start Import",
     addMoreFiles: "Add More Files",
     mergeHint: "Each file is analyzed separately and results are merged. Duplicate dishes are automatically removed.",
+    urlImportTitle: "Import from image URLs",
+    urlImportPlaceholder: "Paste image URLs (one per line, max 10)",
+    urlImportBtn: "Import from URLs",
+    urlImportFetching: "Downloading images...",
+    urlImportFetchError: "Failed to download some images. Check the URLs and try again.",
 
     // Two-step import
     importStep1: "Reading menu...",
@@ -1066,6 +1071,11 @@ const dict = {
     startImport: "Lancer l'import",
     addMoreFiles: "Ajouter des fichiers",
     mergeHint: "Chaque fichier est analysé séparément et les résultats sont fusionnés. Les doublons sont supprimés automatiquement.",
+    urlImportTitle: "Importer depuis des URLs d'images",
+    urlImportPlaceholder: "Collez les URLs des images (une par ligne, max 10)",
+    urlImportBtn: "Importer depuis URLs",
+    urlImportFetching: "Téléchargement des images...",
+    urlImportFetchError: "Impossible de télécharger certaines images. Vérifiez les URLs et réessayez.",
 
     importStep1: "Lecture du menu...",
     importStep1Desc: "L'IA scanne l'image pour extraire le texte",
@@ -1640,6 +1650,11 @@ const dict = {
     startImport: "开始导入",
     addMoreFiles: "继续添加",
     mergeHint: "每个文件单独分析后合并结果，重复菜品会自动去除。",
+    urlImportTitle: "通过图片链接导入",
+    urlImportPlaceholder: "粘贴图片链接（每行一个，最多10个）",
+    urlImportBtn: "从链接导入",
+    urlImportFetching: "正在下载图片...",
+    urlImportFetchError: "部分图片下载失败，请检查链接后重试。",
 
     importStep1: "正在识别菜单...",
     importStep1Desc: "AI 正在扫描图片提取文字",

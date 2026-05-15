@@ -44,6 +44,8 @@ export function MenuImporter({ slug, restaurantName, locale = "en", onImported }
   const [state, setState] = useState<ImportState>("idle");
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [urlText, setUrlText] = useState("");
+  const [urlFetching, setUrlFetching] = useState(false);
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
   const [result, setResult] = useState<{
     draftMenu: RestaurantMenu;
@@ -278,6 +280,50 @@ export function MenuImporter({ slug, restaurantName, locale = "en", onImported }
       toast(t.importFailed);
     }
   }, [slug, t, tAny, toast, fetchWithTimeout]);
+
+  const processUrls = useCallback(async () => {
+    const urls = urlText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0 && (l.startsWith("http://") || l.startsWith("https://")));
+
+    if (urls.length === 0) return;
+    if (urls.length > MAX_FILES) {
+      toast(tAny.maxFilesExceeded);
+      return;
+    }
+
+    setUrlFetching(true);
+    const files: File[] = [];
+
+    for (const url of urls) {
+      try {
+        const res = await fetchWithTimeout("/api/ingest/fetch-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        if (!res.ok) continue;
+
+        const contentType = res.headers.get("x-content-type") || res.headers.get("content-type") || "image/jpeg";
+        const filename = res.headers.get("x-filename") || "image.jpg";
+        const blob = await res.blob();
+        files.push(new File([blob], filename, { type: contentType }));
+      } catch {
+        // skip failed URLs
+      }
+    }
+
+    setUrlFetching(false);
+
+    if (files.length === 0) {
+      toast(tAny.urlImportFetchError);
+      return;
+    }
+
+    setUrlText("");
+    await processFiles(files);
+  }, [urlText, toast, tAny, fetchWithTimeout, processFiles]);
 
   function addFiles(newFiles: FileList | File[]) {
     const arr = Array.from(newFiles);
@@ -539,6 +585,32 @@ export function MenuImporter({ slug, restaurantName, locale = "en", onImported }
 
           <p className="text-xs text-muted-foreground">{tAny.mergeHint}</p>
         </div>
+      )}
+
+      {/* Advanced: URL import (collapsed) */}
+      {selectedFiles.length === 0 && (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+            {tAny.urlImportTitle}
+          </summary>
+          <div className="mt-2 rounded-lg border border-border bg-muted/30 p-3">
+            <textarea
+              value={urlText}
+              onChange={(e) => setUrlText(e.target.value)}
+              placeholder={tAny.urlImportPlaceholder}
+              rows={4}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground placeholder:text-muted-foreground"
+            />
+            <button
+              type="button"
+              onClick={processUrls}
+              disabled={urlFetching || !urlText.trim()}
+              className="mt-2 rounded-md bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {urlFetching ? tAny.urlImportFetching : tAny.urlImportBtn}
+            </button>
+          </div>
+        </details>
       )}
     </div>
   );
